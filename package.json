@@ -7,10 +7,12 @@
     "lib"
   ],
   "scripts": {
+    "build": "ruby script/build",
+    "prepublishOnly": "npm run build",
     "setup": "npm install && npx playwright install chromium && bundle install",
     "test": "bundle exec rspec spec/picodx_spec.rb",
-    "test:e2e": "bundle exec rspec spec/e2e_spec.rb",
-    "serve": "npx serve . -p 3000"
+    "test:e2e": "npm run build && bundle exec rspec spec/e2e_spec.rb",
+    "serve": "npm run build && npx serve . -l 3000"
   },
   "keywords": [
     "picoruby",

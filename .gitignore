@@ -4,3 +4,4 @@ node_modules/
 Gemfile.lock
 .bundle/
 vendor/bundle/
+/lib/picodx.rb

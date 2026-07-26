@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# Concatenates lib/picodx/**/*.rb into lib/picodx.rb for npm distribution.
+
+root = File.expand_path('..', __dir__)
+sources = Dir[File.join(root, 'lib/picodx/**/*.rb')].sort
+
+output = +"require 'js'\n"
+sources.each do |path|
+  output << "\n" << File.read(path)
+end
+
+dest = File.join(root, 'lib/picodx.rb')
+File.write(dest, output)
+puts "Built #{dest} from #{sources.size} file(s)"
