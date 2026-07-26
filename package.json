@@ -1,13 +1,14 @@
 {
-  "name": "picoruby_wasm_template",
+  "name": "picodx",
   "version": "0.1.0",
   "description": "A minimal PicoRuby.wasm gem template",
-  "main": "lib/picoruby_wasm_template.rb",
+  "main": "lib/picodx.rb",
   "files": [
     "lib"
   ],
   "scripts": {
-    "test": "bundle exec rspec spec/picoruby_wasm_template_spec.rb",
+    "setup": "npm install && npx playwright install chromium && bundle install",
+    "test": "bundle exec rspec spec/picodx_spec.rb",
     "test:e2e": "bundle exec rspec spec/e2e_spec.rb",
     "serve": "npx serve . -p 3000"
   },
@@ -20,7 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/itojum/picoruby_wasm_template.git"
+    "url": "git+https://github.com/itojum/picodx.git"
   },
   "devDependencies": {
     "playwright": "*"

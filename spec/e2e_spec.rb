@@ -4,7 +4,7 @@ require 'socket'
 ROOT = File.expand_path('..', __dir__)
 PORT = 3001
 
-RSpec.describe 'PicorubyWasmTemplate', :e2e do
+RSpec.describe 'PicoDX', :e2e do
   before(:all) do
     @server_pid = spawn("npx serve #{ROOT} -p #{PORT}", out: File::NULL, err: File::NULL)
     30.times do

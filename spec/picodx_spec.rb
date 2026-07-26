@@ -1,4 +1,4 @@
-RSpec.describe PicorubyWasmTemplate::Greeter do
+RSpec.describe PicoDX::Greeter do
   describe '#greet' do
     it 'sets innerText on the specified element' do
       described_class.new('greeting').greet('PicoRuby')
