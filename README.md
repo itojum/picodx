@@ -36,7 +36,7 @@ bundle exec rspec spec/e2e_spec.rb
 npm run serve  # http://localhost:3000/examples/index.html
 ```
 
-  ## Publishing
+## Publishing
 
 ```bash
 npm login
