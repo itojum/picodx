@@ -1,0 +1,31 @@
+{
+  "name": "picoruby_wasm_template",
+  "version": "0.1.0",
+  "description": "A minimal PicoRuby.wasm gem template",
+  "main": "lib/picoruby_wasm_template.rb",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "bundle exec rspec spec/picoruby_wasm_template_spec.rb",
+    "test:e2e": "bundle exec rspec spec/e2e_spec.rb",
+    "serve": "npx serve . -p 3000"
+  },
+  "keywords": [
+    "picoruby",
+    "picoruby-wasm",
+    "ruby"
+  ],
+  "author": "itojum <tech@itojum.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itojum/picoruby_wasm_template.git"
+  },
+  "devDependencies": {
+    "playwright": "*"
+  },
+  "engines": {
+    "node": ">=26.1.0"
+  }
+}

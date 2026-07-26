@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>picoruby_wasm_template example</title>
+  </head>
+  <body>
+    <h1 id="greeting"></h1>
+    <script type="text/ruby" src="/lib/picoruby_wasm_template.rb"></script>
+    <script type="text/ruby">
+      PicorubyWasmTemplate::Greeter.new('greeting').greet('PicoRuby')
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@0.9.6/dist/init.iife.js"></script>
+  </body>
+</html>
