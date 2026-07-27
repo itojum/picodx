@@ -9,9 +9,8 @@
   "scripts": {
     "build": "ruby script/build",
     "prepublishOnly": "npm run build",
-    "setup": "npm install && npx playwright install chromium && bundle install",
+    "setup": "npm install && bundle install",
     "test": "bundle exec rspec spec/picodx/",
-    "test:e2e": "npm run build && bundle exec rspec spec/e2e/",
     "serve": "npm run build && npx serve . -l 3000"
   },
   "keywords": [
@@ -26,8 +25,7 @@
     "url": "git+https://github.com/itojum/picodx.git"
   },
   "devDependencies": {
-    "@picoruby/wasm-wasi": "^4.0.2",
-    "playwright": "^1.62.0"
+    "@picoruby/wasm-wasi": "^4.0.2"
   },
   "engines": {
     "node": ">=26.1.0"

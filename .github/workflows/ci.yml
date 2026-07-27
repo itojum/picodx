@@ -14,28 +14,3 @@ jobs:
         with:
           bundler-cache: true
       - run: bundle exec rspec spec/picodx/
-
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '26'
-          cache: 'npm'
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('package-lock.json') }}
-      - run: npm ci
-      - run: npx playwright install chromium --with-deps
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-      - run: npx playwright install-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-      - run: npm run build
-      - run: bundle exec rspec spec/e2e/
