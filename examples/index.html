@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>PicoDX example</title>
-  </head>
-  <body>
-    <h1 id="greeting"></h1>
-    <script type="text/ruby" src="/lib/picodx.rb"></script>
-    <script type="text/ruby">
-      PicoDX::Greeter.new('greeting').greet('PicoRuby')
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@0.9.6/dist/init.iife.js"></script>
-  </body>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>PicoDX Examples</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #eee; padding: 2rem; }
+    a { color: #7af; }
+  </style>
+</head>
+<body>
+  <h1>PicoDX Examples</h1>
+  <ul>
+    <li><a href="bounce/index.html">Bounce Demo</a> — ボールが跳ね返るゲーム。矢印キーで速度変更。</li>
+  </ul>
+</body>
 </html>

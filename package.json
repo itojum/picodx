@@ -10,8 +10,8 @@
     "build": "ruby script/build",
     "prepublishOnly": "npm run build",
     "setup": "npm install && npx playwright install chromium && bundle install",
-    "test": "bundle exec rspec spec/picodx_spec.rb",
-    "test:e2e": "npm run build && bundle exec rspec spec/e2e_spec.rb",
+    "test": "bundle exec rspec spec/picodx/",
+    "test:e2e": "npm run build && bundle exec rspec spec/e2e/",
     "serve": "npm run build && npx serve . -l 3000"
   },
   "keywords": [
