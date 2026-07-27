@@ -29,4 +29,37 @@ RSpec.describe 'Input', :e2e do
 
     page.keyboard.up('ArrowLeft')
   end
+
+  it 'key_push? is true only on the first frame a key is held' do
+    load_ruby(<<~RUBY)
+      Window.init("game")
+      Window.loop do
+        if Input.key_push?(K_SPACE)
+          Window.draw_box_fill(0, 0, 10, 10, [0, 0, 255])
+        end
+      end
+    RUBY
+
+    page.wait_for_function(<<~JS, timeout: 15_000)
+      () => document.getElementById('game').getContext('2d').getImageData(320, 240, 1, 1).data[3] > 0
+    JS
+
+    page.keyboard.down('Space')
+
+    page.wait_for_function(<<~JS, timeout: 5_000)
+      () => {
+        const p = document.getElementById('game').getContext('2d').getImageData(5, 5, 1, 1).data;
+        return p[0] === 0 && p[1] === 0 && p[2] === 255 && p[3] === 255;
+      }
+    JS
+
+    page.wait_for_function(<<~JS, timeout: 5_000)
+      () => {
+        const p = document.getElementById('game').getContext('2d').getImageData(5, 5, 1, 1).data;
+        return p[3] === 0;
+      }
+    JS
+
+    page.keyboard.up('Space')
+  end
 end
