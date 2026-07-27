@@ -26,6 +26,7 @@
     "url": "git+https://github.com/itojum/picodx.git"
   },
   "devDependencies": {
+    "@picoruby/wasm-wasi": "^4.0.2",
     "playwright": "^1.62.0"
   },
   "engines": {
