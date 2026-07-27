@@ -26,10 +26,10 @@ A minimal PicoRuby.wasm gem template — pure Ruby, no C extensions, distributed
 npm run setup  # install dependencies + Chromium for E2E
 
 # Unit tests (standard Ruby + js gem stub)
-bundle exec rspec spec/picodx_spec.rb
+bundle exec rspec spec/picodx/
 
 # E2E tests (Playwright, requires internet for WASM runtime)
-bundle exec rspec spec/e2e_spec.rb
+bundle exec rspec spec/e2e/
 
 # Serve examples locally
 npm run serve  # http://localhost:3000/examples/index.html
