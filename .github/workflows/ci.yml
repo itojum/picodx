@@ -13,7 +13,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - run: bundle exec rspec spec/picodx_spec.rb
+      - run: bundle exec rspec spec/picodx/
 
   e2e:
     runs-on: ubuntu-latest
@@ -38,4 +38,4 @@ jobs:
       - run: npx playwright install-deps chromium
         if: steps.playwright-cache.outputs.cache-hit == 'true'
       - run: npm run build
-      - run: bundle exec rspec spec/e2e_spec.rb
+      - run: bundle exec rspec spec/e2e/
