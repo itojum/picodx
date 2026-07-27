@@ -41,10 +41,12 @@ module PicoDX
       end
 
       def draw_font(x, y, str, color, size = 16)
+        @ctx.save
         @ctx[:fillStyle] = _css(color)
         @ctx[:font] = "#{size}px monospace"
         @ctx[:textBaseline] = 'top'
         @ctx.fillText(str, x, y)
+        @ctx.restore
       end
 
       private
