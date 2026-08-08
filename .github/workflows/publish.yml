@@ -32,6 +32,6 @@ jobs:
       - name: Set version
         run: |
           VERSION="${{ inputs.version || format('{0}', github.ref_name) }}"
-          npm version "${VERSION#v}" --no-git-tag-version
+          npm pkg set version="${VERSION#v}"
 
       - run: npm publish --provenance --access public
