@@ -9,8 +9,7 @@
   "scripts": {
     "build": "ruby script/build",
     "prepublishOnly": "npm run build",
-    "setup": "npm install && bundle install",
-    "test": "bundle exec rspec spec/picodx/",
+    "setup": "npm install",
     "serve": "npm run build && npx serve . -l 3000"
   },
   "keywords": [
