@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PicoDX — Input Test</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #eee; padding: 2rem; }
+    canvas { border: 1px solid #444; display: block; margin: 1rem 0; }
+    a { color: #7af; }
+    p { color: #888; margin: 0.3rem 0; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div><a href="../index.html">← Tests</a></div>
+  <h1>Input Test</h1>
+  <p>Hold a key — <code>key_down?</code> shows the name while held.</p>
+  <p>Tap a key — blue bar flashes <strong>once</strong> and <code>key_push?</code> updates. Holding must not repeat the flash.</p>
+  <canvas id="game" width="640" height="300"></canvas>
+  <script type="text/ruby" src="/lib/picodx.rb"></script>
+  <script type="text/ruby" src="/examples/test/input/test.rb"></script>
+  <script src="/node_modules/@picoruby/wasm-wasi/dist/init.iife.js"></script>
+</body>
+</html>
