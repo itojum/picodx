@@ -10,11 +10,20 @@ root = File.expand_path('..', __dir__)
 dist = File.join(root, 'node_modules/@picoruby/wasm-wasi/dist')
 lib  = File.join(root, 'lib')
 
-server = WEBrick::HTTPServer.new(Port: 3000, DocumentRoot: File.join(root, 'examples'))
+no_cache = proc { |res| res['Cache-Control'] = 'no-store' }
+
+class NoCacheFileHandler < WEBrick::HTTPServlet::FileHandler
+  def do_GET(req, res) = super.tap { res['Cache-Control'] = 'no-store' }
+  def do_HEAD(req, res) = super.tap { res['Cache-Control'] = 'no-store' }
+end
+
+server = WEBrick::HTTPServer.new(Port: 3000)
 server.config[:MimeTypes]['wasm'] = 'application/wasm'
+server.mount('/', NoCacheFileHandler, File.join(root, 'examples'))
 
 server.mount_proc('/lib/picodx.rb') do |_req, res|
   res['Content-Type'] = 'text/plain; charset=utf-8'
+  no_cache.call(res)
   res.body = File.read(File.join(lib, 'picodx.rb'))
 end
 
@@ -24,6 +33,7 @@ end
   filename = File.basename(path)
   server.mount_proc(path) do |_req, res|
     res['Content-Type'] = mime
+    no_cache.call(res)
     res.body = File.binread(File.join(dist, filename))
   end
 end
