@@ -1,7 +1,8 @@
+Window.init("game")
+
 JS.document.getElementById('run').addEventListener('click') do |_e|
   results = []
 
-  Window.init("game")
   results << assert_equal(400, Window.width,  "Window.width after init")
   results << assert_equal(220, Window.height, "Window.height after init")
 
