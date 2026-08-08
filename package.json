@@ -4,7 +4,7 @@
   "description": "A minimal PicoRuby.wasm gem template",
   "main": "lib/picodx.rb",
   "files": [
-    "lib"
+    "lib/picodx.rb"
   ],
   "scripts": {
     "build": "ruby script/build",
