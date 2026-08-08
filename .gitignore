@@ -5,5 +5,4 @@ Gemfile.lock
 .bundle/
 vendor/bundle/
 /lib/picodx.rb
-docs/
 .claude/memory
