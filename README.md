@@ -35,7 +35,7 @@ A minimal 2D game library for [PicoRuby.wasm](https://github.com/picoruby/picoru
 ```bash
 npm run setup   # install dependencies
 npm run build   # build lib/picodx.rb from lib/picodx/**/*.rb
-npm run serve   # start dev server at http://localhost:3000
+npm run serve   # build and start dev server at http://localhost:3000
 ```
 
 ### Manual testing

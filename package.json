@@ -10,7 +10,7 @@
     "build": "ruby script/build",
     "prepublishOnly": "npm run build",
     "setup": "npm install",
-    "serve": "npm run build && npx serve . -l 3000"
+    "serve": "npm run build && ruby script/server"
   },
   "keywords": [
     "picoruby",

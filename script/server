@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+require 'bundler/inline'
+
+gemfile do
+  source 'https://rubygems.org'
+  gem 'webrick'
+end
+
+root = File.expand_path('..', __dir__)
+dist = File.join(root, 'node_modules/@picoruby/wasm-wasi/dist')
+lib  = File.join(root, 'lib')
+
+server = WEBrick::HTTPServer.new(Port: 3000, DocumentRoot: File.join(root, 'examples'))
+server.config[:MimeTypes]['wasm'] = 'application/wasm'
+
+server.mount_proc('/lib/picodx.rb') do |_req, res|
+  res['Content-Type'] = 'text/plain; charset=utf-8'
+  res.body = File.read(File.join(lib, 'picodx.rb'))
+end
+
+{ '/init.iife.js'  => 'application/javascript',
+  '/picoruby.js'   => 'application/javascript',
+  '/picoruby.wasm' => 'application/wasm' }.each do |path, mime|
+  filename = File.basename(path)
+  server.mount_proc(path) do |_req, res|
+    res['Content-Type'] = mime
+    res.body = File.binread(File.join(dist, filename))
+  end
+end
+
+puts "http://localhost:3000"
+trap('INT') { server.shutdown }
+server.start
