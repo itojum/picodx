@@ -1,24 +1,25 @@
 module PicoDX
   class Sprite
     attr_accessor :x, :y, :z, :angle, :scale_x, :scale_y, :center_x, :center_y
-    attr_accessor :alpha, :blend, :visible, :image, :collision, :target
+    attr_accessor :alpha, :blend, :visible, :image, :collision, :target, :offset_sync
 
     def initialize(x = 0, y = 0, image = nil)
-      @x        = x.to_f
-      @y        = y.to_f
-      @z        = 0
-      @angle    = 0
-      @scale_x  = 1.0
-      @scale_y  = 1.0
-      @center_x = nil
-      @center_y = nil
-      @alpha    = 255
-      @blend    = :alpha
-      @visible  = true
-      @image    = image
-      @collision = nil
-      @vanished  = false
-      @target    = nil
+      @x           = x.to_f
+      @y           = y.to_f
+      @z           = 0
+      @angle       = 0
+      @scale_x     = 1.0
+      @scale_y     = 1.0
+      @center_x    = nil
+      @center_y    = nil
+      @alpha       = 255
+      @blend       = :alpha
+      @visible     = true
+      @image       = image
+      @collision   = nil
+      @vanished    = false
+      @target      = nil
+      @offset_sync = false
     end
 
     def draw
@@ -122,27 +123,31 @@ module PicoDX
     private
 
     def _collide?(other)
+      aox = @offset_sync      ? -(@center_x || 0) : 0
+      aoy = @offset_sync      ? -(@center_y || 0) : 0
+      box = other.offset_sync ? -(other.center_x || 0) : 0
+      boy = other.offset_sync ? -(other.center_y || 0) : 0
       ac = @collision
       bc = other.collision
       al = ac.length
       bl = bc.length
 
       if al == 4
-        ax1 = @x + ac[0]; ay1 = @y + ac[1]
-        ax2 = @x + ac[2]; ay2 = @y + ac[3]
+        ax1 = @x + aox + ac[0]; ay1 = @y + aoy + ac[1]
+        ax2 = @x + aox + ac[2]; ay2 = @y + aoy + ac[3]
       elsif al == 3
-        acx = @x + ac[0]; acy = @y + ac[1]; ar = ac[2]
+        acx = @x + aox + ac[0]; acy = @y + aoy + ac[1]; ar = ac[2]
       else
-        apx = @x + ac[0]; apy = @y + ac[1]
+        apx = @x + aox + ac[0]; apy = @y + aoy + ac[1]
       end
 
       if bl == 4
-        bx1 = other.x + bc[0]; by1 = other.y + bc[1]
-        bx2 = other.x + bc[2]; by2 = other.y + bc[3]
+        bx1 = other.x + box + bc[0]; by1 = other.y + boy + bc[1]
+        bx2 = other.x + box + bc[2]; by2 = other.y + boy + bc[3]
       elsif bl == 3
-        bcx = other.x + bc[0]; bcy = other.y + bc[1]; br = bc[2]
+        bcx = other.x + box + bc[0]; bcy = other.y + boy + bc[1]; br = bc[2]
       else
-        bpx = other.x + bc[0]; bpy = other.y + bc[1]
+        bpx = other.x + box + bc[0]; bpy = other.y + boy + bc[1]
       end
 
       if al == 4 && bl == 4
