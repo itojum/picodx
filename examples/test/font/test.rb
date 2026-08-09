@@ -107,11 +107,61 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (yellow_found ? "<span class='pass'>PASS</span> Image#draw_font renders yellow text onto image" :
                              "<span class='fail'>FAIL</span> Image#draw_font produced no visible text")
 
+  # --- Image#draw_font_ex (edge/outline) ---
+  img_ex = Image.new(200, 30, [0, 0, 0])
+  img_font_ex = Font.new(18)
+  img_ex.draw_font_ex(5, 5, "Edge text", img_font_ex, color: [255, 255, 255], edge_color: [255, 0, 0], edge_width: 2)
+  Window.draw(0, 140, img_ex)
+  white_ex_found = false
+  px = 5
+  while px <= 150
+    r = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},153,1,1).data[0]").to_i
+    g = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},153,1,1).data[1]").to_i
+    b = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},153,1,1).data[2]").to_i
+    white_ex_found = true if r > 100 && g > 100 && b > 100
+    px += 1
+  end
+  results << (white_ex_found ? "<span class='pass'>PASS</span> Image#draw_font_ex renders text onto image" :
+                               "<span class='fail'>FAIL</span> Image#draw_font_ex produced no visible text")
+
+  # --- Image#draw_font_ex (shadow) ---
+  img_shadow = Image.new(200, 30, [0, 0, 0])
+  img_shadow.draw_font_ex(5, 5, "Shadow", img_font_ex, color: [255, 255, 255], shadow: true, shadow_color: [0, 200, 0], shadow_x: 2, shadow_y: 2)
+  Window.draw(0, 175, img_shadow)
+  shadow_found = false
+  px = 5
+  while px <= 130
+    r = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},188,1,1).data[0]").to_i
+    g = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},188,1,1).data[1]").to_i
+    b = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},188,1,1).data[2]").to_i
+    shadow_found = true if r > 50 || g > 50 || b > 50
+    px += 1
+  end
+  results << (shadow_found ? "<span class='pass'>PASS</span> Image#draw_font_ex shadow renders text" :
+                             "<span class='fail'>FAIL</span> Image#draw_font_ex shadow produced no visible text")
+
+  # --- Window.draw_font_ex ---
+  Window.draw_box_fill(0, 210, 480, 240, [0, 0, 0])
+  fnt_ex = Font.new(20)
+  Window.draw_font_ex(10, 215, "Window font_ex", fnt_ex, color: [255, 255, 255], edge_color: [0, 0, 255], edge_width: 2)
+  win_ex_found = false
+  px = 10
+  while px <= 200
+    r = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},225,1,1).data[0]").to_i
+    g = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},225,1,1).data[1]").to_i
+    b = JS.eval("document.getElementById('game').getContext('2d').getImageData(#{px},225,1,1).data[2]").to_i
+    win_ex_found = true if r > 50 || g > 50 || b > 50
+    px += 1
+  end
+  results << (win_ex_found ? "<span class='pass'>PASS</span> Window.draw_font_ex renders text" :
+                             "<span class='fail'>FAIL</span> Window.draw_font_ex produced no visible text")
+
   # Visual labels
   Window.draw_font(0, 140, "Window.draw_font new API (white above)", [120, 120, 120], 11)
   Window.draw_font(0, 153, "Window.draw_font hash color (red above)", [120, 120, 120], 11)
   Window.draw_font(0, 166, "Window.draw_font legacy (green above)", [120, 120, 120], 11)
   Window.draw_font(0, 179, "Image#draw_font (yellow on image above)", [120, 120, 120], 11)
+  Window.draw_font(0, 243, "Image#draw_font_ex edge (above) / shadow (above) / Window.draw_font_ex (above)", [120, 120, 120], 10)
 
   show_results(results)
 end
