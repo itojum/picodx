@@ -112,6 +112,37 @@ module PicoDX
       @ctx.restore
     end
 
+    def draw_font_ex(x, y, str, font, options = {})
+      color        = options[:color]        || [255, 255, 255]
+      edge_color   = options[:edge_color]
+      edge_width   = options[:edge_width]   || 2
+      shadow       = options[:shadow]       || false
+      shadow_color = options[:shadow_color] || [0, 0, 0]
+      shadow_x     = options[:shadow_x]     || 1
+      shadow_y     = options[:shadow_y]     || 1
+
+      @ctx.save
+      @ctx[:font]         = font._css_font
+      @ctx[:textBaseline] = 'top'
+
+      if shadow
+        @ctx[:shadowColor]   = _css(shadow_color)
+        @ctx[:shadowOffsetX] = shadow_x
+        @ctx[:shadowOffsetY] = shadow_y
+      end
+
+      if edge_color
+        @ctx[:strokeStyle] = _css(edge_color)
+        @ctx[:lineWidth]   = edge_width * 2
+        @ctx[:lineJoin]    = 'round'
+        @ctx.strokeText(str, x, y)
+      end
+
+      @ctx[:fillStyle] = _css(color)
+      @ctx.fillText(str, x, y)
+      @ctx.restore
+    end
+
     def [](x, y)
       data = @ctx.getImageData(x, y, 1, 1)[:data]
       [data[0].to_i, data[1].to_i, data[2].to_i, data[3].to_i]

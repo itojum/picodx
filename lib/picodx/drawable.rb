@@ -36,6 +36,52 @@ module PicoDX
       end
     end
 
+    def draw_font_ex(x, y, str, font_or_color, options_or_size = nil)
+      if font_or_color.is_a?(Font)
+        font         = font_or_color
+        options      = options_or_size.is_a?(Hash) ? options_or_size : {}
+        color        = options[:color]        || [255, 255, 255]
+        edge_color   = options[:edge_color]
+        edge_width   = options[:edge_width]   || 2
+        shadow       = options[:shadow]       || false
+        shadow_color = options[:shadow_color] || [0, 0, 0]
+        shadow_x     = options[:shadow_x]     || 1
+        shadow_y     = options[:shadow_y]     || 1
+        css_font     = font._css_font
+      else
+        color        = font_or_color
+        size         = options_or_size.is_a?(Integer) ? options_or_size : 16
+        edge_color   = nil
+        edge_width   = 2
+        shadow       = false
+        shadow_color = [0, 0, 0]
+        shadow_x     = 1
+        shadow_y     = 1
+        css_font     = "#{size}px monospace"
+      end
+
+      @ctx.save
+      @ctx[:font]         = css_font
+      @ctx[:textBaseline] = 'top'
+
+      if shadow
+        @ctx[:shadowColor]   = _css(shadow_color)
+        @ctx[:shadowOffsetX] = shadow_x
+        @ctx[:shadowOffsetY] = shadow_y
+      end
+
+      if edge_color
+        @ctx[:strokeStyle] = _css(edge_color)
+        @ctx[:lineWidth]   = edge_width * 2
+        @ctx[:lineJoin]    = 'round'
+        @ctx.strokeText(str, x, y)
+      end
+
+      @ctx[:fillStyle] = _css(color)
+      @ctx.fillText(str, x, y)
+      @ctx.restore
+    end
+
     def draw_line(x1, y1, x2, y2, color)
       @ctx.beginPath
       @ctx[:strokeStyle] = _css(color)
