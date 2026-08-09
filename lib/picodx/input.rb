@@ -1,15 +1,19 @@
 module PicoDX
   class Input
-    @keys_down      = {}
-    @keys_prev      = {}
-    @keys_pushed    = {}
-    @keys_released  = {}
-    @mouse_x        = 0
-    @mouse_y        = 0
-    @mouse_down     = {}
-    @mouse_prev     = {}
-    @mouse_pushed   = {}
-    @mouse_released = {}
+    @keys_down       = {}
+    @keys_prev       = {}
+    @keys_pushed     = {}
+    @keys_released   = {}
+    @key_hold_frames = {}
+    @repeat_initial  = 0
+    @repeat_interval = 0
+    @key_repeat      = {}
+    @mouse_x         = 0
+    @mouse_y         = 0
+    @mouse_down      = {}
+    @mouse_prev      = {}
+    @mouse_pushed    = {}
+    @mouse_released  = {}
     @mouse_wheel_pos = 0
 
     class << self
@@ -48,14 +52,36 @@ module PicoDX
         end
       end
 
+      def set_repeat(initial, interval)
+        @repeat_initial  = initial
+        @repeat_interval = interval
+      end
+
+      def set_key_repeat(key, initial, interval)
+        @key_repeat[key] = [initial, interval]
+      end
+
       def _update
         new_pushed   = {}
         new_released = {}
         @keys_down.each_key do |code|
-          new_pushed[code] = true unless @keys_prev.key?(code)
+          if @keys_prev.key?(code)
+            @key_hold_frames[code] += 1
+            frames = @key_hold_frames[code]
+            ini, rep = @key_repeat[code] || [@repeat_initial, @repeat_interval]
+            if rep > 0 && frames >= ini && (frames - ini) % rep == 0
+              new_pushed[code] = true
+            end
+          else
+            new_pushed[code] = true
+            @key_hold_frames[code] = 0
+          end
         end
         @keys_prev.each_key do |code|
-          new_released[code] = true unless @keys_down.key?(code)
+          unless @keys_down.key?(code)
+            new_released[code] = true
+            @key_hold_frames.delete(code)
+          end
         end
         @keys_pushed   = new_pushed
         @keys_released = new_released
