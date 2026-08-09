@@ -28,6 +28,11 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.ox = 0
   Window.oy = 0
 
+  # Window.caption read/write
+  Window.caption = "Test Title"
+  results << assert_equal("Test Title", Window.caption, "Window.caption= sets document.title")
+  Window.caption = "PicoDX — Window Test"
+
   # Window.bgcolor getter (setter already tested implicitly via init)
   results << assert_equal([0, 0, 0], Window.bgcolor, "Window.bgcolor default is black")
   Window.bgcolor = [255, 0, 128]
