@@ -17,6 +17,14 @@ module PicoDX
         Input.setup(@canvas)
       end
 
+      def caption
+        JS.document[:title].to_s
+      end
+
+      def caption=(str)
+        JS.document[:title] = str
+      end
+
       def bgcolor=(color)
         @bgcolor = color
       end
