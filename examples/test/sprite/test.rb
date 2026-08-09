@@ -93,6 +93,58 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Sprite.draw([sp_red2, sp_blue2])
   results << assert_pixel("game", 380, 80, 255, 0, 0, "Sprite.draw(array): z=2 red drawn on top of z=1 blue")
 
+  # --- Circle vs Circle ---
+  cc_a = Sprite.new(0, 0, nil);   cc_a.collision = [0, 0, 20]
+  cc_b = Sprite.new(10, 10, nil); cc_b.collision = [0, 0, 20]
+  results << (cc_a === cc_b ? "<span class='pass'>PASS</span> circle vs circle: overlapping" :
+                              "<span class='fail'>FAIL</span> circle vs circle: should overlap")
+  cc_c = Sprite.new(50, 0, nil);  cc_c.collision = [0, 0, 10]
+  cc_d = Sprite.new(0, 0, nil);   cc_d.collision = [0, 0, 10]
+  results << (!(cc_c === cc_d) ? "<span class='pass'>PASS</span> circle vs circle: non-overlapping" :
+                                 "<span class='fail'>FAIL</span> circle vs circle: should not overlap")
+
+  # --- Circle vs Rect ---
+  cr_circ = Sprite.new(0, 0, nil);  cr_circ.collision = [15, 15, 10]
+  cr_rect = Sprite.new(0, 0, nil);  cr_rect.collision = [0, 0, 30, 30]
+  results << (cr_circ === cr_rect ? "<span class='pass'>PASS</span> circle vs rect: overlapping" :
+                                    "<span class='fail'>FAIL</span> circle vs rect: should overlap")
+  cr_far = Sprite.new(0, 0, nil);  cr_far.collision = [50, 50, 5]
+  results << (!(cr_far === cr_rect) ? "<span class='pass'>PASS</span> circle vs rect: non-overlapping" :
+                                      "<span class='fail'>FAIL</span> circle vs rect: should not overlap")
+
+  # --- Rect vs Circle ---
+  results << (cr_rect === cr_circ ? "<span class='pass'>PASS</span> rect vs circle: overlapping" :
+                                    "<span class='fail'>FAIL</span> rect vs circle: should overlap")
+  results << (!(cr_rect === cr_far) ? "<span class='pass'>PASS</span> rect vs circle: non-overlapping" :
+                                      "<span class='fail'>FAIL</span> rect vs circle: should not overlap")
+
+  # --- Point vs Rect ---
+  pr_pt  = Sprite.new(0, 0, nil); pr_pt.collision  = [15, 15]
+  pr_rect = Sprite.new(0, 0, nil); pr_rect.collision = [0, 0, 30, 30]
+  results << (pr_pt === pr_rect ? "<span class='pass'>PASS</span> point vs rect: inside" :
+                                  "<span class='fail'>FAIL</span> point vs rect: should be inside")
+  pr_out = Sprite.new(0, 0, nil); pr_out.collision = [50, 50]
+  results << (!(pr_out === pr_rect) ? "<span class='pass'>PASS</span> point vs rect: outside" :
+                                      "<span class='fail'>FAIL</span> point vs rect: should be outside")
+
+  # --- Point vs Circle ---
+  pc_pt   = Sprite.new(0, 0, nil); pc_pt.collision  = [5, 5]
+  pc_circ = Sprite.new(0, 0, nil); pc_circ.collision = [0, 0, 20]
+  results << (pc_pt === pc_circ ? "<span class='pass'>PASS</span> point vs circle: inside" :
+                                  "<span class='fail'>FAIL</span> point vs circle: should be inside")
+  pc_far = Sprite.new(0, 0, nil); pc_far.collision = [30, 0]
+  results << (!(pc_far === pc_circ) ? "<span class='pass'>PASS</span> point vs circle: outside" :
+                                      "<span class='fail'>FAIL</span> point vs circle: should be outside")
+
+  # --- Point vs Point ---
+  pp1 = Sprite.new(0, 0, nil); pp1.collision = [5, 5]
+  pp2 = Sprite.new(0, 0, nil); pp2.collision = [5, 5]
+  pp3 = Sprite.new(0, 0, nil); pp3.collision = [10, 5]
+  results << (pp1 === pp2 ? "<span class='pass'>PASS</span> point vs point: same" :
+                            "<span class='fail'>FAIL</span> point vs point: same should collide")
+  results << (!(pp1 === pp3) ? "<span class='pass'>PASS</span> point vs point: different" :
+                               "<span class='fail'>FAIL</span> point vs point: different should not collide")
+
   # --- Sprite#offset_sync ---
   # Default is false
   os_def = Sprite.new(0, 0, nil)

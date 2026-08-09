@@ -68,8 +68,37 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_scale(250, 178, img2x, 2.0, 2.0)
   results << assert_pixel("game", 255, 183, 255, 128, 0, "Window.draw_scale: pixel inside scaled area is orange")
 
+  # Window.draw_scale with cx/cy: anchor=(5,5) center of 10x10 image, scale=2x
+  # scaled 20x20; anchor maps to (350,140); top-left at (340,130)
+  img_cx = Image.new(10, 10, [255, 128, 0])
+  Window.draw_scale(350, 140, img_cx, 2.0, 2.0, 5, 5)
+  results << assert_pixel("game", 350, 140, 255, 128, 0, "Window.draw_scale(cx,cy): anchor pixel is orange")
+  results << assert_pixel("game", 339, 129, 0,   0,   0, "Window.draw_scale(cx,cy): outside anchor is black")
+
   # Window.draw_rot: rotated image — visual only (transform makes pixel math hard)
   # Window.draw_alpha: semi-transparent draw — visual only
+
+  # --- Window.loop re-entrancy ---
+  # Outer loop runs 1 frame; on that frame it calls an inner Window.loop
+  # which also runs 1 frame, draws a cyan box, then breaks.
+  # After the inner loop exits, the outer block breaks too.
+  # Both loops use break to exit, which raises LocalJumpError via Proc#call.
+  outer_ran = false
+  inner_ran = false
+  Window.loop do
+    outer_ran = true
+    Window.loop do
+      inner_ran = true
+      Window.draw_box_fill(200, 200, 230, 215, [0, 255, 255])
+      break
+    end
+    break
+  end
+  results << (outer_ran ? "<span class='pass'>PASS</span> re-entrant Window.loop: outer block ran" :
+                          "<span class='fail'>FAIL</span> re-entrant Window.loop: outer block did not run")
+  results << (inner_ran ? "<span class='pass'>PASS</span> re-entrant Window.loop: inner block ran" :
+                          "<span class='fail'>FAIL</span> re-entrant Window.loop: inner block did not run")
+  results << assert_pixel("game", 215, 207, 0, 255, 255, "re-entrant Window.loop: inner block drew cyan")
 
   # Visual checks
   Window.draw_font(10, 80,  "draw_font: this text should be visible", [255, 255, 255])

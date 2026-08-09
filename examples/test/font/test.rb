@@ -43,6 +43,16 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (w_long > w_short ? "<span class='pass'>PASS</span> Font#get_width: longer string is wider (#{w_long} > #{w_short})" :
                                  "<span class='fail'>FAIL</span> longer string not wider: #{w_long} vs #{w_short}")
 
+  # --- Font#get_height ---
+  fh = Font.new(16)
+  h16 = fh.get_height
+  results << (h16 > 0 ? "<span class='pass'>PASS</span> Font#get_height(16) returns positive (#{h16}px)" :
+                        "<span class='fail'>FAIL</span> Font#get_height returned #{h16}, expected > 0")
+  fh2 = Font.new(32)
+  h32 = fh2.get_height
+  results << (h32 > h16 ? "<span class='pass'>PASS</span> Font#get_height: larger font is taller (#{h32} > #{h16})" :
+                          "<span class='fail'>FAIL</span> larger font not taller: #{h32} vs #{h16}")
+
   # --- Font.default ---
   Font.default = Font.new(16)
   results << assert_equal(16, Font.default.size, "Font.default returns Font with size 16")

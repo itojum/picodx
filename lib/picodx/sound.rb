@@ -87,6 +87,10 @@ module PicoDX
       @loop_end = pos.to_f
     end
 
+    def volume
+      (@volume * 255).to_i
+    end
+
     def set_volume(vol)
       @volume = vol.to_f / 255
       @gain_node[:gain][:value] = @volume if @gain_node
