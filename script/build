@@ -2,7 +2,7 @@
 # Concatenates lib/picodx/**/*.rb into lib/picodx.rb for npm distribution.
 
 root = File.expand_path('..', __dir__)
-LOAD_ORDER = %w[image.rb input.rb key_constants.rb window.rb init.rb].freeze
+LOAD_ORDER = %w[image.rb input.rb constants.rb window.rb init.rb].freeze
 sources = LOAD_ORDER.map { |f| File.join(root, 'lib/picodx', f) }
 
 output = +"require 'js'\n"
