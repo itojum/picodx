@@ -30,6 +30,13 @@ module PicoDX
       @measure_ctx.measureText(str)[:width].to_i
     end
 
+    def get_height
+      @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
+      @measure_ctx[:font] = _css_font
+      m = @measure_ctx.measureText("Mg")
+      m[:actualBoundingBoxAscent].to_i + m[:actualBoundingBoxDescent].to_i
+    end
+
     def _css_font
       style  = @italic ? "italic " : ""
       family = @fontname.empty? ? "monospace" : "#{@fontname}, monospace"
