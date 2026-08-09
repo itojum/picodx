@@ -15,6 +15,7 @@ module PicoDX
         @real_fps = 0.0
         @ox       = 0
         @oy       = 0
+        @looping  = false
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
       end
@@ -49,21 +50,40 @@ module PicoDX
       end
 
       def loop(&block)
-        @user_block        = block
-        @loop_start_time   = nil
-        @last_tick_time    = nil
-        @last_process_time = nil
-        @accumulated       = 0.0
-        @real_fps          = 0.0
-        while true
-          JS.global.__picodx_nextFrame().await
-          _tick
+        if @looping
+          # Re-entrant call: run a nested frame loop until the block exits.
+          # break/return inside the block raises LocalJumpError via .call,
+          # which we rescue to cleanly exit the inner loop.
+          while true
+            JS.global.__picodx_nextFrame().await
+            begin
+              _tick_with(block)
+            rescue LocalJumpError
+              break
+            end
+          end
+        else
+          @looping           = true
+          @user_block        = block
+          @loop_start_time   = nil
+          @last_tick_time    = nil
+          @last_process_time = nil
+          @accumulated       = 0.0
+          @real_fps          = 0.0
+          while true
+            JS.global.__picodx_nextFrame().await
+            _tick
+          end
         end
       end
 
       private
 
       def _tick
+        _tick_with(@user_block)
+      end
+
+      def _tick_with(blk)
         now = JS.eval("performance.now()").to_f
         @loop_start_time ||= now
 
@@ -91,7 +111,7 @@ module PicoDX
         @ctx.fillRect(0, 0, @width, @height)
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
-        @user_block.call
+        blk.call
         @ctx.restore
       end
     end
