@@ -78,6 +78,28 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   # Window.draw_rot: rotated image — visual only (transform makes pixel math hard)
   # Window.draw_alpha: semi-transparent draw — visual only
 
+  # --- Window.loop re-entrancy ---
+  # Outer loop runs 1 frame; on that frame it calls an inner Window.loop
+  # which also runs 1 frame, draws a cyan box, then breaks.
+  # After the inner loop exits, the outer block breaks too.
+  # Both loops use break to exit, which raises LocalJumpError via Proc#call.
+  outer_ran = false
+  inner_ran = false
+  Window.loop do
+    outer_ran = true
+    Window.loop do
+      inner_ran = true
+      Window.draw_box_fill(200, 200, 230, 215, [0, 255, 255])
+      break
+    end
+    break
+  end
+  results << (outer_ran ? "<span class='pass'>PASS</span> re-entrant Window.loop: outer block ran" :
+                          "<span class='fail'>FAIL</span> re-entrant Window.loop: outer block did not run")
+  results << (inner_ran ? "<span class='pass'>PASS</span> re-entrant Window.loop: inner block ran" :
+                          "<span class='fail'>FAIL</span> re-entrant Window.loop: inner block did not run")
+  results << assert_pixel("game", 215, 207, 0, 255, 255, "re-entrant Window.loop: inner block drew cyan")
+
   # Visual checks
   Window.draw_font(10, 80,  "draw_font: this text should be visible", [255, 255, 255])
   Window.draw_box( 10, 115, 350, 165, [255, 220, 0])
