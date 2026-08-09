@@ -60,8 +60,7 @@ module PicoDX
       end
 
       def draw(x, y, image)
-        @ctx[:fillStyle] = _css(image.color)
-        @ctx.fillRect(x, y, image.width, image.height)
+        @ctx.drawImage(image.canvas, x, y)
       end
 
       def draw_box(x1, y1, x2, y2, color)
@@ -154,8 +153,7 @@ module PicoDX
       private
 
       def _draw_image_at_origin(image, dx = 0, dy = 0)
-        @ctx[:fillStyle] = _css(image.color)
-        @ctx.fillRect(dx, dy, image.width, image.height)
+        @ctx.drawImage(image.canvas, dx, dy)
       end
 
       def _tick
