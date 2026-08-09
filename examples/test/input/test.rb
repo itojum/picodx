@@ -1,8 +1,15 @@
 Window.init("game")
 Window.bgcolor = [20, 20, 40]
 
-ALPHA_KEYS = ('A'..'Z').map { |c| "Key#{c}" }
-ALL_KEYS   = [K_LEFT, K_RIGHT, K_UP, K_DOWN, K_SPACE, K_ESCAPE, K_RETURN] + ALPHA_KEYS
+ALPHA_KEYS  = ('A'..'Z').map { |c| "Key#{c}" }
+DIGIT_KEYS  = [K_0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9]
+NUMPAD_KEYS = [K_NUMPAD0, K_NUMPAD1, K_NUMPAD2, K_NUMPAD3, K_NUMPAD4,
+               K_NUMPAD5, K_NUMPAD6, K_NUMPAD7, K_NUMPAD8, K_NUMPAD9,
+               K_DECIMAL, K_ADD, K_SUBTRACT, K_MULTIPLY, K_DIVIDE, K_NUMRETURN]
+MOD_KEYS    = [K_LSHIFT, K_RSHIFT, K_LCONTROL, K_RCONTROL, K_LALT, K_RALT]
+NAV_KEYS    = [K_TAB, K_BACK, K_DELETE, K_INSERT, K_HOME, K_END, K_PRIOR, K_NEXT]
+ALL_KEYS    = [K_LEFT, K_RIGHT, K_UP, K_DOWN, K_SPACE, K_ESCAPE, K_RETURN] +
+              ALPHA_KEYS + DIGIT_KEYS + NUMPAD_KEYS + MOD_KEYS + NAV_KEYS
 
 last_pushed  = "(none)"
 push_flash   = 0
