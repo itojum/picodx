@@ -122,15 +122,57 @@ module PicoDX
     private
 
     def _collide?(other)
-      ax1 = @x + @collision[0]
-      ay1 = @y + @collision[1]
-      ax2 = @x + @collision[2]
-      ay2 = @y + @collision[3]
-      bx1 = other.x + other.collision[0]
-      by1 = other.y + other.collision[1]
-      bx2 = other.x + other.collision[2]
-      by2 = other.y + other.collision[3]
-      ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
+      ac = @collision
+      bc = other.collision
+      al = ac.length
+      bl = bc.length
+
+      if al == 4
+        ax1 = @x + ac[0]; ay1 = @y + ac[1]
+        ax2 = @x + ac[2]; ay2 = @y + ac[3]
+      elsif al == 3
+        acx = @x + ac[0]; acy = @y + ac[1]; ar = ac[2]
+      else
+        apx = @x + ac[0]; apy = @y + ac[1]
+      end
+
+      if bl == 4
+        bx1 = other.x + bc[0]; by1 = other.y + bc[1]
+        bx2 = other.x + bc[2]; by2 = other.y + bc[3]
+      elsif bl == 3
+        bcx = other.x + bc[0]; bcy = other.y + bc[1]; br = bc[2]
+      else
+        bpx = other.x + bc[0]; bpy = other.y + bc[1]
+      end
+
+      if al == 4 && bl == 4
+        ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
+      elsif al == 4 && bl == 3
+        _rect_circle?(ax1, ay1, ax2, ay2, bcx, bcy, br)
+      elsif al == 4 && bl == 2
+        bpx >= ax1 && bpx <= ax2 && bpy >= ay1 && bpy <= ay2
+      elsif al == 3 && bl == 4
+        _rect_circle?(bx1, by1, bx2, by2, acx, acy, ar)
+      elsif al == 3 && bl == 3
+        dx = acx - bcx; dy = acy - bcy; sr = ar + br
+        dx * dx + dy * dy <= sr * sr
+      elsif al == 3 && bl == 2
+        dx = bpx - acx; dy = bpy - acy
+        dx * dx + dy * dy <= ar * ar
+      elsif al == 2 && bl == 4
+        apx >= bx1 && apx <= bx2 && apy >= by1 && apy <= by2
+      elsif al == 2 && bl == 3
+        dx = apx - bcx; dy = apy - bcy
+        dx * dx + dy * dy <= br * br
+      else
+        apx == bpx && apy == bpy
+      end
+    end
+
+    def _rect_circle?(rx1, ry1, rx2, ry2, cx, cy, r)
+      dx = cx < rx1 ? rx1 - cx : (cx > rx2 ? cx - rx2 : 0)
+      dy = cy < ry1 ? ry1 - cy : (cy > ry2 ? cy - ry2 : 0)
+      dx * dx + dy * dy <= r * r
     end
   end
 end
