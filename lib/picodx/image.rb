@@ -1,6 +1,6 @@
 module PicoDX
   class Image
-    attr_reader :width, :height, :color, :canvas
+    attr_reader :width, :height, :color, :canvas, :_ctx
 
     def initialize(width, height, color = [0, 0, 0])
       @width  = width
@@ -141,6 +141,46 @@ module PicoDX
       @ctx[:fillStyle] = _css(color)
       @ctx.fillText(str, x, y)
       @ctx.restore
+    end
+
+    def to_a
+      data = @ctx.getImageData(0, 0, @width, @height)[:data]
+      result = []
+      n = @width * @height
+      i = 0
+      while i < n
+        j = i * 4
+        result << [data[j].to_i, data[j+1].to_i, data[j+2].to_i, data[j+3].to_i]
+        i += 1
+      end
+      result
+    end
+
+    def compare(x, y, other, ox, oy, w, h)
+      data1 = @ctx.getImageData(x, y, w, h)[:data]
+      data2 = other._ctx.getImageData(ox, oy, w, h)[:data]
+      diff = 0
+      n = w * h
+      i = 0
+      while i < n
+        j = i * 4
+        if data1[j].to_i   != data2[j].to_i   ||
+           data1[j+1].to_i != data2[j+1].to_i ||
+           data1[j+2].to_i != data2[j+2].to_i ||
+           data1[j+3].to_i != data2[j+3].to_i
+          diff += 1
+        end
+        i += 1
+      end
+      diff
+    end
+
+    def change_hue(degree)
+      new_img = Image.new(@width, @height, [0, 0, 0, 0])
+      new_img._ctx[:filter] = "hue-rotate(#{degree}deg)"
+      new_img._ctx.drawImage(@canvas, 0, 0)
+      new_img._ctx[:filter] = "none"
+      new_img
     end
 
     def [](x, y)
