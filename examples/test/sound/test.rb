@@ -12,6 +12,13 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   # --- Setter API (no playback) ---
   snd.set_volume(200)
   results << "<span class='pass'>PASS</span> Sound#set_volume does not raise"
+  results << assert_equal(200, snd.volume, "Sound#volume returns 200 after set_volume(200)")
+
+  snd.set_volume(0)
+  results << assert_equal(0, snd.volume, "Sound#volume returns 0 after set_volume(0)")
+
+  snd.set_volume(255)
+  results << assert_equal(255, snd.volume, "Sound#volume returns 255 after set_volume(255)")
 
   snd.pan = 0.0
   results << "<span class='pass'>PASS</span> Sound#pan= does not raise"
