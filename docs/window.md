@@ -7,6 +7,7 @@
 ```ruby
 Window.init("canvas-id")   # connect to <canvas id="canvas-id">
 Window.bgcolor = [r, g, b] # background color, cleared each frame
+Window.bgcolor             # => [r, g, b]
 Window.width               # canvas width in pixels
 Window.height              # canvas height in pixels
 ```
@@ -17,6 +18,24 @@ Window.height              # canvas height in pixels
 Window.loop do
   # called every animation frame (requestAnimationFrame)
 end
+```
+
+## Frame rate
+
+```ruby
+Window.fps          # => Integer (target FPS, default 60)
+Window.fps = 30     # throttle to 30 FPS
+Window.real_fps     # => Float (actual FPS measured from last frame)
+Window.running_time # => Integer (ms elapsed since Window.loop started)
+```
+
+## Viewport offset
+
+```ruby
+Window.ox = 100   # shift all draw calls right by 100 px
+Window.oy = 50    # shift all draw calls down by 50 px
+Window.ox         # => Integer
+Window.oy         # => Integer
 ```
 
 ## Drawing
