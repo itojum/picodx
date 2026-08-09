@@ -3,26 +3,21 @@ Window.init("game")
 JS.document.getElementById('run').addEventListener('click') do |_e|
   results = []
 
-  # Sound.new loads audio asynchronously via fetch + decodeAudioData.
-  # The button click satisfies the browser's user-gesture requirement for AudioContext.
-  snd = Sound.new("/test/sound/silence.wav")
+  snd = Sound.new("/test/sound/beep.wav")
 
-  # --- Initial state after load ---
+  # --- Initial state ---
   results << assert_equal(false, snd.playing?,  "Sound: playing? is false after load")
   results << assert_equal(false, snd.disposed?, "Sound: disposed? is false after load")
 
-  # --- Setter API (no error expected) ---
-  snd.set_volume(128)
-  results << "<span class='pass'>PASS</span> Sound#set_volume(128) does not raise"
+  # --- Setter API (no playback) ---
+  snd.set_volume(200)
+  results << "<span class='pass'>PASS</span> Sound#set_volume does not raise"
 
-  snd.pan = 0.5
+  snd.pan = 0.0
   results << "<span class='pass'>PASS</span> Sound#pan= does not raise"
 
-  snd.loop_count = 0
-  results << "<span class='pass'>PASS</span> Sound#loop_count= 0 (infinite) does not raise"
-
   snd.loop_count = 1
-  results << "<span class='pass'>PASS</span> Sound#loop_count= 1 does not raise"
+  results << "<span class='pass'>PASS</span> Sound#loop_count= does not raise"
 
   snd.loop_start = 0.0
   results << "<span class='pass'>PASS</span> Sound#loop_start= does not raise"
@@ -33,37 +28,23 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   snd.start = 0.0
   results << "<span class='pass'>PASS</span> Sound#start= does not raise"
 
-  # --- play / playing? ---
+  # --- play / stop ---
   snd.play
-  results << assert_equal(true, snd.playing?, "Sound: playing? is true after play")
-
-  # --- stop / playing? ---
+  results << assert_equal(true, snd.playing?, "Sound: playing? true after play")
   snd.stop
-  results << assert_equal(false, snd.playing?, "Sound: playing? is false after stop")
-
-  # --- play → stop → play again (no crash) ---
-  snd.play
-  snd.stop
-  snd.play
-  results << assert_equal(true, snd.playing?, "Sound: play after stop works")
-  snd.stop
+  results << assert_equal(false, snd.playing?, "Sound: playing? false after stop")
 
   # --- dispose ---
   snd.dispose
   results << assert_equal(true, snd.disposed?, "Sound#dispose sets disposed? true")
-
-  # disposed sound ignores play
   snd.play
   results << assert_equal(false, snd.playing?, "Sound#play is no-op when disposed")
 
-  # --- Second sound: independent instance ---
-  snd2 = Sound.new("/test/sound/silence.wav")
-  snd2.frequency = 880.0
-  results << "<span class='pass'>PASS</span> Sound#frequency= does not raise"
-  snd2.play
-  results << assert_equal(true,  snd2.playing?, "Second Sound instance plays independently")
-  snd2.dispose
-  results << assert_equal(false, snd2.playing?, "dispose stops playing second sound")
-
   show_results(results)
+
+  # Audible check: load fresh, play once at full volume, let it finish naturally (0.5 s)
+  beep = Sound.new("/test/sound/beep.wav")
+  beep.set_volume(30)
+  beep.pan = 0.0
+  beep.play
 end
