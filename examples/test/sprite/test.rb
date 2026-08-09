@@ -112,6 +112,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (!(cr_far === cr_rect) ? "<span class='pass'>PASS</span> circle vs rect: non-overlapping" :
                                       "<span class='fail'>FAIL</span> circle vs rect: should not overlap")
 
+  # --- Rect vs Circle ---
+  results << (cr_rect === cr_circ ? "<span class='pass'>PASS</span> rect vs circle: overlapping" :
+                                    "<span class='fail'>FAIL</span> rect vs circle: should overlap")
+  results << (!(cr_rect === cr_far) ? "<span class='pass'>PASS</span> rect vs circle: non-overlapping" :
+                                      "<span class='fail'>FAIL</span> rect vs circle: should not overlap")
+
   # --- Point vs Rect ---
   pr_pt  = Sprite.new(0, 0, nil); pr_pt.collision  = [15, 15]
   pr_rect = Sprite.new(0, 0, nil); pr_rect.collision = [0, 0, 30, 30]
