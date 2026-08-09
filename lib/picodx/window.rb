@@ -111,8 +111,11 @@ module PicoDX
         @ctx.fillRect(0, 0, @width, @height)
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
-        blk.call
-        @ctx.restore
+        begin
+          blk.call
+        ensure
+          @ctx.restore
+        end
       end
     end
   end
