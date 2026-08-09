@@ -68,6 +68,13 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_scale(250, 178, img2x, 2.0, 2.0)
   results << assert_pixel("game", 255, 183, 255, 128, 0, "Window.draw_scale: pixel inside scaled area is orange")
 
+  # Window.draw_scale with cx/cy: anchor=(5,5) center of 10x10 image, scale=2x
+  # scaled 20x20; anchor maps to (350,140); top-left at (340,130)
+  img_cx = Image.new(10, 10, [255, 128, 0])
+  Window.draw_scale(350, 140, img_cx, 2.0, 2.0, 5, 5)
+  results << assert_pixel("game", 350, 140, 255, 128, 0, "Window.draw_scale(cx,cy): anchor pixel is orange")
+  results << assert_pixel("game", 339, 129, 0,   0,   0, "Window.draw_scale(cx,cy): outside anchor is black")
+
   # Window.draw_rot: rotated image — visual only (transform makes pixel math hard)
   # Window.draw_alpha: semi-transparent draw — visual only
 
