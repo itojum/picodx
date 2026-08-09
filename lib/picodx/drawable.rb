@@ -109,11 +109,11 @@ module PicoDX
       @ctx.fill
     end
 
-    def draw_scale(x, y, image, scale_x, scale_y)
+    def draw_scale(x, y, image, scale_x, scale_y, cx = 0, cy = 0)
       @ctx.save
       @ctx.translate(x, y)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image.canvas, 0, 0)
+      @ctx.drawImage(image.canvas, -cx, -cy)
       @ctx.restore
     end
 
