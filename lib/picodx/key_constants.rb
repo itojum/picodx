@@ -1,4 +1,8 @@
 module PicoDX
+  M_LBUTTON = 0
+  M_RBUTTON = 1
+  M_MBUTTON = 2
+
   K_LEFT   = "ArrowLeft"
   K_RIGHT  = "ArrowRight"
   K_UP     = "ArrowUp"

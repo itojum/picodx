@@ -10,7 +10,7 @@ module PicoDX
         @height  = @canvas[:height].to_i
         @bgcolor = [0, 0, 0]
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
-        Input.setup
+        Input.setup(@canvas)
       end
 
       def bgcolor=(color)
