@@ -1,24 +1,25 @@
 module PicoDX
   class Sprite
     attr_accessor :x, :y, :z, :angle, :scale_x, :scale_y, :center_x, :center_y
-    attr_accessor :alpha, :blend, :visible, :image, :collision, :target
+    attr_accessor :alpha, :blend, :visible, :image, :collision, :target, :offset_sync
 
     def initialize(x = 0, y = 0, image = nil)
-      @x        = x.to_f
-      @y        = y.to_f
-      @z        = 0
-      @angle    = 0
-      @scale_x  = 1.0
-      @scale_y  = 1.0
-      @center_x = nil
-      @center_y = nil
-      @alpha    = 255
-      @blend    = :alpha
-      @visible  = true
-      @image    = image
-      @collision = nil
-      @vanished  = false
-      @target    = nil
+      @x           = x.to_f
+      @y           = y.to_f
+      @z           = 0
+      @angle       = 0
+      @scale_x     = 1.0
+      @scale_y     = 1.0
+      @center_x    = nil
+      @center_y    = nil
+      @alpha       = 255
+      @blend       = :alpha
+      @visible     = true
+      @image       = image
+      @collision   = nil
+      @vanished    = false
+      @target      = nil
+      @offset_sync = false
     end
 
     def draw
@@ -122,14 +123,19 @@ module PicoDX
     private
 
     def _collide?(other)
-      ax1 = @x + @collision[0]
-      ay1 = @y + @collision[1]
-      ax2 = @x + @collision[2]
-      ay2 = @y + @collision[3]
-      bx1 = other.x + other.collision[0]
-      by1 = other.y + other.collision[1]
-      bx2 = other.x + other.collision[2]
-      by2 = other.y + other.collision[3]
+      aox = @offset_sync       ? -(@center_x || 0) : 0
+      aoy = @offset_sync       ? -(@center_y || 0) : 0
+      box = other.offset_sync  ? -(other.center_x || 0) : 0
+      boy = other.offset_sync  ? -(other.center_y || 0) : 0
+
+      ax1 = @x + aox + @collision[0]
+      ay1 = @y + aoy + @collision[1]
+      ax2 = @x + aox + @collision[2]
+      ay2 = @y + aoy + @collision[3]
+      bx1 = other.x + box + other.collision[0]
+      by1 = other.y + boy + other.collision[1]
+      bx2 = other.x + box + other.collision[2]
+      by2 = other.y + boy + other.collision[3]
       ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
     end
   end

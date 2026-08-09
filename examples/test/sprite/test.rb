@@ -93,6 +93,37 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Sprite.draw([sp_red2, sp_blue2])
   results << assert_pixel("game", 380, 80, 255, 0, 0, "Sprite.draw(array): z=2 red drawn on top of z=1 blue")
 
+  # --- Sprite#offset_sync ---
+  # Default is false
+  os_def = Sprite.new(0, 0, nil)
+  results << assert_equal(false, os_def.offset_sync, "Sprite#offset_sync default is false")
+
+  # offset_sync=true: collision shifted by -center_x/-center_y
+  # Sprite at (100,100), center=(50,50), collision [0,0,10,10]
+  # → effective rect (50,50)-(60,60)
+  os_a = Sprite.new(100, 100, nil)
+  os_a.center_x    = 50
+  os_a.center_y    = 50
+  os_a.offset_sync = true
+  os_a.collision   = [0, 0, 10, 10]
+
+  # Sprite at (55,55), no offset, collision [0,0,10,10] → rect (55,55)-(65,65)
+  os_b = Sprite.new(55, 55, nil)
+  os_b.collision = [0, 0, 10, 10]
+
+  results << (os_a === os_b ? "<span class='pass'>PASS</span> offset_sync=true: collision shifts to overlap" :
+                              "<span class='fail'>FAIL</span> offset_sync=true: should overlap after shift")
+
+  # Without offset_sync the same sprite at (100,100) does NOT reach (55,55)-(65,65)
+  os_c = Sprite.new(100, 100, nil)
+  os_c.center_x    = 50
+  os_c.center_y    = 50
+  os_c.offset_sync = false
+  os_c.collision   = [0, 0, 10, 10]
+
+  results << (!(os_c === os_b) ? "<span class='pass'>PASS</span> offset_sync=false: no shift, no overlap" :
+                                 "<span class='fail'>FAIL</span> offset_sync=false: should not overlap without shift")
+
   # --- Sprite.clean(array) ---
   live = Sprite.new(0, 0, nil)
   dead = Sprite.new(0, 0, nil)
