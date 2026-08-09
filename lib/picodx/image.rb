@@ -1,6 +1,10 @@
 module PicoDX
   class Image
-    attr_reader :width, :height, :color, :canvas, :_ctx
+    attr_reader :width, :height, :color, :canvas
+
+    def _ctx
+      @ctx
+    end
 
     def initialize(width, height, color = [0, 0, 0])
       @width  = width
