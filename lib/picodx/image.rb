@@ -103,6 +103,15 @@ module PicoDX
       @ctx.drawImage(other_image.canvas, x, y)
     end
 
+    def draw_font(x, y, str, font, color = [255, 255, 255])
+      @ctx.save
+      @ctx[:fillStyle]    = _css(color)
+      @ctx[:font]         = font._css_font
+      @ctx[:textBaseline] = 'top'
+      @ctx.fillText(str, x, y)
+      @ctx.restore
+    end
+
     def [](x, y)
       data = @ctx.getImageData(x, y, 1, 1)[:data]
       [data[0].to_i, data[1].to_i, data[2].to_i, data[3].to_i]
