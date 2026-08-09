@@ -13,9 +13,9 @@
 <body>
   <div><a href="../index.html">← Tests</a></div>
   <h1>Input Test</h1>
-  <p>Hold a key — <code>key_down?</code> shows the name while held.</p>
-  <p>Tap a key — blue bar flashes <strong>once</strong> and <code>key_push?</code> updates. Holding must not repeat the flash.</p>
-  <canvas id="game" width="640" height="300"></canvas>
+  <p>Hold a key — <code>key_down?</code> shows the name while held. Tap — blue bar flashes once (<code>key_push?</code>). Release — orange bar flashes once (<code>key_release?</code>).</p>
+  <p>Arrows / WASD → <code>Input.x</code> / <code>Input.y</code> axis. Move mouse over canvas → coordinates. Click → button state. Scroll → <code>mouse_wheel_pos</code>.</p>
+  <canvas id="game" width="640" height="500"></canvas>
   <script type="text/ruby" src="/lib/picodx.rb"></script>
   <script type="text/ruby" src="/test/input/test.rb"></script>
   <script src="/init.iife.js"></script>
