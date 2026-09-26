@@ -5,20 +5,20 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
 
   snd = Sound.new("/test/sound/beep.wav")
 
-  # --- Initial state ---
-  results << assert_equal(false, snd.playing?,  "Sound: playing? is false after load")
+  # --- DXRuby compatibility surface ---
+  results << assert_equal(false, snd.respond_to?(:playing?), "Sound#playing? is not public")
+  results << assert_equal(false, snd.respond_to?(:volume),   "Sound#volume is not public")
   results << assert_equal(false, snd.disposed?, "Sound: disposed? is false after load")
 
   # --- Setter API (no playback) ---
   snd.set_volume(200)
   results << "<span class='pass'>PASS</span> Sound#set_volume does not raise"
-  results << assert_equal(200, snd.volume, "Sound#volume returns 200 after set_volume(200)")
 
   snd.set_volume(0)
-  results << assert_equal(0, snd.volume, "Sound#volume returns 0 after set_volume(0)")
+  results << "<span class='pass'>PASS</span> Sound#set_volume(0) does not raise"
 
   snd.set_volume(255)
-  results << assert_equal(255, snd.volume, "Sound#volume returns 255 after set_volume(255)")
+  results << "<span class='pass'>PASS</span> Sound#set_volume(255) does not raise"
 
   snd.pan = 0.0
   results << "<span class='pass'>PASS</span> Sound#pan= does not raise"
@@ -37,15 +37,15 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
 
   # --- play / stop ---
   snd.play
-  results << assert_equal(true, snd.playing?, "Sound: playing? true after play")
+  results << "<span class='pass'>PASS</span> Sound#play does not raise"
   snd.stop
-  results << assert_equal(false, snd.playing?, "Sound: playing? false after stop")
+  results << "<span class='pass'>PASS</span> Sound#stop does not raise"
 
   # --- dispose ---
   snd.dispose
   results << assert_equal(true, snd.disposed?, "Sound#dispose sets disposed? true")
   snd.play
-  results << assert_equal(false, snd.playing?, "Sound#play is no-op when disposed")
+  results << "<span class='pass'>PASS</span> Sound#play remains callable after dispose"
 
   show_results(results)
 

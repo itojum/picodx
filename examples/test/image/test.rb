@@ -99,15 +99,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_scale(260, 0, gear, 0.625, 0.625)
   Window.draw_font(262, 143, "Image.load (visual)", [140, 140, 140], 10)
 
-  # --- Image#to_a ---
-  img_toa = Image.new(2, 1, [100, 150, 200])
-  arr = img_toa.to_a
-  results << assert_equal(2,   arr.length, "Image#to_a returns 2 elements for 2x1 image")
-  results << assert_equal(100, arr[0][0],  "Image#to_a pixel[0] r=100")
-  results << assert_equal(150, arr[0][1],  "Image#to_a pixel[0] g=150")
-  results << assert_equal(200, arr[0][2],  "Image#to_a pixel[0] b=200")
-  results << assert_equal(255, arr[0][3],  "Image#to_a pixel[0] a=255 (opaque)")
-  results << assert_equal(100, arr[1][0],  "Image#to_a pixel[1] r=100")
+  # --- DXRuby compatibility surface ---
+  img_api = Image.new(2, 1, [100, 150, 200])
+  results << assert_equal(false, img_api.respond_to?(:to_a),       "Image#to_a is not public")
+  results << assert_equal(false, img_api.respond_to?(:change_hue), "Image#change_hue is not public")
+  results << assert_equal(false, img_api.respond_to?(:canvas),     "Image#canvas is not public")
+  results << assert_equal(false, img_api.respond_to?(:color),      "Image#color is not public")
 
   # --- Image#compare ---
   img_cmp_a = Image.new(4, 4, [255, 0, 0])
@@ -118,14 +115,15 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   img_cmp_b[0, 0] = [0, 0, 255]
   results << assert_equal(2, img_cmp_a.compare(0, 0, img_cmp_b, 0, 0, 4, 4), "Image#compare two diff pixels → 2")
 
-  # --- Image#change_hue ---
+  # --- Image#change_hls ---
   img_red = Image.new(10, 10, [255, 0, 0])
-  img_rot = img_red.change_hue(120)
-  results << assert_equal(10, img_rot.width,  "Image#change_hue returns correct width")
-  results << assert_equal(10, img_rot.height, "Image#change_hue returns correct height")
+  img_rot = img_red.change_hls(120, 0, 0)
+  results << assert_equal(true,  img_red.respond_to?(:change_hls), "Image#change_hls is public")
+  results << assert_equal(10, img_rot.width,  "Image#change_hls returns correct width")
+  results << assert_equal(10, img_rot.height, "Image#change_hls returns correct height")
   px_rot = img_rot[5, 5]
-  results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hue(120) on red → green dominant #{px_rot.inspect}" :
-                                      "<span class='fail'>FAIL</span> Image#change_hue(120) expected green dominant, got #{px_rot.inspect}")
+  results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
+                                      "<span class='fail'>FAIL</span> Image#change_hls(120, 0, 0) expected green dominant, got #{px_rot.inspect}")
   Window.draw(0, 200, img_red)
   Window.draw(15, 200, img_rot)
 
@@ -133,7 +131,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_font(0,  60, "new / fill / box_fill / circle_fill", [140, 140, 140], 10)
   Window.draw_font(0, 128, "line / box / circle / triangle_fill", [140, 140, 140], 10)
   Window.draw_font(0, 190, "slice / dup / Image#draw   ([]= / [] tested via assert_equal)", [140, 140, 140], 10)
-  Window.draw_font(0, 213, "change_hue: red → green (visual)", [140, 140, 140], 10)
+  Window.draw_font(0, 213, "change_hls: red → green (visual)", [140, 140, 140], 10)
 
   show_results(results)
 end

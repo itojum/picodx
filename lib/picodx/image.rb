@@ -1,6 +1,10 @@
 module PicoDX
   class Image
-    attr_reader :width, :height, :color, :canvas
+    attr_reader :width, :height
+
+    def _canvas
+      @canvas
+    end
 
     def _ctx
       @ctx
@@ -104,7 +108,7 @@ module PicoDX
     end
 
     def draw(x, y, other_image)
-      @ctx.drawImage(other_image.canvas, x, y)
+      @ctx.drawImage(other_image._canvas, x, y)
     end
 
     def draw_font(x, y, str, font, color = [255, 255, 255])
@@ -147,19 +151,6 @@ module PicoDX
       @ctx.restore
     end
 
-    def to_a
-      data = @ctx.getImageData(0, 0, @width, @height)[:data]
-      result = []
-      n = @width * @height
-      i = 0
-      while i < n
-        j = i * 4
-        result << [data[j].to_i, data[j+1].to_i, data[j+2].to_i, data[j+3].to_i]
-        i += 1
-      end
-      result
-    end
-
     def compare(x, y, other, ox, oy, w, h)
       data1 = @ctx.getImageData(x, y, w, h)[:data]
       data2 = other._ctx.getImageData(ox, oy, w, h)[:data]
@@ -179,9 +170,11 @@ module PicoDX
       diff
     end
 
-    def change_hue(degree)
+    def change_hls(hue, luminance = 0, saturation = 0)
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
-      new_img._ctx[:filter] = "hue-rotate(#{degree}deg)"
+      brightness = [100 + luminance.to_f, 0].max
+      saturation = [100 + saturation.to_f, 0].max
+      new_img._ctx[:filter] = "hue-rotate(#{hue}deg) brightness(#{brightness}%) saturate(#{saturation}%)"
       new_img._ctx.drawImage(@canvas, 0, 0)
       new_img._ctx[:filter] = "none"
       new_img

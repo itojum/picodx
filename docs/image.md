@@ -11,8 +11,6 @@ img = Image.new(width, height, [r, g, b, a])  # a: 0–255
 
 img.width   # => Integer
 img.height  # => Integer
-img.color   # => the color passed to new (constructor snapshot)
-img.canvas  # => OffscreenCanvas (for internal use / Window.draw)
 ```
 
 ## Class methods
@@ -52,4 +50,10 @@ img[x, y] = color  # color = [r, g, b] or [r, g, b, a]
 img.slice(x, y, w, h)  # => new Image (sub-region)
 img.dup                 # => new Image (full copy)
 img.clone               # alias for dup
+```
+
+## Color adjustment
+
+```ruby
+img.change_hls(hue, luminance, saturation)  # => new Image
 ```
