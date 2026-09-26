@@ -56,6 +56,7 @@ img.clone               # alias for dup
 
 ```ruby
 img.change_hls(hue, luminance, saturation)  # => new Image
+img.change_hls(hue, luminance = 0, saturation = 0)  # luminance / saturation are optional
 ```
 
 - `hue` is added in degrees around the color wheel.

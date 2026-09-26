@@ -170,7 +170,7 @@ module PicoDX
       hue_shift        = hue.to_f
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
-      return dup if hue_shift == 0.0 && luminance_delta == 0.0 && saturation_delta == 0.0
+      return dup if hue_shift.zero? && luminance_delta.zero? && saturation_delta.zero?
 
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
       src_data = @ctx.getImageData(0, 0, @width, @height)[:data]
