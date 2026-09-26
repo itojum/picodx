@@ -124,6 +124,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   px_rot = img_rot[5, 5]
   results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
                                       "<span class='fail'>FAIL</span> Image#change_hls(120, 0, 0) expected green dominant, got #{px_rot.inspect}")
+  bright_px = Image.new(1, 1, [64, 64, 64]).change_hls(0, 20, 0)[0, 0]
+  results << (bright_px[0] > 64 && bright_px[1] > 64 && bright_px[2] > 64 ? "<span class='pass'>PASS</span> Image#change_hls luminance raises lightness #{bright_px.inspect}" :
+                                                                              "<span class='fail'>FAIL</span> Image#change_hls luminance did not raise lightness: #{bright_px.inspect}")
+  gray_px = Image.new(1, 1, [255, 0, 0]).change_hls(0, 0, -100)[0, 0]
+  results << (gray_px[0] == gray_px[1] && gray_px[1] == gray_px[2] ? "<span class='pass'>PASS</span> Image#change_hls saturation -100 desaturates #{gray_px.inspect}" :
+                                                                      "<span class='fail'>FAIL</span> Image#change_hls saturation -100 did not desaturate: #{gray_px.inspect}")
   Window.draw(0, 200, img_red)
   Window.draw(15, 200, img_rot)
 

@@ -57,3 +57,10 @@ img.clone               # alias for dup
 ```ruby
 img.change_hls(hue, luminance, saturation)  # => new Image
 ```
+
+- `hue` is added in degrees around the color wheel.
+- `luminance` and `saturation` are additive percentage-point adjustments.
+  - `0` keeps the original value
+  - positive values increase lightness / saturation
+  - negative values decrease lightness / saturation
+- `luminance` and `saturation` are clamped to the valid range after adjustment.
