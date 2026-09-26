@@ -171,14 +171,7 @@ module PicoDX
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
       return dup if hue_shift.zero? && luminance_delta.zero? && saturation_delta.zero?
-
-      if luminance_delta.zero? && saturation_delta.zero?
-        new_img = Image.new(@width, @height, [0, 0, 0, 0])
-        new_img._ctx[:filter] = "hue-rotate(#{hue_shift}deg)"
-        new_img._ctx.drawImage(@canvas, 0, 0)
-        new_img._ctx[:filter] = "none"
-        return new_img
-      end
+      hue_only = luminance_delta.zero? && saturation_delta.zero?
 
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
       src_data = @ctx.getImageData(0, 0, @width, @height)[:data]
@@ -195,8 +188,10 @@ module PicoDX
 
         h, l, s = _rgb_to_hls(r, g, b)
         h = (h + hue_shift) % 360
-        l = _clamp01(l + luminance_delta)
-        s = _clamp01(s + saturation_delta)
+        unless hue_only
+          l = _clamp01(l + luminance_delta)
+          s = _clamp01(s + saturation_delta)
+        end
         nr, ng, nb = _hls_to_rgb(h, l, s)
 
         dst_data[j]     = (nr * 255).round

@@ -59,7 +59,7 @@ img.change_hls(hue, luminance, saturation)  # => new Image
 img.change_hls(hue = 0, luminance = 0, saturation = 0)  # all adjustments are optional
 ```
 
-- `hue` is added in degrees around the color wheel.
+- `hue` is added in degrees around the color wheel and normalized modulo 360.
 - `luminance` and `saturation` are additive percentage-point adjustments.
   - `0` keeps the original value
   - positive values increase lightness / saturation
