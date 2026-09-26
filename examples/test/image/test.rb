@@ -105,6 +105,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(false, img_api.respond_to?(:change_hue), "Image#change_hue is not public")
   results << assert_equal(false, img_api.respond_to?(:canvas),     "Image#canvas is not public")
   results << assert_equal(false, img_api.respond_to?(:color),      "Image#color is not public")
+  results << assert_equal(false, Image.public_instance_methods.include?(:_canvas), "Image#_canvas is not public")
 
   # --- Image#compare ---
   img_cmp_a = Image.new(4, 4, [255, 0, 0])
@@ -121,6 +122,8 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(true,  img_red.respond_to?(:change_hls), "Image#change_hls is public")
   results << assert_equal(10, img_rot.width,  "Image#change_hls returns correct width")
   results << assert_equal(10, img_rot.height, "Image#change_hls returns correct height")
+  img_same = img_red.change_hls(0, 0, 0)
+  results << assert_equal(0, img_red.compare(0, 0, img_same, 0, 0, 10, 10), "Image#change_hls(0, 0, 0) keeps pixels unchanged")
   px_rot = img_rot[5, 5]
   results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
                                       "<span class='fail'>FAIL</span> Image#change_hls(120, 0, 0) expected green dominant, got #{px_rot.inspect}")

@@ -2,10 +2,6 @@ module PicoDX
   class Image
     attr_reader :width, :height
 
-    def _canvas
-      @canvas
-    end
-
     def _ctx
       @ctx
     end
@@ -108,7 +104,7 @@ module PicoDX
     end
 
     def draw(x, y, other_image)
-      @ctx.drawImage(other_image._canvas, x, y)
+      @ctx.drawImage(other_image.__send__(:_canvas), x, y)
     end
 
     def draw_font(x, y, str, font, color = [255, 255, 255])
@@ -174,6 +170,8 @@ module PicoDX
       hue_shift        = hue.to_f
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
+      return dup if hue_shift == 0.0 && luminance_delta == 0.0 && saturation_delta == 0.0
+
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
       src_data = @ctx.getImageData(0, 0, @width, @height)[:data]
       dst_img  = new_img._ctx.createImageData(@width, @height)
@@ -240,6 +238,10 @@ module PicoDX
     end
 
     private
+
+    def _canvas
+      @canvas
+    end
 
     def _css(color)
       r, g, b, a = color
