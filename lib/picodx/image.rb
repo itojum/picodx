@@ -104,7 +104,7 @@ module PicoDX
     end
 
     def draw(x, y, other_image)
-      @ctx.drawImage(other_image.__send__(:_canvas), x, y)
+      @ctx.drawImage(other_image._ctx[:canvas], x, y)
     end
 
     def draw_font(x, y, str, font, color = [255, 255, 255])
@@ -166,7 +166,7 @@ module PicoDX
       diff
     end
 
-    def change_hls(hue, luminance = 0, saturation = 0)
+    def change_hls(hue = 0, luminance = 0, saturation = 0)
       hue_shift        = hue.to_f
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
@@ -238,10 +238,6 @@ module PicoDX
     end
 
     private
-
-    def _canvas
-      @canvas
-    end
 
     def _css(color)
       r, g, b, a = color
