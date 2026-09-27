@@ -1,7 +1,7 @@
 module PicoDX
   module Drawable
     def draw(x, y, image)
-      @ctx.drawImage(image.canvas, x, y)
+      @ctx.drawImage(image._ctx[:canvas], x, y)
     end
 
     def draw_box(x1, y1, x2, y2, color)
@@ -113,7 +113,7 @@ module PicoDX
       @ctx.save
       @ctx.translate(x, y)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image.canvas, -cx, -cy)
+      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
     end
 
@@ -122,14 +122,14 @@ module PicoDX
       @ctx.save
       @ctx.translate(x, y)
       @ctx.rotate(rad)
-      @ctx.drawImage(image.canvas, -cx, -cy)
+      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
     end
 
     def draw_alpha(x, y, image, alpha)
       @ctx.save
       @ctx[:globalAlpha] = alpha.to_f / 255
-      @ctx.drawImage(image.canvas, x, y)
+      @ctx.drawImage(image._ctx[:canvas], x, y)
       @ctx.restore
     end
 
@@ -148,7 +148,7 @@ module PicoDX
       @ctx.translate(x, y)
       @ctx.rotate(rad)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image.canvas, -cx, -cy)
+      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
     end
 
@@ -171,7 +171,7 @@ module PicoDX
           next if idx.nil?
           chip = flat[idx]
           next if chip.nil?
-          @ctx.drawImage(chip.canvas, x + col * tw - px_ox, y + row * th - px_oy)
+          @ctx.drawImage(chip._ctx[:canvas], x + col * tw - px_ox, y + row * th - px_oy)
         end
       end
     end

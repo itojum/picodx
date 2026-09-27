@@ -1,8 +1,5 @@
 module PicoDX
   class Font
-    NORMAL = 400
-    BOLD   = 700
-
     class << self
       def default
         @default ||= new(16)
@@ -19,7 +16,7 @@ module PicoDX
       @size     = size
       @fontname = name.to_s
       @italic   = options[:italic] || false
-      @weight   = options[:weight] || NORMAL
+      @weight   = options[:weight] || 400
     end
 
     alias name fontname
@@ -28,13 +25,6 @@ module PicoDX
       @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
       @measure_ctx[:font] = _css_font
       @measure_ctx.measureText(str)[:width].to_i
-    end
-
-    def get_height
-      @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
-      @measure_ctx[:font] = _css_font
-      m = @measure_ctx.measureText("Mg")
-      m[:actualBoundingBoxAscent].to_i + m[:actualBoundingBoxDescent].to_i
     end
 
     def _css_font
