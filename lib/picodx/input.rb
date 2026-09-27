@@ -16,6 +16,17 @@ module PicoDX
     @mouse_released  = {}
     @mouse_wheel_pos = 0
 
+    # Gamepad state (up to 4 pads)
+    @pad_count          = 0
+    @pad_btns_down      = []
+    @pad_btns_prev      = []
+    @pad_btns_pushed    = []
+    @pad_btns_released  = []
+    @pad_hold_frames    = []
+    @pad_axes_data      = []
+    @pad_repeat_initial = []
+    @pad_repeat_interval= []
+
     class << self
       attr_reader :mouse_x, :mouse_y, :mouse_wheel_pos
 
@@ -63,6 +74,11 @@ module PicoDX
         @key_repeat[key] = [initial, interval]
       end
 
+      def set_pad_repeat(initial, interval, padnum = 0)
+        @pad_repeat_initial[padnum]  = initial
+        @pad_repeat_interval[padnum] = interval
+      end
+
       def _update
         new_pushed   = {}
         new_released = {}
@@ -100,6 +116,8 @@ module PicoDX
         @mouse_pushed   = new_mouse_pushed
         @mouse_released = new_mouse_released
         @mouse_prev.replace(@mouse_down)
+
+        _update_gamepads
       end
 
       def key_down?(key)
@@ -144,6 +162,169 @@ module PicoDX
 
       def mouse_release?(btn)
         @mouse_released[btn] || false
+      end
+
+      # --- Gamepad API ---
+
+      def pad_num
+        @pad_count
+      end
+
+      def pad_down?(button, padnum = 0)
+        return false unless (btns = @pad_btns_down[padnum])
+        btns[button] || false
+      end
+
+      def pad_push?(button, padnum = 0)
+        return false unless (btns = @pad_btns_pushed[padnum])
+        btns[button] || false
+      end
+
+      def pad_release?(button, padnum = 0)
+        return false unless (btns = @pad_btns_released[padnum])
+        btns[button] || false
+      end
+
+      def pad_axis(padnum = 0)
+        @pad_axes_data[padnum] || []
+      end
+
+      def pad_lx(padnum = 0)
+        axes = @pad_axes_data[padnum]
+        axes ? (axes[0] || 0.0) : 0.0
+      end
+
+      def pad_ly(padnum = 0)
+        axes = @pad_axes_data[padnum]
+        axes ? (axes[1] || 0.0) : 0.0
+      end
+
+      def pad_rx(padnum = 0)
+        axes = @pad_axes_data[padnum]
+        axes ? (axes[2] || 0.0) : 0.0
+      end
+
+      def pad_ry(padnum = 0)
+        axes = @pad_axes_data[padnum]
+        axes ? (axes[3] || 0.0) : 0.0
+      end
+
+      def pad_lstick(padnum = 0)
+        [pad_lx(padnum), pad_ly(padnum)]
+      end
+
+      def pad_rstick(padnum = 0)
+        [pad_rx(padnum), pad_ry(padnum)]
+      end
+
+      def pad_pov_x(padnum = 0)
+        if pad_down?(P_LEFT, padnum)
+          -1
+        elsif pad_down?(P_RIGHT, padnum)
+          1
+        else
+          0
+        end
+      end
+
+      def pad_pov_y(padnum = 0)
+        if pad_down?(P_UP, padnum)
+          -1
+        elsif pad_down?(P_DOWN, padnum)
+          1
+        else
+          0
+        end
+      end
+
+      def pad_pov(padnum = 0)
+        px = pad_pov_x(padnum)
+        py = pad_pov_y(padnum)
+        return -1 if px == 0 && py == 0
+        angle = (Math.atan2(py, px) * 180.0 / Math::PI).round
+        angle < 0 ? angle + 360 : angle
+      end
+
+      private
+
+      def _update_gamepads
+        # Serialize all gamepad state to a string: "b0,b1,...|a0,a1,...;..." per pad
+        raw = JS.eval(
+          "(() => {" \
+          "  const gs = Array.from(navigator.getGamepads()).filter(Boolean);" \
+          "  if (!gs.length) return '';" \
+          "  return gs.map(g => g.buttons.map(b => b.pressed ? 1 : 0).join(',') + '|' + Array.from(g.axes).join(',')).join(';');" \
+          "})()"
+        ).to_s
+
+        if raw.empty?
+          @pad_count         = 0
+          @pad_btns_down     = []
+          @pad_btns_pushed   = []
+          @pad_btns_released = []
+          @pad_axes_data     = []
+          @pad_btns_prev     = []
+          @pad_hold_frames   = []
+          return
+        end
+
+        pads_raw = raw.split(';')
+        @pad_count = pads_raw.length
+
+        pads_raw.each_with_index do |pad_raw, pi|
+          btn_str, axis_str = pad_raw.split('|')
+
+          new_down = {}
+          (btn_str || "").split(',').each_with_index do |v, bi|
+            new_down[bi] = true if v.to_i == 1
+          end
+
+          @pad_btns_prev[pi]  ||= {}
+          @pad_hold_frames[pi] ||= {}
+          prev = @pad_btns_prev[pi]
+          hold = @pad_hold_frames[pi]
+          pushed   = {}
+          released = {}
+          ini  = @pad_repeat_initial[pi]  || 0
+          rep  = @pad_repeat_interval[pi] || 0
+
+          new_down.each_key do |bi|
+            if prev.key?(bi)
+              hold[bi] = (hold[bi] || 0) + 1
+              frames = hold[bi]
+              if rep > 0 && frames >= ini && (frames - ini) % rep == 0
+                pushed[bi] = true
+              end
+            else
+              pushed[bi] = true
+              hold[bi] = 0
+            end
+          end
+          prev.each_key do |bi|
+            unless new_down.key?(bi)
+              released[bi] = true
+              hold.delete(bi)
+            end
+          end
+
+          @pad_btns_down[pi]     = new_down
+          @pad_btns_pushed[pi]   = pushed
+          @pad_btns_released[pi] = released
+          @pad_btns_prev[pi]     = new_down.dup
+
+          axes = (axis_str || "").split(',').map { |v| v.to_f }
+          @pad_axes_data[pi] = axes
+        end
+
+        # Clear state for pads no longer connected
+        (@pad_count...@pad_btns_down.length).each do |pi|
+          @pad_btns_down[pi]     = {}
+          @pad_btns_pushed[pi]   = {}
+          @pad_btns_released[pi] = {}
+          @pad_axes_data[pi]     = []
+          @pad_btns_prev[pi]     = {}
+          @pad_hold_frames[pi]   = {}
+        end
       end
     end
   end

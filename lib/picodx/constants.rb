@@ -45,6 +45,25 @@ module PicoDX
   K_DIVIDE    = "NumpadDivide"
   K_NUMRETURN = "NumpadEnter"
 
+  # Gamepad button constants (Gamepad API "standard" mapping)
+  P_A     = 0   # A / Cross
+  P_B     = 1   # B / Circle
+  P_C     = 2   # X / Square
+  P_D     = 3   # Y / Triangle
+  P_E     = 4   # LB / L1
+  P_F     = 5   # RB / R1
+  P_G     = 6   # LT / L2
+  P_H     = 7   # RT / R2
+  P_UP    = 12  # D-pad Up
+  P_DOWN  = 13  # D-pad Down
+  P_LEFT  = 14  # D-pad Left
+  P_RIGHT = 15  # D-pad Right
+  P_START = 9   # Start / Options
+  P_SELECT= 8   # Back / Select
+  P_L3    = 10  # Left stick click
+  P_R3    = 11  # Right stick click
+  (0..15).each { |i| const_set("P_#{i}", i) }
+
   C_BLACK   = [0,   0,   0  ]
   C_WHITE   = [255, 255, 255]
   C_RED     = [255, 0,   0  ]
