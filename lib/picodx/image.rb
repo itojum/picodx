@@ -192,6 +192,7 @@ module PicoDX
     end
 
     def []=(x, y, color)
+      @ctx.clearRect(x, y, 1, 1)
       @ctx[:fillStyle] = _css(color)
       @ctx.fillRect(x, y, 1, 1)
     end
