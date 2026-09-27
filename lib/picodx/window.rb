@@ -41,6 +41,7 @@ module PicoDX
         @ox       = 0
         @oy       = 0
         @looping  = false
+        @draw_queue = nil
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
       end
@@ -134,11 +135,15 @@ module PicoDX
         Input._update
         @ctx[:fillStyle] = _css(@bgcolor)
         @ctx.fillRect(0, 0, @width, @height)
+        saved_queue = @draw_queue
+        @draw_queue = []
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
         begin
           blk.call
         ensure
+          _flush_draw_queue
+          @draw_queue = saved_queue
           @ctx.restore
         end
       end

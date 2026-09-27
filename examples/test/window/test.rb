@@ -153,5 +153,24 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_box( 10, 115, 350, 165, [255, 220, 0])
   Window.draw_font(10, 172, "draw_box: yellow outline above should be visible", [180, 180, 180], 12)
 
+  # --- z-order tests: must run inside Window.loop so _flush_draw_queue is called ---
+  Window.loop do
+    # higher z drawn on top regardless of call order
+    Window.draw_box_fill(10, 100, 50, 120, [255, 0, 0], z: 0)
+    Window.draw_box_fill(10, 100, 50, 120, [0, 0, 255], z: 1)
+
+    # reversed call order: lower z called last but still renders below
+    Window.draw_box_fill(60, 100, 100, 120, [0, 128, 0], z: 1)
+    Window.draw_box_fill(60, 100, 100, 120, [255, 0, 0], z: 0)
+
+    # same z preserves call order (cyan overwrites magenta)
+    Window.draw_box_fill(110, 100, 150, 120, [255, 0, 255], z: 0)
+    Window.draw_box_fill(110, 100, 150, 120, [0, 255, 255], z: 0)
+    break
+  end
+  results << assert_pixel("game", 30,  110, 0,   0,   255, "z-order: higher-z (blue z:1) is drawn on top of lower-z (red z:0)")
+  results << assert_pixel("game", 80,  110, 0,   128, 0,   "z-order: lower-z (red z:0) does not overwrite higher-z (green z:1)")
+  results << assert_pixel("game", 130, 110, 0,   255, 255, "z-order: same z preserves call order (cyan overwrites magenta)")
+
   show_results(results)
 end
