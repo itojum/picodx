@@ -136,6 +136,18 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.height = 220
   Window.init("game")
 
+  # Stale-preset regression: dimensions set on one canvas must NOT bleed into
+  # a subsequent Window.init with a different canvas (game2 is 200x100).
+  Window.init("game")
+  Window.width  = 800
+  Window.height = 600
+  Window.init("game2")
+  results << assert_equal(200, Window.width,                                          "switching canvas: old preset width not applied to game2")
+  results << assert_equal(100, Window.height,                                         "switching canvas: old preset height not applied to game2")
+  results << assert_equal(200, JS.document.getElementById("game2")[:width].to_i,     "switching canvas: game2 DOM width is its own 200")
+  results << assert_equal(100, JS.document.getElementById("game2")[:height].to_i,    "switching canvas: game2 DOM height is its own 100")
+  Window.init("game")
+
   # Visual checks
   Window.draw_font(10, 80,  "draw_font: this text should be visible", [255, 255, 255])
   Window.draw_box( 10, 115, 350, 165, [255, 220, 0])
