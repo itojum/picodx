@@ -69,7 +69,7 @@ npm publish
 
 ### Win32 / デスクトップ専用
 - `Window.hWnd` — Win32 ウィンドウハンドル
-- `Window.full_screen?=` / `Window.windowed?=` — フルスクリーン切替
+- `Window.full_screen=` / `Window.windowed=` — フルスクリーン切替
 - `Window.get_screen_modes` / `Window.get_current_modes` — 画面解像度列挙
 - `Window.load_icon` — ウィンドウアイコン設定
 - `Window.open_filename` / `Window.save_filename` / `Window.folder_dialog` — ファイルダイアログ
