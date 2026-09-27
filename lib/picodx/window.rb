@@ -7,7 +7,7 @@ module PicoDX
 
       def width=(value)
         @preset_width = value
-        @preset_canvas_id = @canvas_id if @canvas_id
+        @preset_width_canvas_id = @canvas_id if @canvas_id
         if @canvas
           @canvas[:width] = value
           @width = value
@@ -16,7 +16,7 @@ module PicoDX
 
       def height=(value)
         @preset_height = value
-        @preset_canvas_id = @canvas_id if @canvas_id
+        @preset_height_canvas_id = @canvas_id if @canvas_id
         if @canvas
           @canvas[:height] = value
           @height = value
@@ -27,10 +27,12 @@ module PicoDX
         @canvas_id = canvas_id
         @canvas   = JS.document.getElementById(canvas_id)
         @ctx      = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-        apply_preset = @preset_canvas_id.nil? || @preset_canvas_id == canvas_id
-        @canvas[:width]  = @preset_width  if apply_preset && @preset_width
-        @canvas[:height] = @preset_height if apply_preset && @preset_height
-        @preset_canvas_id = canvas_id if apply_preset && (@preset_width || @preset_height)
+        apply_width  = @preset_width_canvas_id.nil? || @preset_width_canvas_id == canvas_id
+        apply_height = @preset_height_canvas_id.nil? || @preset_height_canvas_id == canvas_id
+        @canvas[:width]  = @preset_width  if apply_width && @preset_width
+        @canvas[:height] = @preset_height if apply_height && @preset_height
+        @preset_width_canvas_id = canvas_id if apply_width && @preset_width
+        @preset_height_canvas_id = canvas_id if apply_height && @preset_height
         @width    = @canvas[:width].to_i
         @height   = @canvas[:height].to_i
         @bgcolor  = [0, 0, 0]

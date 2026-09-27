@@ -16,7 +16,7 @@ module PicoDX
       @size     = size
       @fontname = name.to_s
       @italic   = options[:italic] || false
-      @weight   = options.key?(:weight) ? options[:weight] : 400
+      @weight   = options.fetch(:weight, 400) || 400
     end
 
     alias name fontname
