@@ -12,9 +12,9 @@ module PicoDX
       def install(filename, name)
         JS.eval(
           "new FontFace(arguments[0], 'url(' + arguments[1] + ')')" \
-          ".load().then(font => document.fonts.add(font));",
+          ".load().then(font => { document.fonts.add(font); return font; });",
           name, filename
-        )
+        ).await
         new(16, name)
       end
     end

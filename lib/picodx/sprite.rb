@@ -76,14 +76,6 @@ module PicoDX
       @collision_enable = val
     end
 
-    def collision_sync
-      @collision_sync || false
-    end
-
-    def collision_sync=(val)
-      raise NotImplementedError, "collision_sync= is not yet implemented (requires rotated/scaled collision shapes)"
-    end
-
     def param_hash
       {
         x: x, y: y, z: z,

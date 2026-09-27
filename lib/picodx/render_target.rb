@@ -31,12 +31,12 @@ module PicoDX
 
     def min_filter=(filter)
       @min_filter = filter
-      @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+      @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
     end
 
     def mag_filter=(filter)
       @mag_filter = filter
-      @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+      @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
     end
 
     def discard; end
