@@ -248,8 +248,7 @@ module PicoDX
       private
 
       def _update_gamepads
-        # Serialize as "idx:b0,b1,...|a0,a1,...;..." preserving the original
-        # Gamepad.index so device identity is stable when slots are disconnected.
+        # Serialize as "idx:b0,b1,...|a0,a1,...;..." preserving original Gamepad.index.
         raw = JS.eval(
           "(() => {" \
           "  const pads = Array.from(navigator.getGamepads());" \
@@ -269,31 +268,43 @@ module PicoDX
           @pad_btns_pushed   = []
           @pad_btns_released = []
           @pad_axes_data     = []
-          @pad_btns_prev     = []
-          @pad_hold_frames   = []
+          @pad_btns_prev     = {}
+          @pad_hold_frames   = {}
           return
         end
 
-        pads_raw = raw.split(';')
-        @pad_count = pads_raw.length
-        active_indices = []
-
-        pads_raw.each do |pad_raw|
+        # Parse entries and sort by original Gamepad.index so compact slot 0
+        # always corresponds to the lowest-indexed connected pad.
+        pad_entries = []
+        raw.split(';').each do |pad_raw|
           colon_pos = pad_raw.index(':')
-          pi        = pad_raw[0, colon_pos].to_i
+          orig_idx  = pad_raw[0, colon_pos].to_i
           rest      = pad_raw[colon_pos + 1..]
           btn_str, axis_str = rest.split('|')
-          active_indices << pi
+          pad_entries << [orig_idx, btn_str, axis_str]
+        end
+        pad_entries.sort_by! { |entry| entry[0] }
+
+        @pad_count = pad_entries.length
+        # @pad_btns_prev and @pad_hold_frames are keyed by orig Gamepad.index so
+        # state continuity is preserved when slots shift on disconnect/reconnect.
+        @pad_btns_prev   ||= {}
+        @pad_hold_frames ||= {}
+        active_orig = []
+
+        pad_entries.each_with_index do |entry, pi|
+          orig_idx, btn_str, axis_str = entry
+          active_orig << orig_idx
 
           new_down = {}
           (btn_str || "").split(',').each_with_index do |v, bi|
             new_down[bi] = true if v.to_i == 1
           end
 
-          @pad_btns_prev[pi]  ||= {}
-          @pad_hold_frames[pi] ||= {}
-          prev = @pad_btns_prev[pi]
-          hold = @pad_hold_frames[pi]
+          @pad_btns_prev[orig_idx]   ||= {}
+          @pad_hold_frames[orig_idx] ||= {}
+          prev = @pad_btns_prev[orig_idx]
+          hold = @pad_hold_frames[orig_idx]
           pushed   = {}
           released = {}
           ini  = @pad_repeat_initial[pi]  || 0
@@ -318,26 +329,26 @@ module PicoDX
             end
           end
 
+          # Store at compact public slot (pi), not at orig_idx
           @pad_btns_down[pi]     = new_down
           @pad_btns_pushed[pi]   = pushed
           @pad_btns_released[pi] = released
-          @pad_btns_prev[pi]     = new_down.dup
-
-          axes = (axis_str || "").split(',').map { |v| v.to_f }
-          @pad_axes_data[pi] = axes
+          @pad_axes_data[pi]     = (axis_str || "").split(',').map { |v| v.to_f }
+          @pad_btns_prev[orig_idx] = new_down.dup
         end
 
-        # Clear state for slots that are no longer connected.
-        # Use active_indices (original Gamepad.index values) so a gap in slots
-        # (e.g. pad 0 gone, pad 1 still connected) doesn't clear the wrong entry.
-        (0...@pad_btns_down.length).each do |pi|
-          next if active_indices.include?(pi)
+        # Clear public slots beyond current connected count
+        (@pad_count...@pad_btns_down.length).each do |pi|
           @pad_btns_down[pi]     = {}
           @pad_btns_pushed[pi]   = {}
           @pad_btns_released[pi] = {}
           @pad_axes_data[pi]     = []
-          @pad_btns_prev[pi]     = {}
-          @pad_hold_frames[pi]   = {}
+        end
+
+        # Remove per-device state for gamepads that are no longer connected
+        (@pad_btns_prev.keys - active_orig).each do |k|
+          @pad_btns_prev.delete(k)
+          @pad_hold_frames.delete(k)
         end
       end
     end
