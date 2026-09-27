@@ -1,7 +1,23 @@
 module PicoDX
   class Sprite
-    attr_accessor :x, :y, :z, :angle, :scale_x, :scale_y, :center_x, :center_y
-    attr_accessor :alpha, :blend, :visible, :image, :collision, :target, :offset_sync
+    attr_writer :x, :y, :z, :angle, :scale_x, :scale_y, :center_x, :center_y
+    attr_writer :alpha, :blend, :visible, :image, :collision, :target, :offset_sync
+
+    def x;           @x           || 0;      end
+    def y;           @y           || 0;      end
+    def z;           @z           || 0;      end
+    def angle;       @angle       || 0;      end
+    def scale_x;     @scale_x     || 1.0;    end
+    def scale_y;     @scale_y     || 1.0;    end
+    def center_x;    @center_x;              end
+    def center_y;    @center_y;              end
+    def alpha;       @alpha       || 255;    end
+    def blend;       @blend       || :alpha; end
+    def visible;     @visible.nil? ? true : @visible; end
+    def image;       @image;                 end
+    def collision;   @collision;             end
+    def target;      @target;                end
+    def offset_sync; @offset_sync || false;  end
 
     def initialize(x = 0, y = 0, image = nil)
       @x           = x.to_f
@@ -23,19 +39,19 @@ module PicoDX
     end
 
     def draw
-      return if @vanished || !@visible || @image.nil?
-      cx = @center_x || (@image.width  / 2)
-      cy = @center_y || (@image.height / 2)
-      t  = @target || Window
-      t.draw_ex(@x.to_i, @y.to_i, @image, {
-        z:       @z,
-        angle:   @angle,
-        scale_x: @scale_x,
-        scale_y: @scale_y,
-        alpha:   @alpha,
+      return if @vanished || !visible || image.nil?
+      cx = center_x || (image.width  / 2)
+      cy = center_y || (image.height / 2)
+      t  = target || Window
+      t.draw_ex(x.to_i, y.to_i, image, {
+        z:       z,
+        angle:   angle,
+        scale_x: scale_x,
+        scale_y: scale_y,
+        alpha:   alpha,
         cx:      cx,
         cy:      cy,
-        blend:   @blend
+        blend:   blend
       })
     end
 
@@ -47,11 +63,11 @@ module PicoDX
     end
 
     def vanished?
-      @vanished
+      @vanished || false
     end
 
     def check(other)
-      return [] if @vanished || @collision.nil?
+      return [] if vanished? || collision.nil?
       targets = other.is_a?(Array) ? other : [other]
       result = []
       targets.each do |sp|
@@ -62,7 +78,7 @@ module PicoDX
     end
 
     def ===(other)
-      return false if @vanished || @collision.nil?
+      return false if vanished? || collision.nil?
       return false if other.nil? || other.vanished? || other.collision.nil?
       _collide?(other)
     end
@@ -124,22 +140,22 @@ module PicoDX
     private
 
     def _collide?(other)
-      aox = @offset_sync      ? -(@center_x || 0) : 0
-      aoy = @offset_sync      ? -(@center_y || 0) : 0
+      aox = offset_sync       ? -(center_x || 0) : 0
+      aoy = offset_sync       ? -(center_y || 0) : 0
       box = other.offset_sync ? -(other.center_x || 0) : 0
       boy = other.offset_sync ? -(other.center_y || 0) : 0
-      ac = @collision
+      ac = collision
       bc = other.collision
       al = ac.length
       bl = bc.length
 
       if al == 4
-        ax1 = @x + aox + ac[0]; ay1 = @y + aoy + ac[1]
-        ax2 = @x + aox + ac[2]; ay2 = @y + aoy + ac[3]
+        ax1 = x + aox + ac[0]; ay1 = y + aoy + ac[1]
+        ax2 = x + aox + ac[2]; ay2 = y + aoy + ac[3]
       elsif al == 3
-        acx = @x + aox + ac[0]; acy = @y + aoy + ac[1]; ar = ac[2]
+        acx = x + aox + ac[0]; acy = y + aoy + ac[1]; ar = ac[2]
       else
-        apx = @x + aox + ac[0]; apy = @y + aoy + ac[1]
+        apx = x + aox + ac[0]; apy = y + aoy + ac[1]
       end
 
       if bl == 4

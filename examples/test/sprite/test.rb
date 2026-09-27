@@ -188,5 +188,43 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (all_live ? "<span class='pass'>PASS</span> Sprite.clean keeps only live sprites" :
                          "<span class='fail'>FAIL</span> Sprite.clean kept wrong sprites")
 
+  # --- Subclass without super in initialize ---
+  class NoSuperSprite < Sprite
+    def initialize(img)
+      # intentionally does NOT call super
+      @image = img
+    end
+  end
+
+  ns = NoSuperSprite.new(img)
+  results << assert_equal(0,     ns.x,           "no-super subclass: x default 0")
+  results << assert_equal(0,     ns.y,           "no-super subclass: y default 0")
+  results << assert_equal(0,     ns.z,           "no-super subclass: z default 0")
+  results << assert_equal(0,     ns.angle,       "no-super subclass: angle default 0")
+  results << assert_equal(1.0,   ns.scale_x,     "no-super subclass: scale_x default 1.0")
+  results << assert_equal(1.0,   ns.scale_y,     "no-super subclass: scale_y default 1.0")
+  results << assert_equal(255,   ns.alpha,       "no-super subclass: alpha default 255")
+  results << assert_equal(:alpha, ns.blend,      "no-super subclass: blend default :alpha")
+  results << assert_equal(true,  ns.visible,     "no-super subclass: visible default true")
+  results << assert_equal(false, ns.vanished?,   "no-super subclass: vanished? default false")
+  results << assert_equal(false, ns.offset_sync, "no-super subclass: offset_sync default false")
+  results << assert_equal(nil,   ns.collision,   "no-super subclass: collision default nil")
+
+  # draw should not raise (image is set, defaults apply)
+  ns.draw
+  results << assert_pixel("game", 0, 0, 255, 0, 0, "no-super subclass: draw works with defaults (center pixel)")
+
+  # vanish works
+  ns.vanish
+  results << assert_equal(true, ns.vanished?, "no-super subclass: vanish sets vanished? true")
+
+  # collision detection works with no-super subclass
+  ns_a = NoSuperSprite.new(nil)
+  ns_b = NoSuperSprite.new(nil)
+  ns_a.x = 0;  ns_a.y = 0;  ns_a.collision = [0, 0, 20, 20]
+  ns_b.x = 10; ns_b.y = 10; ns_b.collision = [0, 0, 20, 20]
+  results << (ns_a === ns_b ? "<span class='pass'>PASS</span> no-super subclass: collision detection works" :
+                              "<span class='fail'>FAIL</span> no-super subclass: collision detection failed")
+
   show_results(results)
 end
