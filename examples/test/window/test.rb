@@ -6,6 +6,14 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(400, Window.width,  "Window.width after init")
   results << assert_equal(220, Window.height, "Window.height after init")
 
+  # Window.width= / Window.height=: setters update canvas and instance variables
+  Window.width  = 500
+  Window.height = 300
+  results << assert_equal(500, Window.width,  "Window.width= updates width")
+  results << assert_equal(300, Window.height, "Window.height= updates height")
+  Window.width  = 400
+  Window.height = 220
+
   # Window.fps: default 60, read/write
   results << assert_equal(60,   Window.fps,  "Window.fps default is 60")
   Window.fps = 30

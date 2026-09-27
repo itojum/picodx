@@ -5,9 +5,21 @@ module PicoDX
 
       attr_reader :width, :height, :fps, :real_fps, :ox, :oy, :bgcolor
 
+      def width=(value)
+        @width = value
+        @canvas[:width] = value if @canvas
+      end
+
+      def height=(value)
+        @height = value
+        @canvas[:height] = value if @canvas
+      end
+
       def init(canvas_id)
         @canvas   = JS.document.getElementById(canvas_id)
         @ctx      = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
+        @canvas[:width]  = @width  if @width
+        @canvas[:height] = @height if @height
         @width    = @canvas[:width].to_i
         @height   = @canvas[:height].to_i
         @bgcolor  = [0, 0, 0]
