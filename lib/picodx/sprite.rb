@@ -233,20 +233,49 @@ module PicoDX
 
     def _scaled_collision(sp, c)
       return c unless sp.collision_sync
-      sx = sp.scale_x
-      sy = sp.scale_y
-      return c if sx == 1.0 && sy == 1.0
-      if c.length == 4
-        mcx = (c[0] + c[2]) / 2.0
-        mcy = (c[1] + c[3]) / 2.0
-        hw  = (c[2] - c[0]) / 2.0 * sx
-        hh  = (c[3] - c[1]) / 2.0 * sy
-        [mcx - hw, mcy - hh, mcx + hw, mcy + hh]
-      elsif c.length == 3
-        scale = sx > sy ? sx : sy
-        [c[0], c[1], c[2] * scale]
+      sx    = sp.scale_x
+      sy    = sp.scale_y
+      angle = sp.angle
+
+      scaled = if sx != 1.0 || sy != 1.0
+        if c.length == 4
+          mcx = (c[0] + c[2]) / 2.0
+          mcy = (c[1] + c[3]) / 2.0
+          hw  = (c[2] - c[0]) / 2.0 * sx
+          hh  = (c[3] - c[1]) / 2.0 * sy
+          [mcx - hw, mcy - hh, mcx + hw, mcy + hh]
+        elsif c.length == 3
+          scale = sx > sy ? sx : sy
+          [c[0], c[1], c[2] * scale]
+        else
+          c
+        end
       else
         c
+      end
+
+      return scaled if angle.nil? || angle == 0
+      rad     = angle * Math::PI / 180.0
+      cos_a   = Math.cos(rad)
+      sin_a   = Math.sin(rad)
+      cos_abs = cos_a < 0 ? -cos_a : cos_a
+      sin_abs = sin_a < 0 ? -sin_a : sin_a
+
+      if scaled.length == 4
+        x1, y1, x2, y2 = scaled
+        mcx    = (x1 + x2) / 2.0
+        mcy    = (y1 + y2) / 2.0
+        hw     = (x2 - x1) / 2.0
+        hh     = (y2 - y1) / 2.0
+        new_hw = hw * cos_abs + hh * sin_abs
+        new_hh = hw * sin_abs + hh * cos_abs
+        [mcx - new_hw, mcy - new_hh, mcx + new_hw, mcy + new_hh]
+      elsif scaled.length == 3
+        scaled
+      else
+        px = scaled[0]
+        py = scaled[1]
+        [px * cos_a - py * sin_a, px * sin_a + py * cos_a]
       end
     end
   end

@@ -40,17 +40,19 @@ module PicoDX
         @real_fps = 0.0
         @ox       = 0
         @oy       = 0
-        @looping  = false
-        @closed   = false
-        @created  = true
+        @looping   = false
+        @closed    = false
+        @created   = true
+        @frameskip = false
         @draw_queue = nil
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
       end
 
       def close
-        @closed = true
-        @looping = false
+        @closed   = true
+        @created  = false
+        @looping  = false
       end
 
       def closed?
