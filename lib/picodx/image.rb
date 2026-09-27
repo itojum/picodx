@@ -12,8 +12,7 @@ module PicoDX
       @color  = color
       @canvas = JS.eval("new OffscreenCanvas(#{width}, #{height})")
       @ctx    = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-      r, g, b, a = color
-      @ctx[:fillStyle] = a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      @ctx[:fillStyle] = _css(color)
       @ctx.fillRect(0, 0, width, height)
     end
 
@@ -154,7 +153,7 @@ module PicoDX
       i = 0
       while i < n
         j = i * 4
-        result << [data[j].to_i, data[j+1].to_i, data[j+2].to_i, data[j+3].to_i]
+        result << [data[j+3].to_i, data[j].to_i, data[j+1].to_i, data[j+2].to_i]
         i += 1
       end
       result
@@ -189,13 +188,11 @@ module PicoDX
 
     def [](x, y)
       data = @ctx.getImageData(x, y, 1, 1)[:data]
-      [data[0].to_i, data[1].to_i, data[2].to_i, data[3].to_i]
+      [data[3].to_i, data[0].to_i, data[1].to_i, data[2].to_i]
     end
 
     def []=(x, y, color)
-      r, g, b, a = color
-      a ||= 255
-      @ctx[:fillStyle] = "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+      @ctx[:fillStyle] = _css(color)
       @ctx.fillRect(x, y, 1, 1)
     end
 
@@ -226,8 +223,13 @@ module PicoDX
     private
 
     def _css(color)
-      r, g, b, a = color
-      a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      if color.length == 4
+        a, r, g, b = color
+        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+      else
+        r, g, b = color
+        "rgb(#{r},#{g},#{b})"
+      end
     end
   end
 end

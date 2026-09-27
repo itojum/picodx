@@ -179,8 +179,13 @@ module PicoDX
     private
 
     def _css(color)
-      r, g, b, a = color
-      a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      if color.length == 4
+        a, r, g, b = color
+        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+      else
+        r, g, b = color
+        "rgb(#{r},#{g},#{b})"
+      end
     end
 
     def _blend_op(blend)

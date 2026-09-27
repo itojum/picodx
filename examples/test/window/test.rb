@@ -47,9 +47,9 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_box_fill(60, 10, 160, 60, [0, 128, 255])
   results << assert_pixel("game", 110, 35, 0, 128, 255, "Window.draw_box_fill: RGB fill")
 
-  # Window.draw_box_fill: RGBA opaque
-  Window.draw_box_fill(170, 10, 270, 60, [0, 200, 0, 255])
-  results << assert_pixel("game", 220, 35, 0, 200, 0, "Window.draw_box_fill: RGBA opaque fill")
+  # Window.draw_box_fill: ARGB opaque
+  Window.draw_box_fill(170, 10, 270, 60, [255, 0, 200, 0])
+  results << assert_pixel("game", 220, 35, 0, 200, 0, "Window.draw_box_fill: ARGB opaque fill")
 
   # Window.draw_line: draws a red horizontal line — check a midpoint pixel
   Window.draw_line(10, 185, 100, 185, [255, 0, 0])
