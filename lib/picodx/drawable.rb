@@ -126,6 +126,32 @@ module PicoDX
       end
     end
 
+    def draw_add(x, y, image, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_add, z: z, x: x, y: y, image: image }
+      else
+        _render_draw_add(x, y, image)
+      end
+    end
+
+    def draw_sub(x, y, image, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_sub, z: z, x: x, y: y, image: image }
+      else
+        _render_draw_sub(x, y, image)
+      end
+    end
+
+    # draw_morph: 2画像間の線形補間（rate: 0.0=image1のみ, 1.0=image2のみ）
+    # DXRubyの4コーナー変換とは異なり、Canvas 2D でのアルファブレンドで近似する
+    def draw_morph(x, y, image1, image2, rate, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_morph, z: z, x: x, y: y, image1: image1, image2: image2, rate: rate }
+      else
+        _render_draw_morph(x, y, image1, image2, rate)
+      end
+    end
+
     def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, z: 0)
       if _has_queue?
         @draw_queue << { type: :draw_tile, z: z, x: x, y: y, map: map, chips: chips,
@@ -201,6 +227,12 @@ module PicoDX
         _render_draw_alpha(cmd[:x], cmd[:y], cmd[:image], cmd[:alpha])
       when :draw_ex
         _render_draw_ex(cmd[:x], cmd[:y], cmd[:image], cmd[:options])
+      when :draw_add
+        _render_draw_add(cmd[:x], cmd[:y], cmd[:image])
+      when :draw_sub
+        _render_draw_sub(cmd[:x], cmd[:y], cmd[:image])
+      when :draw_morph
+        _render_draw_morph(cmd[:x], cmd[:y], cmd[:image1], cmd[:image2], cmd[:rate])
       when :draw_tile
         _render_draw_tile(cmd[:x], cmd[:y], cmd[:map], cmd[:chips],
                           cmd[:offset_x], cmd[:offset_y], cmd[:count_x], cmd[:count_y])
@@ -365,6 +397,41 @@ module PicoDX
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
+    end
+
+    def _render_draw_add(x, y, image)
+      @ctx.save
+      @ctx[:globalCompositeOperation] = "lighter"
+      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.restore
+    end
+
+    def _render_draw_sub(x, y, image)
+      # Canvas 2D に真の減算合成はない。"difference" は差の絶対値で近似。
+      @ctx.save
+      @ctx[:globalCompositeOperation] = "difference"
+      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.restore
+    end
+
+    def _render_draw_morph(x, y, image1, image2, rate)
+      r = rate.to_f
+      w = [image1.width,  image2.width ].max
+      h = [image1.height, image2.height].max
+      if @_morph_canvas.nil? || @_morph_canvas[:width].to_i != w || @_morph_canvas[:height].to_i != h
+        @_morph_canvas = JS.eval("new OffscreenCanvas(#{w}, #{h})")
+        @_morph_ctx    = @_morph_canvas.getContext('2d')
+      end
+      @_morph_ctx.clearRect(0, 0, w, h)
+      @_morph_ctx[:globalCompositeOperation] = "source-over"
+      @_morph_ctx[:globalAlpha] = 1.0 - r
+      @_morph_ctx.drawImage(image1._ctx[:canvas], 0, 0)
+      @_morph_ctx[:globalCompositeOperation] = "lighter"
+      @_morph_ctx[:globalAlpha] = r
+      @_morph_ctx.drawImage(image2._ctx[:canvas], 0, 0)
+      @_morph_ctx[:globalCompositeOperation] = "source-over"
+      @_morph_ctx[:globalAlpha] = 1.0
+      @ctx.drawImage(@_morph_canvas, x, y)
     end
 
     def _render_draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y)
