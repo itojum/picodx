@@ -185,7 +185,7 @@ module PicoDX
         if @last_tick_time
           delta = now - @last_tick_time
           @accumulated += delta
-          if @frameskip != false && @accumulated < interval * 0.9
+          if @accumulated < interval * 0.9
             @last_tick_time = now
             return
           end
