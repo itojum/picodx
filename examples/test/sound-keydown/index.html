@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PicoDX — Sound Keydown Test</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #eee; padding: 2rem; }
+    canvas { border: 1px solid #444; margin: 1rem 0; display: block; }
+    a { color: #7af; }
+    p { color: #888; margin: 0.3rem 0; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div><a href="../index.html">← Tests</a></div>
+  <h1>Sound Keydown Test</h1>
+  <p>Verifies that Sound#play works after keydown (simulates camp game BGM trigger from Window.loop)</p>
+  <p><b>Enter</b> = play beep &nbsp; <b>Space</b> = stop &nbsp; <b>Esc</b> = quit loop</p>
+  <canvas id="game" width="400" height="60"></canvas>
+  <script type="text/ruby" src="/lib/picodx.rb"></script>
+  <script type="text/ruby" src="/test/sound-keydown/test.rb"></script>
+  <script src="/init.iife.js"></script>
+</body>
+</html>
