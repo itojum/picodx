@@ -22,6 +22,7 @@ module PicoDX
     @pad_hold_frames     = {}
     @pad_repeat_initial  = 0
     @pad_repeat_interval = 0
+    @connected_pads      = []
 
     class << self
       attr_reader :mouse_x, :mouse_y, :mouse_wheel_pos
@@ -115,10 +116,15 @@ module PicoDX
           @pad_buttons_down    = {}
           @pad_buttons_pushed  = {}
           @pad_buttons_released= {}
+          @connected_pads      = []
           pad_idx = 0
           while pad_idx < max
             gp = gamepads[pad_idx]
-            unless gp.nil? || gp[:connected].to_s == "false"
+            if gp.nil? || gp[:connected].to_s == "false"
+              @pad_buttons_prev.delete(pad_idx)
+              @pad_hold_frames.delete(pad_idx)
+            else
+              @connected_pads << pad_idx
               btn_count = gp[:buttons][:length].to_i
               @pad_buttons_down[pad_idx]     = {}
               @pad_buttons_pushed[pad_idx]   = {}
@@ -201,22 +207,25 @@ module PicoDX
       end
 
       def pad_num
-        JS.eval("navigator.getGamepads ? navigator.getGamepads().filter(g=>g!=null).length : 0").to_i
+        @connected_pads.length
       end
 
       def pad_down?(button, pad = 0)
-        return false unless @pad_buttons_down[pad]
-        @pad_buttons_down[pad][button] || false
+        slot = _pad_slot(pad)
+        return false unless slot && @pad_buttons_down[slot]
+        @pad_buttons_down[slot][button] || false
       end
 
       def pad_push?(button, pad = 0)
-        return false unless @pad_buttons_pushed[pad]
-        @pad_buttons_pushed[pad][button] || false
+        slot = _pad_slot(pad)
+        return false unless slot && @pad_buttons_pushed[slot]
+        @pad_buttons_pushed[slot][button] || false
       end
 
       def pad_release?(button, pad = 0)
-        return false unless @pad_buttons_released[pad]
-        @pad_buttons_released[pad][button] || false
+        slot = _pad_slot(pad)
+        return false unless slot && @pad_buttons_released[slot]
+        @pad_buttons_released[slot][button] || false
       end
 
       def pad_axis(index, pad = 0)
@@ -273,10 +282,16 @@ module PicoDX
 
       private
 
+      def _pad_slot(pad)
+        @connected_pads[pad]
+      end
+
       def _pad_axes(pad)
         return nil unless JS.eval("typeof navigator.getGamepads === 'function'")
+        slot = _pad_slot(pad)
+        return nil unless slot
         gamepads = JS.eval("navigator.getGamepads()")
-        gp = gamepads[pad]
+        gp = gamepads[slot]
         return nil if gp.nil? || gp[:connected].to_s == "false"
         axis_count = gp[:axes][:length].to_i
         result = []
