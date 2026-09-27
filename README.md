@@ -57,6 +57,24 @@ npm publish --dry-run
 npm publish
 ```
 
+## 非対応API（Canvas 2D では実装不能）
+
+以下のAPIはDXRubyに存在しますが、PicoDXのCanvas 2Dバックエンドでは実装できないため、呼び出すと `NotImplementedError` が発生します。互換率の算出時はこれらを分母から除外します。
+
+### シェーダ系（HLSL / DirectX 依存）
+- `Shader` クラス全体（`Shader::Core` を含む）
+- `Window.draw_shader`
+- `RenderTarget#draw_shader`
+- `Sprite#shader=`
+
+### Win32 / デスクトップ専用
+- `Window.hWnd` — Win32 ウィンドウハンドル
+- `Window.full_screen=` / `Window.windowed=` — フルスクリーン切替
+- `Window.get_screen_modes` / `Window.get_current_modes` — 画面解像度列挙
+- `Window.load_icon` — ウィンドウアイコン設定
+- `Window.open_filename` / `Window.save_filename` / `Window.folder_dialog` — ファイルダイアログ
+- `Window.x=` / `Window.y=` — ウィンドウ位置（ブラウザに対応概念なし）
+
 ## License
 
 MIT
