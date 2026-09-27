@@ -24,8 +24,8 @@ module PicoDX
     @pad_btns_released  = []
     @pad_hold_frames    = {}   # keyed by orig Gamepad.index (Hash, not Array)
     @pad_axes_data      = []
-    @pad_repeat_initial = []
-    @pad_repeat_interval= []
+    @pad_axes_prev      = []   # previous-frame axes, compact-indexed (for stick push/release)
+    @pad_repeat_config  = {}   # {pad_number => {button_code => [wait, interval]}}
 
     class << self
       attr_reader :mouse_x, :mouse_y, :mouse_wheel_pos
@@ -74,9 +74,10 @@ module PicoDX
         @key_repeat[key] = [initial, interval]
       end
 
-      def set_pad_repeat(initial, interval, padnum = 0)
-        @pad_repeat_initial[padnum]  = initial
-        @pad_repeat_interval[padnum] = interval
+      def set_pad_repeat(pad_code, wait, interval, pad_number = 0)
+        @pad_repeat_config ||= {}
+        @pad_repeat_config[pad_number] ||= {}
+        @pad_repeat_config[pad_number][pad_code] = [wait, interval]
       end
 
       def _update
@@ -171,18 +172,32 @@ module PicoDX
       end
 
       def pad_down?(button, padnum = 0)
-        return false unless (btns = @pad_btns_down[padnum])
-        btns[button] || false
+        if _pad_stick_dir?(button)
+          _stick_active?(button, @pad_axes_data[padnum] || [])
+        else
+          return false unless (btns = @pad_btns_down[padnum])
+          btns[button] || false
+        end
       end
 
       def pad_push?(button, padnum = 0)
-        return false unless (btns = @pad_btns_pushed[padnum])
-        btns[button] || false
+        if _pad_stick_dir?(button)
+          _stick_active?(button, @pad_axes_data[padnum] || []) &&
+            !_stick_active?(button, @pad_axes_prev[padnum] || [])
+        else
+          return false unless (btns = @pad_btns_pushed[padnum])
+          btns[button] || false
+        end
       end
 
       def pad_release?(button, padnum = 0)
-        return false unless (btns = @pad_btns_released[padnum])
-        btns[button] || false
+        if _pad_stick_dir?(button)
+          !_stick_active?(button, @pad_axes_data[padnum] || []) &&
+            _stick_active?(button, @pad_axes_prev[padnum] || [])
+        else
+          return false unless (btns = @pad_btns_released[padnum])
+          btns[button] || false
+        end
       end
 
       def pad_axis(padnum = 0)
@@ -247,6 +262,26 @@ module PicoDX
 
       private
 
+      def _pad_stick_dir?(button)
+        (button >= P_L_UP && button <= P_L_RIGHT) ||
+          (button >= P_R_UP && button <= P_R_RIGHT)
+      end
+
+      def _stick_active?(button, axes)
+        t = PAD_STICK_THRESHOLD
+        case button
+        when P_L_LEFT  then (axes[0] || 0.0) <= -t
+        when P_L_RIGHT then (axes[0] || 0.0) >=  t
+        when P_L_UP    then (axes[1] || 0.0) <= -t
+        when P_L_DOWN  then (axes[1] || 0.0) >=  t
+        when P_R_LEFT  then (axes[2] || 0.0) <= -t
+        when P_R_RIGHT then (axes[2] || 0.0) >=  t
+        when P_R_UP    then (axes[3] || 0.0) <= -t
+        when P_R_DOWN  then (axes[3] || 0.0) >=  t
+        else false
+        end
+      end
+
       def _update_gamepads
         # Serialize as "idx:b0,b1,...|a0,a1,...;..." preserving original Gamepad.index.
         raw = JS.eval(
@@ -307,10 +342,10 @@ module PicoDX
           hold = @pad_hold_frames[orig_idx]
           pushed   = {}
           released = {}
-          ini  = @pad_repeat_initial[pi]  || 0
-          rep  = @pad_repeat_interval[pi] || 0
+          pad_repeat = (@pad_repeat_config ||= {})[pi] || {}
 
           new_down.each_key do |bi|
+            ini, rep = pad_repeat[bi] || [0, 0]
             if prev.key?(bi)
               hold[bi] = (hold[bi] || 0) + 1
               frames = hold[bi]
@@ -333,6 +368,7 @@ module PicoDX
           @pad_btns_down[pi]     = new_down
           @pad_btns_pushed[pi]   = pushed
           @pad_btns_released[pi] = released
+          @pad_axes_prev[pi]     = @pad_axes_data[pi] || []
           @pad_axes_data[pi]     = (axis_str || "").split(',').map { |v| v.to_f }
           @pad_btns_prev[orig_idx] = new_down.dup
         end

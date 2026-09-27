@@ -144,7 +144,12 @@ module PicoDX
 
     # 4-point perspective warp: corners are (x1,y1)=TL, (x2,y2)=TR, (x3,y3)=BR, (x4,y4)=BL
     # Approximated with two affine-mapped triangles (Canvas 2D has no projective transform).
-    def draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, alpha = 255, z: 0)
+    # option accepts DXRuby-compatible hash keys: :alpha, :blend, :z, :color
+    # (:dividex/:dividey are accepted but ignored — we always use 2-triangle approximation)
+    def draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, option = nil)
+      option ||= {}
+      alpha = option[:alpha] || 255
+      z     = option[:z]     || 0
       if _has_queue?
         @draw_queue << { type: :draw_morph, z: z,
                          x1: x1, y1: y1, x2: x2, y2: y2,
@@ -249,7 +254,7 @@ module PicoDX
     # -------------------------------------------------------------------------
 
     def _render_draw(x, y, image)
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image.canvas, x, y)
     end
 
     def _render_draw_box(x1, y1, x2, y2, color)
@@ -363,7 +368,7 @@ module PicoDX
       @ctx.save
       @ctx.translate(x, y)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image.canvas, -cx, -cy)
       @ctx.restore
     end
 
@@ -374,14 +379,14 @@ module PicoDX
       @ctx.save
       @ctx.translate(x, y)
       @ctx.rotate(rad)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image.canvas, -cx, -cy)
       @ctx.restore
     end
 
     def _render_draw_alpha(x, y, image, alpha)
       @ctx.save
       @ctx[:globalAlpha] = alpha.to_f / 255
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image.canvas, x, y)
       @ctx.restore
     end
 
@@ -400,7 +405,7 @@ module PicoDX
       @ctx.translate(x, y)
       @ctx.rotate(rad)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image.canvas, -cx, -cy)
       @ctx.restore
     end
 
@@ -442,7 +447,7 @@ module PicoDX
       @ctx.save
       @ctx[:globalCompositeOperation] = "lighter"
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image.canvas, x, y)
       @ctx.restore
     end
 
@@ -451,14 +456,14 @@ module PicoDX
       @ctx.save
       @ctx[:globalCompositeOperation] = "difference"
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image.canvas, x, y)
       @ctx.restore
     end
 
     def _render_draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, alpha = 255)
       w = image.width.to_f
       h = image.height.to_f
-      src = image._ctx[:canvas]
+      src = image.canvas
       @ctx.save
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
 

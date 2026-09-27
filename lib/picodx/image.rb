@@ -1,6 +1,6 @@
 module PicoDX
   class Image
-    attr_reader :width, :height
+    attr_reader :width, :height, :canvas
 
     def _ctx
       @ctx

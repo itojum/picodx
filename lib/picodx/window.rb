@@ -126,6 +126,7 @@ module PicoDX
           result
         else
           @looping           = true
+          @closed            = false  # reset at loop start so closed? is accurate during run
           @user_block        = block
           @loop_start_time   = nil
           @last_tick_time    = nil
@@ -138,8 +139,9 @@ module PicoDX
             break if @closed
             _tick
           end
-          @closed  = false
           @looping = false
+          # @closed is intentionally NOT reset here — callers can check Window.closed?
+          # after the loop exits. It is cleared at the top of the next loop call or init.
         end
       end
 
