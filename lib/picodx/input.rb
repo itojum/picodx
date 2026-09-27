@@ -248,12 +248,18 @@ module PicoDX
       private
 
       def _update_gamepads
-        # Serialize all gamepad state to a string: "b0,b1,...|a0,a1,...;..." per pad
+        # Serialize as "idx:b0,b1,...|a0,a1,...;..." preserving the original
+        # Gamepad.index so device identity is stable when slots are disconnected.
         raw = JS.eval(
           "(() => {" \
-          "  const gs = Array.from(navigator.getGamepads()).filter(Boolean);" \
-          "  if (!gs.length) return '';" \
-          "  return gs.map(g => g.buttons.map(b => b.pressed ? 1 : 0).join(',') + '|' + Array.from(g.axes).join(',')).join(';');" \
+          "  const pads = Array.from(navigator.getGamepads());" \
+          "  const parts = [];" \
+          "  for (let i = 0; i < pads.length; i++) {" \
+          "    const g = pads[i];" \
+          "    if (!g) continue;" \
+          "    parts.push(i + ':' + g.buttons.map(b => b.pressed ? 1 : 0).join(',') + '|' + Array.from(g.axes).join(','));" \
+          "  }" \
+          "  return parts.join(';');" \
           "})()"
         ).to_s
 
@@ -270,9 +276,14 @@ module PicoDX
 
         pads_raw = raw.split(';')
         @pad_count = pads_raw.length
+        active_indices = []
 
-        pads_raw.each_with_index do |pad_raw, pi|
-          btn_str, axis_str = pad_raw.split('|')
+        pads_raw.each do |pad_raw|
+          colon_pos = pad_raw.index(':')
+          pi        = pad_raw[0, colon_pos].to_i
+          rest      = pad_raw[colon_pos + 1..]
+          btn_str, axis_str = rest.split('|')
+          active_indices << pi
 
           new_down = {}
           (btn_str || "").split(',').each_with_index do |v, bi|
@@ -316,8 +327,11 @@ module PicoDX
           @pad_axes_data[pi] = axes
         end
 
-        # Clear state for pads no longer connected
-        (@pad_count...@pad_btns_down.length).each do |pi|
+        # Clear state for slots that are no longer connected.
+        # Use active_indices (original Gamepad.index values) so a gap in slots
+        # (e.g. pad 0 gone, pad 1 still connected) doesn't clear the wrong entry.
+        (0...@pad_btns_down.length).each do |pi|
+          next if active_indices.include?(pi)
           @pad_btns_down[pi]     = {}
           @pad_btns_pushed[pi]   = {}
           @pad_btns_released[pi] = {}

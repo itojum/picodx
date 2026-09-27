@@ -105,8 +105,11 @@ module PicoDX
 
     def save(filename = nil)
       return if @disposed
-      a_el = JS.eval("document.createElement('a')")
-      a_el[:href]     = @canvas.toDataURL('image/png')
+      # OffscreenCanvas lacks toDataURL; use convertToBlob + object URL
+      blob = @canvas.convertToBlob().await
+      url  = JS.eval("URL").createObjectURL(blob).to_s
+      a_el = JS.document.createElement('a')
+      a_el[:href]     = url
       a_el[:download] = filename || "image.png"
       a_el.click
     end

@@ -472,7 +472,7 @@ module PicoDX
       @ctx.clip
       a1 = (x2 - x1) / w; b1 = (y2 - y1) / w
       c1 = (x4 - x1) / h; d1 = (y4 - y1) / h
-      @ctx.setTransform(a1, b1, c1, d1, x1, y1)
+      @ctx.transform(a1, b1, c1, d1, x1, y1)
       @ctx.drawImage(src, 0, 0)
       @ctx.restore
 
@@ -487,7 +487,7 @@ module PicoDX
       a2 = (x3 - x4) / w; b2 = (y3 - y4) / w
       c2 = (x3 - x2) / h; d2 = (y3 - y2) / h
       e2 = x4 - x3 + x2;  f2 = y4 - y3 + y2
-      @ctx.setTransform(a2, b2, c2, d2, e2, f2)
+      @ctx.transform(a2, b2, c2, d2, e2, f2)
       @ctx.drawImage(src, 0, 0)
       @ctx.restore
 

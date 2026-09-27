@@ -11,8 +11,10 @@ module PicoDX
 
       def install(filename, name = nil)
         font_name = name || File.basename(filename, ".*")
+        safe_name = font_name.gsub("\\") { "\\\\" }.gsub("'") { "\\'" }
+        safe_file = filename.gsub("\\") { "\\\\" }.gsub("'") { "\\'" }
         JS.eval(
-          "new FontFace('#{font_name}', 'url(#{filename})').load().then(f => document.fonts.add(f))"
+          "new FontFace('#{safe_name}', 'url(#{safe_file})').load().then(f => document.fonts.add(f))"
         ).await
         font_name
       end

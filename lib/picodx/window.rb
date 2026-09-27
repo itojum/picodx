@@ -41,6 +41,7 @@ module PicoDX
         @ox       = 0
         @oy       = 0
         @looping  = false
+        @closed   = false
         @draw_queue = nil
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
@@ -132,9 +133,12 @@ module PicoDX
           @accumulated       = 0.0
           @real_fps          = 0.0
           while true
+            break if @closed
             JS.global.__picodx_nextFrame().await
+            break if @closed
             _tick
           end
+          @closed = false
         end
       end
 
