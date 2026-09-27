@@ -1,13 +1,24 @@
+# Pre-init setter test: call width=/height= before Window.init so the
+# else-branch (preset path) is exercised and applied on first init.
+Window.width  = 320
+Window.height = 240
 Window.init("game")
 
 JS.document.getElementById('run').addEventListener('click') do |_e|
   results = []
 
-  results << assert_equal(400, Window.width,  "Window.width after init")
-  results << assert_equal(220, Window.height, "Window.height after init")
+  # Verify pre-init dimensions were applied by init
+  canvas = JS.document.getElementById("game")
+  results << assert_equal(320, Window.width,            "pre-init Window.width= applied by init")
+  results << assert_equal(240, Window.height,           "pre-init Window.height= applied by init")
+  results << assert_equal(320, canvas[:width].to_i,    "pre-init Window.width= applied to canvas DOM")
+  results << assert_equal(240, canvas[:height].to_i,   "pre-init Window.height= applied to canvas DOM")
+
+  # Reset to 400x220 for the rest of the tests
+  Window.width  = 400
+  Window.height = 220
 
   # Window.width= / Window.height=: setters update both instance variables and canvas DOM
-  canvas = JS.document.getElementById("game")
   Window.width  = 500
   Window.height = 300
   results << assert_equal(500, Window.width,            "Window.width= updates instance variable")
