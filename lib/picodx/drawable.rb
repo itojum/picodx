@@ -91,7 +91,7 @@ module PicoDX
       end
     end
 
-    def draw_scale(x, y, image, scale_x, scale_y, cx = 0, cy = 0, z: 0)
+    def draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil, z: 0)
       if _has_queue?
         @draw_queue << { type: :draw_scale, z: z, x: x, y: y, image: image,
                          scale_x: scale_x, scale_y: scale_y, cx: cx, cy: cy }
@@ -100,7 +100,7 @@ module PicoDX
       end
     end
 
-    def draw_rot(x, y, image, angle, cx = 0, cy = 0, z: 0)
+    def draw_rot(x, y, image, angle, cx = nil, cy = nil, z: 0)
       if _has_queue?
         @draw_queue << { type: :draw_rot, z: z, x: x, y: y, image: image,
                          angle: angle, cx: cx, cy: cy }
@@ -320,7 +320,9 @@ module PicoDX
       @ctx.fill
     end
 
-    def _render_draw_scale(x, y, image, scale_x, scale_y, cx = 0, cy = 0)
+    def _render_draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil)
+      cx = image.width  / 2 if cx.nil?
+      cy = image.height / 2 if cy.nil?
       @ctx.save
       @ctx.translate(x, y)
       @ctx.scale(scale_x, scale_y)
@@ -328,7 +330,9 @@ module PicoDX
       @ctx.restore
     end
 
-    def _render_draw_rot(x, y, image, angle, cx = 0, cy = 0)
+    def _render_draw_rot(x, y, image, angle, cx = nil, cy = nil)
+      cx = image.width  / 2 if cx.nil?
+      cy = image.height / 2 if cy.nil?
       rad = angle * Math::PI / 180.0
       @ctx.save
       @ctx.translate(x, y)
