@@ -54,6 +54,8 @@ img.clone               # alias for dup
 
 ## Color adjustment
 
+`Image#change_hls` is the supported API name; use it instead of the older `change_hue` name.
+
 ```ruby
 img.change_hls(hue, luminance, saturation)  # => new Image
 img.change_hls(hue = 0, luminance = 0, saturation = 0)  # all adjustments are optional

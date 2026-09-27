@@ -152,10 +152,6 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   img_same = img_red.change_hls(0, 0, 0)
   results << assert_equal(0, img_red.compare(0, 0, img_same, 0, 0, 10, 10), "Image#change_hls(0, 0, 0) keeps pixels unchanged")
   px_rot = img_rot[5, 5]
-<<<<<<< HEAD
-  results << (px_rot[2] > px_rot[1] ? "<span class='pass'>PASS</span> Image#change_hue(120) on red → green dominant #{px_rot.inspect}" :
-                                      "<span class='fail'>FAIL</span> Image#change_hue(120) expected green dominant, got #{px_rot.inspect}")
-=======
   results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
                                       "<span class='fail'>FAIL</span> Image#change_hls(120, 0, 0) expected green dominant, got #{px_rot.inspect}")
   wrap_a = Image.new(1, 1, [255, 0, 0]).change_hls(120, 0, 0)
@@ -176,7 +172,6 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   sat_a = Image.new(1, 1, [192, 96, 96]).change_hls(0, 0, 100)
   sat_b = Image.new(1, 1, [192, 96, 96]).change_hls(0, 0, 200)
   results << assert_equal(0, sat_a.compare(0, 0, sat_b, 0, 0, 1, 1), "Image#change_hls clamps saturation high")
->>>>>>> origin/main
   Window.draw(0, 200, img_red)
   Window.draw(15, 200, img_rot)
 
