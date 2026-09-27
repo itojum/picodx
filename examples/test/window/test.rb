@@ -85,10 +85,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_circle_fill(180, 185, 12, [0, 0, 255])
   results << assert_pixel("game", 180, 185, 0, 0, 255, "Window.draw_circle_fill: center pixel is blue")
 
-  # Window.draw_scale: scaled image — check pixel inside scaled area
+  # Window.draw_scale: scaled image — default center is image center (5,5 for 10x10)
+  # translate(250,178), scale(2,2), drawImage at (-5,-5) => top-left (240,168), size 20x20
   img2x = Image.new(10, 10, [255, 128, 0])
   Window.draw_scale(250, 178, img2x, 2.0, 2.0)
-  results << assert_pixel("game", 255, 183, 255, 128, 0, "Window.draw_scale: pixel inside scaled area is orange")
+  results << assert_pixel("game", 250, 178, 255, 128, 0, "Window.draw_scale: anchor pixel is orange (image center at draw pos)")
+  results << assert_pixel("game", 239, 167, 0,   0,   0, "Window.draw_scale: outside scaled area is black")
 
   # Window.draw_scale with cx/cy: anchor=(5,5) center of 10x10 image, scale=2x
   # scaled 20x20; anchor maps to (350,140); top-left at (340,130)
