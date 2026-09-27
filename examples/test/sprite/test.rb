@@ -176,6 +176,31 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (!(os_c === os_b) ? "<span class='pass'>PASS</span> offset_sync=false: no shift, no overlap" :
                                  "<span class='fail'>FAIL</span> offset_sync=false: should not overlap without shift")
 
+  # --- Sprite#collision_sync uses sprite center as transform origin ---
+  cs_a = Sprite.new(100, 100, nil)
+  cs_a.center_x = 0
+  cs_a.center_y = 0
+  cs_a.angle = 90
+  cs_a.collision = [20, 0, 40, 10]
+
+  cs_b = Sprite.new(92, 125, nil)
+  cs_b.collision = [0, 0, 5, 5]
+
+  results << (cs_a === cs_b ? "<span class='pass'>PASS</span> collision_sync rotates rect around sprite center" :
+                              "<span class='fail'>FAIL</span> collision_sync should rotate rect around sprite center")
+
+  cs_c = Sprite.new(100, 100, nil)
+  cs_c.center_x = 0
+  cs_c.center_y = 0
+  cs_c.angle = 90
+  cs_c.collision = [30, 0, 5]
+
+  cs_d = Sprite.new(97, 128, nil)
+  cs_d.collision = [0, 0, 5]
+
+  results << (cs_c === cs_d ? "<span class='pass'>PASS</span> collision_sync rotates circle center around sprite center" :
+                              "<span class='fail'>FAIL</span> collision_sync should rotate circle center around sprite center")
+
   # --- Sprite.clean(array) ---
   live = Sprite.new(0, 0, nil)
   dead = Sprite.new(0, 0, nil)

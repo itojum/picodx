@@ -236,46 +236,35 @@ module PicoDX
       sx    = sp.scale_x
       sy    = sp.scale_y
       angle = sp.angle
+      origin_x = sp.center_x || (sp.image ? sp.image.width / 2.0 : 0.0)
+      origin_y = sp.center_y || (sp.image ? sp.image.height / 2.0 : 0.0)
+      rad      = angle * Math::PI / 180.0
+      cos_a    = Math.cos(rad)
+      sin_a    = Math.sin(rad)
 
-      scaled = if sx != 1.0 || sy != 1.0
-        if c.length == 4
-          mcx = (c[0] + c[2]) / 2.0
-          mcy = (c[1] + c[3]) / 2.0
-          hw  = (c[2] - c[0]) / 2.0 * sx
-          hh  = (c[3] - c[1]) / 2.0 * sy
-          [mcx - hw, mcy - hh, mcx + hw, mcy + hh]
-        elsif c.length == 3
-          scale = sx > sy ? sx : sy
-          [c[0], c[1], c[2] * scale]
-        else
-          c
-        end
-      else
-        c
+      transform_point = lambda do |px, py|
+        dx = px - origin_x
+        dy = py - origin_y
+        [
+          origin_x + dx * sx * cos_a - dy * sy * sin_a,
+          origin_y + dx * sx * sin_a + dy * sy * cos_a
+        ]
       end
 
-      return scaled if angle.nil? || angle == 0
-      rad     = angle * Math::PI / 180.0
-      cos_a   = Math.cos(rad)
-      sin_a   = Math.sin(rad)
-      cos_abs = cos_a < 0 ? -cos_a : cos_a
-      sin_abs = sin_a < 0 ? -sin_a : sin_a
-
-      if scaled.length == 4
-        x1, y1, x2, y2 = scaled
-        mcx    = (x1 + x2) / 2.0
-        mcy    = (y1 + y2) / 2.0
-        hw     = (x2 - x1) / 2.0
-        hh     = (y2 - y1) / 2.0
-        new_hw = hw * cos_abs + hh * sin_abs
-        new_hh = hw * sin_abs + hh * cos_abs
-        [mcx - new_hw, mcy - new_hh, mcx + new_hw, mcy + new_hh]
-      elsif scaled.length == 3
-        scaled
+      if c.length == 4
+        p1 = transform_point.call(c[0], c[1])
+        p2 = transform_point.call(c[0], c[3])
+        p3 = transform_point.call(c[2], c[1])
+        p4 = transform_point.call(c[2], c[3])
+        xs = [p1[0], p2[0], p3[0], p4[0]]
+        ys = [p1[1], p2[1], p3[1], p4[1]]
+        [xs.min, ys.min, xs.max, ys.max]
+      elsif c.length == 3
+        pcx, pcy = transform_point.call(c[0], c[1])
+        scale = sx.abs > sy.abs ? sx.abs : sy.abs
+        [pcx, pcy, c[2] * scale]
       else
-        px = scaled[0]
-        py = scaled[1]
-        [px * cos_a - py * sin_a, px * sin_a + py * cos_a]
+        transform_point.call(c[0], c[1])
       end
     end
   end
