@@ -25,6 +25,7 @@ module PicoDX
 
         JS.document.addEventListener('keydown') do |e|
           @keys_down[e[:code].to_s] = true
+          JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
         end
         JS.document.addEventListener('keyup') do |e|
           @keys_down.delete(e[:code].to_s)
@@ -41,6 +42,7 @@ module PicoDX
           raw = e[:button].to_i
           btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
           @mouse_down[btn] = true
+          JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
         end
         canvas.addEventListener('mouseup') do |e|
           raw = e[:button].to_i
