@@ -418,14 +418,20 @@ module PicoDX
       r = rate.to_f
       w = [image1.width,  image2.width ].max
       h = [image1.height, image2.height].max
-      tmp = JS.eval("new OffscreenCanvas(#{w}, #{h})")
-      tc  = tmp.getContext('2d')
-      tc[:globalAlpha] = 1.0 - r
-      tc.drawImage(image1._ctx[:canvas], 0, 0)
-      tc[:globalAlpha] = r
-      tc[:globalCompositeOperation] = "source-over"
-      tc.drawImage(image2._ctx[:canvas], 0, 0)
-      @ctx.drawImage(tmp, x, y)
+      if @_morph_canvas.nil? || @_morph_canvas[:width].to_i != w || @_morph_canvas[:height].to_i != h
+        @_morph_canvas = JS.eval("new OffscreenCanvas(#{w}, #{h})")
+        @_morph_ctx    = @_morph_canvas.getContext('2d')
+      end
+      @_morph_ctx.clearRect(0, 0, w, h)
+      @_morph_ctx[:globalCompositeOperation] = "source-over"
+      @_morph_ctx[:globalAlpha] = 1.0 - r
+      @_morph_ctx.drawImage(image1._ctx[:canvas], 0, 0)
+      @_morph_ctx[:globalCompositeOperation] = "lighter"
+      @_morph_ctx[:globalAlpha] = r
+      @_morph_ctx.drawImage(image2._ctx[:canvas], 0, 0)
+      @_morph_ctx[:globalCompositeOperation] = "source-over"
+      @_morph_ctx[:globalAlpha] = 1.0
+      @ctx.drawImage(@_morph_canvas, x, y)
     end
 
     def _render_draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y)
