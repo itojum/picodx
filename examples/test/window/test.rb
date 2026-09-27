@@ -6,11 +6,14 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(400, Window.width,  "Window.width after init")
   results << assert_equal(220, Window.height, "Window.height after init")
 
-  # Window.width= / Window.height=: setters update canvas and instance variables
+  # Window.width= / Window.height=: setters update both instance variables and canvas DOM
+  canvas = JS.document.getElementById("game")
   Window.width  = 500
   Window.height = 300
-  results << assert_equal(500, Window.width,  "Window.width= updates width")
-  results << assert_equal(300, Window.height, "Window.height= updates height")
+  results << assert_equal(500, Window.width,            "Window.width= updates instance variable")
+  results << assert_equal(300, Window.height,           "Window.height= updates instance variable")
+  results << assert_equal(500, canvas[:width].to_i,    "Window.width= updates canvas DOM width")
+  results << assert_equal(300, canvas[:height].to_i,   "Window.height= updates canvas DOM height")
   Window.width  = 400
   Window.height = 220
 
@@ -107,6 +110,20 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (inner_ran ? "<span class='pass'>PASS</span> re-entrant Window.loop: inner block ran" :
                           "<span class='fail'>FAIL</span> re-entrant Window.loop: inner block did not run")
   results << assert_pixel("game", 215, 207, 0, 255, 255, "re-entrant Window.loop: inner block drew cyan")
+
+  # Window.init re-call: dimensions set via setter are preserved across re-init.
+  # (True pre-init path — width= called before the very first init — is exercised
+  # by the page-load sequence: canvas starts at 400x220 in HTML and init reads it.)
+  Window.width  = 800
+  Window.height = 600
+  Window.init("game")
+  results << assert_equal(800, Window.width,                                        "re-init preserves width set before init")
+  results << assert_equal(600, Window.height,                                       "re-init preserves height set before init")
+  results << assert_equal(800, JS.document.getElementById("game")[:width].to_i,    "re-init canvas DOM width correct")
+  results << assert_equal(600, JS.document.getElementById("game")[:height].to_i,   "re-init canvas DOM height correct")
+  Window.width  = 400
+  Window.height = 220
+  Window.init("game")
 
   # Visual checks
   Window.draw_font(10, 80,  "draw_font: this text should be visible", [255, 255, 255])
