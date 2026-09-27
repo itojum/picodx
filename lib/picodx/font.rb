@@ -18,7 +18,7 @@ module PicoDX
           " 'url(' + window.__picodx_font_url + ')')" \
           ".load().then(font => { document.fonts.add(font); return font; });"
         ).await
-        new(16, family)
+        [family]
       end
     end
 

@@ -37,7 +37,7 @@ module PicoDX
       @target            = nil
       @offset_sync       = false
       @collision_enable  = true
-      @collision_sync    = false
+      @collision_sync    = nil
     end
 
     def draw
@@ -74,6 +74,14 @@ module PicoDX
 
     def collision_enable=(val)
       @collision_enable = val
+    end
+
+    def collision_sync
+      @collision_sync.nil? ? true : @collision_sync
+    end
+
+    def collision_sync=(val)
+      @collision_sync = val
     end
 
     def param_hash
@@ -170,8 +178,8 @@ module PicoDX
       aoy = offset_sync       ? -(center_y || 0) : 0
       box = other.offset_sync ? -(other.center_x || 0) : 0
       boy = other.offset_sync ? -(other.center_y || 0) : 0
-      ac = collision
-      bc = other.collision
+      ac = _scaled_collision(self, collision)
+      bc = _scaled_collision(other, other.collision)
       al = ac.length
       bl = bc.length
 
@@ -221,6 +229,25 @@ module PicoDX
       dx = cx < rx1 ? rx1 - cx : (cx > rx2 ? cx - rx2 : 0)
       dy = cy < ry1 ? ry1 - cy : (cy > ry2 ? cy - ry2 : 0)
       dx * dx + dy * dy <= r * r
+    end
+
+    def _scaled_collision(sp, c)
+      return c unless sp.collision_sync
+      sx = sp.scale_x
+      sy = sp.scale_y
+      return c if sx == 1.0 && sy == 1.0
+      if c.length == 4
+        mcx = (c[0] + c[2]) / 2.0
+        mcy = (c[1] + c[3]) / 2.0
+        hw  = (c[2] - c[0]) / 2.0 * sx
+        hh  = (c[3] - c[1]) / 2.0 * sy
+        [mcx - hw, mcy - hh, mcx + hw, mcy + hh]
+      elsif c.length == 3
+        scale = sx > sy ? sx : sy
+        [c[0], c[1], c[2] * scale]
+      else
+        c
+      end
     end
   end
 end
