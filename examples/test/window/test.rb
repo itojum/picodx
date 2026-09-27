@@ -148,6 +148,32 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(100, JS.document.getElementById("game2")[:height].to_i,    "switching canvas: game2 DOM height is its own 100")
   Window.init("game")
 
+  # Window.loop re-entrancy with break value ---
+  # The inner loop exits via `break value` and the return value of Window.loop
+  # should be that value (not nil).
+  break_val = Window.loop do
+    Window.loop do
+      break 42
+    end
+    break
+  end
+  results << assert_equal(42, break_val, "re-entrant Window.loop: break value is returned")
+
+  # Window.loop re-entrancy with return value ---
+  # The inner loop is called from a helper method. The block uses `return` to
+  # exit the method, carrying a value. Window.loop should propagate the
+  # LocalJumpError's exit_value so the caller receives the value.
+  def select_value
+    Window.loop do
+      Window.loop do
+        return 99
+      end
+      break
+    end
+  end
+  ret_val = select_value
+  results << assert_equal(99, ret_val, "re-entrant Window.loop: return value is propagated")
+
   # Visual checks
   Window.draw_font(10, 80,  "draw_font: this text should be visible", [255, 255, 255])
   Window.draw_box( 10, 115, 350, 165, [255, 220, 0])
