@@ -56,8 +56,7 @@ module PicoDX
     def info(str)
       @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
       @measure_ctx[:font] = _css_font
-      ch = str.length > 0 ? str[0, 1] : " "
-      m  = @measure_ctx.measureText(ch)
+      m  = @measure_ctx.measureText(str)
       {
         width:       m[:width].to_i,
         height:      (m[:actualBoundingBoxAscent].to_f + m[:actualBoundingBoxDescent].to_f).to_i,
