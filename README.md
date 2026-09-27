@@ -29,6 +29,7 @@ A minimal 2D game library for [PicoRuby.wasm](https://github.com/picoruby/picoru
 - [Window](docs/window.md) — game loop and drawing
 - [Image](docs/image.md) — image object
 - [Input](docs/input.md) — keyboard input and key constants
+- [Compatibility](docs/compatibility.md) — DXRuby互換ポリシー（非該当APIの一覧）
 
 ## Development
 

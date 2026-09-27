@@ -46,6 +46,36 @@ module PicoDX
         Input.setup(@canvas)
       end
 
+      def created?
+        !@canvas.nil?
+      end
+
+      def closed?
+        @closed || false
+      end
+
+      def close
+        @closed = true
+      end
+
+      def active?
+        JS.eval("document.hasFocus()").to_s == "true"
+      end
+
+      def get_screen_shot(filename = nil)
+        return unless @canvas
+        a_el = JS.document.createElement('a')
+        a_el[:href]     = @canvas.toDataURL('image/png')
+        a_el[:download] = filename || "screenshot.png"
+        a_el.click
+      end
+
+      def scale=(s)
+        return unless @canvas
+        @canvas[:style][:transform] = "scale(#{s})"
+        @canvas[:style][:transformOrigin] = "0 0"
+      end
+
       def caption
         JS.document[:title].to_s
       end
@@ -107,6 +137,23 @@ module PicoDX
           end
         end
       end
+
+      # --- Platform non-applicable (Canvas 2D backend) ---
+      # These APIs exist in DXRuby but cannot be implemented in a browser.
+      # They raise NotImplementedError so ported code fails with a clear message.
+      NOT_IMPL = "not supported on the Canvas 2D backend (picodx). See docs/compatibility.md"
+      def hWnd;              raise NotImplementedError, "Window.hWnd #{NOT_IMPL}";              end
+      def full_screen?;      raise NotImplementedError, "Window.full_screen? #{NOT_IMPL}";      end
+      def full_screen=(_v);  raise NotImplementedError, "Window.full_screen= #{NOT_IMPL}";      end
+      def windowed?;         raise NotImplementedError, "Window.windowed? #{NOT_IMPL}";          end
+      def windowed=(_v);     raise NotImplementedError, "Window.windowed= #{NOT_IMPL}";          end
+      def get_screen_modes;  raise NotImplementedError, "Window.get_screen_modes #{NOT_IMPL}";  end
+      def get_current_mode;  raise NotImplementedError, "Window.get_current_mode #{NOT_IMPL}";  end
+      def load_icon(*_);     raise NotImplementedError, "Window.load_icon #{NOT_IMPL}";         end
+      def open_filename(*_); raise NotImplementedError, "Window.open_filename #{NOT_IMPL}";     end
+      def save_filename(*_); raise NotImplementedError, "Window.save_filename #{NOT_IMPL}";     end
+      def folder_dialog(*_); raise NotImplementedError, "Window.folder_dialog #{NOT_IMPL}";     end
+      def draw_shader(*_);   raise NotImplementedError, "Window.draw_shader #{NOT_IMPL}";       end
 
       private
 

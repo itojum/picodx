@@ -53,5 +53,12 @@ module PicoDX
     def disposed?
       @disposed
     end
+
+    NOT_IMPL = "not supported on the Canvas 2D backend (picodx). See docs/compatibility.md"
+    def draw_shader(*_); raise NotImplementedError, "RenderTarget#draw_shader #{NOT_IMPL}"; end
+    def min_filter=(_v); raise NotImplementedError, "RenderTarget#min_filter= #{NOT_IMPL}"; end
+    def mag_filter=(_v); raise NotImplementedError, "RenderTarget#mag_filter= #{NOT_IMPL}"; end
+    def discard(*_);     raise NotImplementedError, "RenderTarget#discard #{NOT_IMPL}";     end
+    def decide(*_);      raise NotImplementedError, "RenderTarget#decide #{NOT_IMPL}";      end
   end
 end

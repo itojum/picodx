@@ -38,6 +38,28 @@ module PicoDX
       @offset_sync = false
     end
 
+    NOT_IMPL = "not supported on the Canvas 2D backend (picodx). See docs/compatibility.md"
+    def shader=(_v); raise NotImplementedError, "Sprite#shader= #{NOT_IMPL}"; end
+
+    def collision_enable
+      @collision_enable.nil? ? true : @collision_enable
+    end
+
+    def collision_enable=(val)
+      @collision_enable = val
+    end
+
+    def param_hash
+      {
+        x: x, y: y, z: z,
+        angle: angle, scale_x: scale_x, scale_y: scale_y,
+        center_x: center_x, center_y: center_y,
+        alpha: alpha, blend: blend, visible: visible,
+        image: image, collision: collision, target: target,
+        offset_sync: offset_sync
+      }
+    end
+
     def draw
       return if @vanished || !visible || image.nil?
       cx = center_x || (image.width  / 2)
@@ -67,7 +89,7 @@ module PicoDX
     end
 
     def check(other)
-      return [] if vanished? || collision.nil?
+      return [] if vanished? || collision.nil? || !collision_enable
       targets = other.is_a?(Array) ? other : [other]
       result = []
       targets.each do |sp|
@@ -78,8 +100,8 @@ module PicoDX
     end
 
     def ===(other)
-      return false if vanished? || collision.nil?
-      return false if other.nil? || other.vanished? || other.collision.nil?
+      return false if vanished? || collision.nil? || !collision_enable
+      return false if other.nil? || other.vanished? || other.collision.nil? || !other.collision_enable
       _collide?(other)
     end
 
