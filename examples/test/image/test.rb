@@ -57,13 +57,29 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
 
   # --- Pixel access ---
 
-  # Image#[]= and Image#[]
+  # Image#[]= and Image#[] — 3-element RGB
   img_px = Image.new(10, 10, [0, 0, 0])
   img_px[5, 5] = [77, 88, 99]
   px = img_px[5, 5]
   results << assert_equal(77, px[1], "Image#[]= and [] r")
   results << assert_equal(88, px[2], "Image#[]= and [] g")
   results << assert_equal(99, px[3], "Image#[]= and [] b")
+
+  # Image.new 4-element ARGB: [a, r, g, b]
+  img_argb = Image.new(10, 10, [200, 100, 50, 25])
+  px_argb = img_argb[5, 5]
+  results << assert_equal(200, px_argb[0], "Image.new ARGB: a=200")
+  results << assert_equal(100, px_argb[1], "Image.new ARGB: r=100")
+  results << assert_equal(50,  px_argb[2], "Image.new ARGB: g=50")
+  results << assert_equal(25,  px_argb[3], "Image.new ARGB: b=25")
+
+  # Image#[]= 4-element ARGB: [a, r, g, b]
+  img_px[5, 5] = [128, 255, 0, 0]
+  px4 = img_px[5, 5]
+  results << assert_equal(128, px4[0], "Image#[]= ARGB: a=128")
+  results << assert_equal(255, px4[1], "Image#[]= ARGB: r=255")
+  results << assert_equal(0,   px4[2], "Image#[]= ARGB: g=0")
+  results << assert_equal(0,   px4[3], "Image#[]= ARGB: b=0")
 
   # --- Row 3 (y=135): slice / dup / Image#draw ---
 
