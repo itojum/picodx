@@ -12,6 +12,14 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(0,            rt.oy,       "RenderTarget.new oy default 0")
   results << assert_equal(false,        rt.disposed?, "RenderTarget.new disposed? is false")
 
+  # RenderTarget.new with 4-element ARGB background: [a, r, g, b]
+  rt_argb = RenderTarget.new(10, 10, [128, 255, 0, 0])
+  px_argb = rt_argb.to_image[0, 0]
+  results << assert_equal(128, px_argb[0], "RenderTarget.new ARGB bgcolor: a=128")
+  results << assert_equal(255, px_argb[1], "RenderTarget.new ARGB bgcolor: r=255")
+  results << assert_equal(0,   px_argb[2], "RenderTarget.new ARGB bgcolor: g=0")
+  results << assert_equal(0,   px_argb[3], "RenderTarget.new ARGB bgcolor: b=0")
+
   # --- attr setters ---
   rt.bgcolor = [10, 20, 30]; rt.ox = 5; rt.oy = 3
   results << assert_equal([10, 20, 30], rt.bgcolor, "RenderTarget#bgcolor= setter")

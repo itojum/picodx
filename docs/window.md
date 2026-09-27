@@ -52,4 +52,4 @@ Window.draw_font(x, y, str, color)            # 16px monospace
 Window.draw_font(x, y, str, color, size)      # custom size
 ```
 
-Colors are `[r, g, b]` or `[r, g, b, a]` with `a` in 0–255.
+Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order) with `a` in 0–255.

@@ -13,8 +13,7 @@ module PicoDX
       @disposed = false
       @canvas   = JS.eval("new OffscreenCanvas(#{width}, #{height})")
       @ctx      = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-      r, g, b, a = bgcolor
-      @ctx[:fillStyle] = a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      @ctx[:fillStyle] = _css(bgcolor)
       @ctx.fillRect(0, 0, width, height)
     end
 

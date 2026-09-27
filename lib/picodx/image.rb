@@ -12,8 +12,7 @@ module PicoDX
       @color  = color
       @canvas = JS.eval("new OffscreenCanvas(#{width}, #{height})")
       @ctx    = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-      r, g, b, a = color
-      @ctx[:fillStyle] = a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      @ctx[:fillStyle] = _css(color)
       @ctx.fillRect(0, 0, width, height)
     end
 
@@ -147,6 +146,20 @@ module PicoDX
       @ctx.restore
     end
 
+    def to_a
+      data = @ctx.getImageData(0, 0, @width, @height)[:data]
+      result = []
+      n = @width * @height
+      i = 0
+      while i < n
+        j = i * 4
+        result << [data[j+3].to_i, data[j].to_i, data[j+1].to_i, data[j+2].to_i]
+        i += 1
+      end
+      result
+    end
+    private :to_a
+
     def compare(x, y, other, ox, oy, w, h)
       data1 = @ctx.getImageData(x, y, w, h)[:data]
       data2 = other._ctx.getImageData(ox, oy, w, h)[:data]
@@ -171,7 +184,7 @@ module PicoDX
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
       return dup if hue_shift.zero? && luminance_delta.zero? && saturation_delta.zero?
-      base_img = hue_shift.zero? ? self : _change_hue(hue_shift)
+      base_img = hue_shift.zero? ? self : _change_hls_hue(hue_shift)
       return base_img if luminance_delta.zero? && saturation_delta.zero?
 
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
@@ -204,13 +217,12 @@ module PicoDX
 
     def [](x, y)
       data = @ctx.getImageData(x, y, 1, 1)[:data]
-      [data[0].to_i, data[1].to_i, data[2].to_i, data[3].to_i]
+      [data[3].to_i, data[0].to_i, data[1].to_i, data[2].to_i]
     end
 
     def []=(x, y, color)
-      r, g, b, a = color
-      a ||= 255
-      @ctx[:fillStyle] = "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+      @ctx.clearRect(x, y, 1, 1)
+      @ctx[:fillStyle] = _css(color)
       @ctx.fillRect(x, y, 1, 1)
     end
 
@@ -240,7 +252,7 @@ module PicoDX
 
     private
 
-    def _change_hue(hue_shift)
+    def _change_hls_hue(hue_shift)
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
       new_img._ctx[:filter] = "hue-rotate(#{hue_shift}deg)"
       new_img._ctx.drawImage(@canvas, 0, 0)
@@ -249,8 +261,13 @@ module PicoDX
     end
 
     def _css(color)
-      r, g, b, a = color
-      a ? "rgba(#{r},#{g},#{b},#{a.to_f / 255})" : "rgb(#{r},#{g},#{b})"
+      if color.length == 4
+        a, r, g, b = color
+        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+      else
+        r, g, b = color
+        "rgb(#{r},#{g},#{b})"
+      end
     end
 
     def _clamp01(value)

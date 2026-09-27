@@ -6,30 +6,33 @@ module PicoDX
       attr_reader :width, :height, :fps, :real_fps, :ox, :oy, :bgcolor
 
       def width=(value)
+        @preset_width = value
+        @preset_width_canvas_id = @canvas_id if @canvas_id
         if @canvas
           @canvas[:width] = value
           @width = value
-        else
-          @preset_width = value
         end
       end
 
       def height=(value)
+        @preset_height = value
+        @preset_height_canvas_id = @canvas_id if @canvas_id
         if @canvas
           @canvas[:height] = value
           @height = value
-        else
-          @preset_height = value
         end
       end
 
       def init(canvas_id)
+        @canvas_id = canvas_id
         @canvas   = JS.document.getElementById(canvas_id)
         @ctx      = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-        @canvas[:width]  = @preset_width  if @preset_width
-        @canvas[:height] = @preset_height if @preset_height
-        @preset_width  = nil
-        @preset_height = nil
+        apply_width  = @preset_width_canvas_id.nil? || @preset_width_canvas_id == canvas_id
+        apply_height = @preset_height_canvas_id.nil? || @preset_height_canvas_id == canvas_id
+        @canvas[:width]  = @preset_width  if apply_width && @preset_width
+        @canvas[:height] = @preset_height if apply_height && @preset_height
+        @preset_width_canvas_id = canvas_id if apply_width && @preset_width
+        @preset_height_canvas_id = canvas_id if apply_height && @preset_height
         @width    = @canvas[:width].to_i
         @height   = @canvas[:height].to_i
         @bgcolor  = [0, 0, 0]

@@ -7,7 +7,7 @@
 ```ruby
 img = Image.new(width, height)              # filled with black [0,0,0]
 img = Image.new(width, height, [r, g, b])
-img = Image.new(width, height, [r, g, b, a])  # a: 0–255
+img = Image.new(width, height, [a, r, g, b])  # a: 0–255 (DXRuby order)
 
 img.width   # => Integer
 img.height  # => Integer
@@ -40,8 +40,8 @@ img.draw(x, y, other_image)                    # blit another Image onto this on
 ## Pixel access
 
 ```ruby
-img[x, y]          # => [r, g, b, a]  (0–255 each)
-img[x, y] = color  # color = [r, g, b] or [r, g, b, a]
+img[x, y]          # => [a, r, g, b]  (0–255 each, DXRuby order)
+img[x, y] = color  # color = [r, g, b] or [a, r, g, b]
 ```
 
 ## Copy / slice
@@ -53,6 +53,8 @@ img.clone               # alias for dup
 ```
 
 ## Color adjustment
+
+`Image#change_hls` is the supported API name; replace `change_hue(degree)` with `change_hls(degree, 0, 0)`.
 
 ```ruby
 img.change_hls(hue, luminance, saturation)  # => new Image
