@@ -24,11 +24,10 @@ module PicoDX
       end
 
       def init(canvas_id)
-        previous_canvas_id = @canvas_id
         @canvas_id = canvas_id
         @canvas   = JS.document.getElementById(canvas_id)
         @ctx      = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
-        apply_preset = previous_canvas_id.nil? || @preset_canvas_id == canvas_id
+        apply_preset = @preset_canvas_id.nil? || @preset_canvas_id == canvas_id
         @canvas[:width]  = @preset_width  if apply_preset && @preset_width
         @canvas[:height] = @preset_height if apply_preset && @preset_height
         @preset_canvas_id = canvas_id if apply_preset && (@preset_width || @preset_height)
