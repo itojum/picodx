@@ -19,10 +19,10 @@ module PicoDX
     # Gamepad state (up to 4 pads)
     @pad_count          = 0
     @pad_btns_down      = []
-    @pad_btns_prev      = []
+    @pad_btns_prev      = {}   # keyed by orig Gamepad.index (Hash, not Array)
     @pad_btns_pushed    = []
     @pad_btns_released  = []
-    @pad_hold_frames    = []
+    @pad_hold_frames    = {}   # keyed by orig Gamepad.index (Hash, not Array)
     @pad_axes_data      = []
     @pad_repeat_initial = []
     @pad_repeat_interval= []

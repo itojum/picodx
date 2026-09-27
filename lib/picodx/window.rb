@@ -138,7 +138,8 @@ module PicoDX
             break if @closed
             _tick
           end
-          @closed = false
+          @closed  = false
+          @looping = false
         end
       end
 

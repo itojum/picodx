@@ -62,7 +62,12 @@ module PicoDX
   P_SELECT= 8   # Back / Select
   P_L3    = 10  # Left stick click
   P_R3    = 11  # Right stick click
-  (0..15).each { |i| const_set("P_#{i}", i) }
+  # P_BUTTON0..P_BUTTON15: DXRuby-compatible names for face/shoulder buttons.
+  # Values 0-11 match the Gamepad API standard mapping.
+  # P_UP/DOWN/LEFT/RIGHT map to Gamepad API D-pad buttons (12-15); note that
+  # DXRuby's original numeric values for these constants differ (POV-hat based)
+  # but the named constants work correctly in ported code. See docs/compatibility.md.
+  (0..15).each { |i| const_set("P_#{i}", i); const_set("P_BUTTON#{i}", i) }
 
   C_BLACK   = [0,   0,   0  ]
   C_WHITE   = [255, 255, 255]
