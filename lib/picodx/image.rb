@@ -259,7 +259,7 @@ module PicoDX
     end
 
     def set_color_key(color)
-      r_key, g_key, b_key = color.length >= 3 ? [color[0], color[1], color[2]] : [0, 0, 0]
+      r_key, g_key, b_key = color.length == 4 ? [color[1], color[2], color[3]] : [color[0], color[1], color[2]]
       data = @ctx.getImageData(0, 0, @width, @height)
       pixels = data[:data]
       n = @width * @height
@@ -282,11 +282,12 @@ module PicoDX
         "const ctx=c.getContext('2d');" \
         "ctx.drawImage(arguments[0],0,0);" \
         "c.convertToBlob({type:'image/png'}).then(blob=>{" \
+        "const url=URL.createObjectURL(blob);" \
         "const a=document.createElement('a');" \
-        "a.href=URL.createObjectURL(blob);" \
-        "a.download='#{fname}';" \
-        "a.click()});"
-      , @canvas)
+        "a.href=url;a.download=arguments[1];a.click();" \
+        "URL.revokeObjectURL(url);" \
+        "});"
+      , @canvas, fname)
     end
 
     def flush; end

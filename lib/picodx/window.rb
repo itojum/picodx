@@ -73,11 +73,12 @@ module PicoDX
           "const ctx=oc.getContext('2d');" \
           "ctx.drawImage(c,0,0);" \
           "oc.convertToBlob({type:'image/png'}).then(blob=>{" \
+          "const url=URL.createObjectURL(blob);" \
           "const a=document.createElement('a');" \
-          "a.href=URL.createObjectURL(blob);" \
-          "a.download='#{fname}';" \
-          "a.click()});"
-        , @canvas)
+          "a.href=url;a.download=arguments[1];a.click();" \
+          "URL.revokeObjectURL(url);" \
+          "});"
+        , @canvas, fname)
       end
 
       def resize(w, h)
@@ -85,6 +86,7 @@ module PicoDX
         @canvas[:height] = h
         @width  = w
         @height = h
+        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
       end
 
       def scale=(s)
@@ -99,14 +101,17 @@ module PicoDX
       end
 
       def min_filter=(filter)
+        @min_filter = filter
         @ctx[:imageSmoothingEnabled] = (filter != :nearest)
       end
 
       def mag_filter=(filter)
+        @mag_filter = filter
         @ctx[:imageSmoothingEnabled] = (filter != :nearest)
       end
 
       def frameskip=(val)
+        @frameskip = val
       end
 
       def caption
@@ -146,7 +151,7 @@ module PicoDX
           # The exit_value carries the value from break/return so callers
           # can use: result = Window.loop { ... ; return chara_type }
           result = nil
-          while true
+          while !@closed
             JS.global.__picodx_nextFrame().await
             begin
               _tick_with(block)
@@ -164,7 +169,7 @@ module PicoDX
           @last_process_time = nil
           @accumulated       = 0.0
           @real_fps          = 0.0
-          while true
+          while !@closed
             JS.global.__picodx_nextFrame().await
             _tick
           end
@@ -185,7 +190,7 @@ module PicoDX
         if @last_tick_time
           delta = now - @last_tick_time
           @accumulated += delta
-          if @accumulated < interval * 0.9
+          if @frameskip != false && @accumulated < interval * 0.9
             @last_tick_time = now
             return
           end

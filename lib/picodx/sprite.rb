@@ -81,7 +81,7 @@ module PicoDX
     end
 
     def collision_sync=(val)
-      @collision_sync = val
+      raise NotImplementedError, "collision_sync= is not yet implemented (requires rotated/scaled collision shapes)"
     end
 
     def param_hash
@@ -89,12 +89,11 @@ module PicoDX
         x: x, y: y, z: z,
         angle: angle,
         scale_x: scale_x, scale_y: scale_y,
-        center_x: center_x, center_y: center_y,
+        cx: center_x, cy: center_y,
         alpha: alpha, blend: blend,
         visible: visible,
         collision: collision,
-        collision_enable: collision_enable,
-        collision_sync: collision_sync
+        collision_enable: collision_enable
       }
     end
 
