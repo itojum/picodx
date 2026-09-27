@@ -80,14 +80,19 @@ module PicoDX
           # Re-entrant call: run a nested frame loop until the block exits.
           # break/return inside the block raises LocalJumpError via .call,
           # which we rescue to cleanly exit the inner loop.
+          # The exit_value carries the value from break/return so callers
+          # can use: result = Window.loop { ... ; return chara_type }
+          result = nil
           while true
             JS.global.__picodx_nextFrame().await
             begin
               _tick_with(block)
-            rescue LocalJumpError
+            rescue LocalJumpError => e
+              result = e.exit_value
               break
             end
           end
+          result
         else
           @looping           = true
           @user_block        = block
