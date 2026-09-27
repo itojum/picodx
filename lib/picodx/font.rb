@@ -8,6 +8,14 @@ module PicoDX
       def default=(font)
         @default = font
       end
+
+      def install(filename, name)
+        JS.eval(
+          "const f = new FontFace('#{name}', 'url(#{filename})');" \
+          "f.load().then(font => document.fonts.add(font));"
+        )
+        new(16, name)
+      end
     end
 
     attr_reader :size, :fontname, :italic, :weight
@@ -31,6 +39,18 @@ module PicoDX
       style  = @italic ? "italic " : ""
       family = @fontname.empty? ? "monospace" : "#{@fontname}, monospace"
       "#{style}#{@weight} #{@size}px #{family}"
+    end
+
+    def dispose
+      @disposed = true
+    end
+
+    def disposed?
+      @disposed || false
+    end
+
+    def info
+      { size: @size, name: @fontname, italic: @italic, weight: @weight }
     end
   end
 end

@@ -33,9 +33,11 @@ module PicoDX
       @visible     = true
       @image       = image
       @collision   = nil
-      @vanished    = false
-      @target      = nil
-      @offset_sync = false
+      @vanished          = false
+      @target            = nil
+      @offset_sync       = false
+      @collision_enable  = true
+      @collision_sync    = false
     end
 
     def draw
@@ -66,20 +68,50 @@ module PicoDX
       @vanished || false
     end
 
+    def collision_enable
+      @collision_enable.nil? ? true : @collision_enable
+    end
+
+    def collision_enable=(val)
+      @collision_enable = val
+    end
+
+    def collision_sync
+      @collision_sync || false
+    end
+
+    def collision_sync=(val)
+      @collision_sync = val
+    end
+
+    def param_hash
+      {
+        x: x, y: y, z: z,
+        angle: angle,
+        scale_x: scale_x, scale_y: scale_y,
+        center_x: center_x, center_y: center_y,
+        alpha: alpha, blend: blend,
+        visible: visible,
+        collision: collision,
+        collision_enable: collision_enable,
+        collision_sync: collision_sync
+      }
+    end
+
     def check(other)
-      return [] if vanished? || collision.nil?
+      return [] if vanished? || collision.nil? || !collision_enable
       targets = other.is_a?(Array) ? other : [other]
       result = []
       targets.each do |sp|
-        next if sp.nil? || sp.vanished? || sp.collision.nil?
+        next if sp.nil? || sp.vanished? || sp.collision.nil? || !sp.collision_enable
         result << sp if _collide?(sp)
       end
       result
     end
 
     def ===(other)
-      return false if vanished? || collision.nil?
-      return false if other.nil? || other.vanished? || other.collision.nil?
+      return false if vanished? || collision.nil? || !collision_enable
+      return false if other.nil? || other.vanished? || other.collision.nil? || !other.collision_enable
       _collide?(other)
     end
 

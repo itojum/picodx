@@ -41,9 +41,72 @@ module PicoDX
         @ox       = 0
         @oy       = 0
         @looping  = false
+        @closed   = false
+        @created  = true
         @draw_queue = nil
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
+      end
+
+      def close
+        @closed = true
+        @looping = false
+      end
+
+      def closed?
+        @closed || false
+      end
+
+      def created?
+        @created || false
+      end
+
+      def active?
+        JS.eval("document.hasFocus()").to_s == "true"
+      end
+
+      def get_screen_shot(filename = nil)
+        fname = filename || "screenshot.png"
+        JS.eval(
+          "const c=arguments[0];" \
+          "const oc=new OffscreenCanvas(c.width,c.height);" \
+          "const ctx=oc.getContext('2d');" \
+          "ctx.drawImage(c,0,0);" \
+          "oc.convertToBlob({type:'image/png'}).then(blob=>{" \
+          "const a=document.createElement('a');" \
+          "a.href=URL.createObjectURL(blob);" \
+          "a.download='#{fname}';" \
+          "a.click()});"
+        , @canvas)
+      end
+
+      def resize(w, h)
+        @canvas[:width]  = w
+        @canvas[:height] = h
+        @width  = w
+        @height = h
+      end
+
+      def scale=(s)
+        @canvas[:style][:width]  = "#{(@width  * s).to_i}px"
+        @canvas[:style][:height] = "#{(@height * s).to_i}px"
+      end
+
+      def sync
+      end
+
+      def update
+      end
+
+      def min_filter=(filter)
+        @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+      end
+
+      def mag_filter=(filter)
+        @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+      end
+
+      def frameskip=(val)
       end
 
       def caption

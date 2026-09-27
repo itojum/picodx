@@ -1,5 +1,13 @@
 module PicoDX
   class Sound
+    def self.load_from_memory(data)
+      snd = new(nil)
+      JS.eval("window.__picodx_audio_ctx = window.__picodx_audio_ctx || new AudioContext()")
+      buffer = JS.eval("window.__picodx_audio_ctx.decodeAudioData(arguments[0])", data).await
+      snd.instance_variable_set(:@buffer, buffer)
+      snd
+    end
+
     def initialize(filename)
       @playing    = false
       @disposed   = false
@@ -13,6 +21,8 @@ module PicoDX
       @source     = nil
       @gain_node  = nil
       @pan_node   = nil
+      @buffer     = nil
+      return if filename.nil?
 
       JS.eval("window.__picodx_audio_ctx = window.__picodx_audio_ctx || new AudioContext()")
       @buffer = JS.eval(

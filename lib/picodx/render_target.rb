@@ -29,6 +29,19 @@ module PicoDX
       @oy = value
     end
 
+    def min_filter=(filter)
+      @min_filter = filter
+      @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+    end
+
+    def mag_filter=(filter)
+      @mag_filter = filter
+      @ctx[:imageSmoothingEnabled] = (filter != :nearest)
+    end
+
+    def discard; end
+    def decide;  end
+
     def update
     end
 
