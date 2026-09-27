@@ -176,6 +176,73 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (!(os_c === os_b) ? "<span class='pass'>PASS</span> offset_sync=false: no shift, no overlap" :
                                  "<span class='fail'>FAIL</span> offset_sync=false: should not overlap without shift")
 
+  # --- Sprite#collision_sync ---
+  cs_def = Sprite.new(0, 0, nil)
+  results << assert_equal(true, cs_def.collision_sync, "collision_sync default is true")
+
+  # scale_x/scale_y applied to rect: scale 0.5 shrinks collision from (-50,-50,50,50) to (-25,-25,25,25)
+  cs_big = Sprite.new(0, 0, nil)
+  cs_big.collision = [-50, -50, 50, 50]
+  cs_big.scale_x   = 0.5
+  cs_big.scale_y   = 0.5
+
+  cs_near = Sprite.new(29, 0, nil)
+  cs_near.collision = [-5, -5, 5, 5]
+  # cs_big right edge=25, cs_near left edge=24 → overlap
+  results << (cs_big === cs_near ? "<span class='pass'>PASS</span> collision_sync: scale 0.5 rect, overlap" :
+                                   "<span class='fail'>FAIL</span> collision_sync: scale 0.5 rect should overlap")
+
+  cs_far = Sprite.new(31, 0, nil)
+  cs_far.collision = [-5, -5, 5, 5]
+  # cs_big right edge=25, cs_far left edge=26 → no overlap
+  results << (!(cs_big === cs_far) ? "<span class='pass'>PASS</span> collision_sync: scale 0.5 rect, no overlap" :
+                                     "<span class='fail'>FAIL</span> collision_sync: scale 0.5 rect should not overlap")
+
+  # negative scale_x (left-right flip): symmetric rect AABB is same as positive scale
+  cs_flip = Sprite.new(0, 0, nil)
+  cs_flip.collision = [-50, -50, 50, 50]
+  cs_flip.scale_x   = -0.5
+  cs_flip.scale_y   = 0.5
+  results << (cs_flip === cs_near ? "<span class='pass'>PASS</span> collision_sync: negative scale_x (flip) overlap" :
+                                    "<span class='fail'>FAIL</span> collision_sync: negative scale_x should overlap")
+  results << (!(cs_flip === cs_far) ? "<span class='pass'>PASS</span> collision_sync: negative scale_x (flip) no overlap" :
+                                      "<span class='fail'>FAIL</span> collision_sync: negative scale_x should not overlap")
+
+  # scale applied to circle: radius *= max(|scale_x|, |scale_y|)
+  cs_circ = Sprite.new(0, 0, nil)
+  cs_circ.collision = [0, 0, 50]
+  cs_circ.scale_x   = 0.5
+  cs_circ.scale_y   = 0.5
+  # effective: center (0,0), radius 25
+
+  cs_circ_near = Sprite.new(28, 0, nil)
+  cs_circ_near.collision = [0, 0, 5]
+  # distance=28, sum radii=30 → overlap
+  results << (cs_circ === cs_circ_near ? "<span class='pass'>PASS</span> collision_sync: scale 0.5 circle, overlap" :
+                                         "<span class='fail'>FAIL</span> collision_sync: scale 0.5 circle should overlap")
+
+  cs_circ_far = Sprite.new(31, 0, nil)
+  cs_circ_far.collision = [0, 0, 5]
+  # distance=31, sum radii=30 → no overlap
+  results << (!(cs_circ === cs_circ_far) ? "<span class='pass'>PASS</span> collision_sync: scale 0.5 circle, no overlap" :
+                                           "<span class='fail'>FAIL</span> collision_sync: scale 0.5 circle should not overlap")
+
+  # collision_sync=false: scale not applied to collision
+  cs_off = Sprite.new(0, 0, nil)
+  cs_off.collision      = [-50, -50, 50, 50]
+  cs_off.scale_x        = 0.5
+  cs_off.scale_y        = 0.5
+  cs_off.collision_sync = false
+  # effective rect unchanged: (-50,-50,50,50)
+  cs_off_near = Sprite.new(49, 0, nil)
+  cs_off_near.collision = [-5, -5, 5, 5]
+  # cs_off right edge=50 > cs_off_near left edge=44 → overlap
+  results << (cs_off === cs_off_near ? "<span class='pass'>PASS</span> collision_sync=false: scale not applied, overlap" :
+                                       "<span class='fail'>FAIL</span> collision_sync=false: should overlap with unscaled rect")
+  # but cs_big (sync=true, scale 0.5) does NOT overlap cs_off_near at x=49
+  results << (!(cs_big === cs_off_near) ? "<span class='pass'>PASS</span> collision_sync=true vs x=49: no overlap after scale" :
+                                          "<span class='fail'>FAIL</span> collision_sync=true vs x=49: scaled rect should not reach x=44")
+
   # --- Sprite.clean(array) ---
   live = Sprite.new(0, 0, nil)
   dead = Sprite.new(0, 0, nil)
@@ -207,8 +274,9 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(:alpha, ns.blend,      "no-super subclass: blend default :alpha")
   results << assert_equal(true,  ns.visible,     "no-super subclass: visible default true")
   results << assert_equal(false, ns.vanished?,   "no-super subclass: vanished? default false")
-  results << assert_equal(false, ns.offset_sync, "no-super subclass: offset_sync default false")
-  results << assert_equal(nil,   ns.collision,   "no-super subclass: collision default nil")
+  results << assert_equal(false, ns.offset_sync,    "no-super subclass: offset_sync default false")
+  results << assert_equal(true,  ns.collision_sync, "no-super subclass: collision_sync default true")
+  results << assert_equal(nil,   ns.collision,      "no-super subclass: collision default nil")
 
   # draw should not raise (image is set, defaults apply)
   ns.draw
