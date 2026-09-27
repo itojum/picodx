@@ -28,6 +28,7 @@ module PicoDX
       cy = @center_y || (@image.height / 2)
       t  = @target || Window
       t.draw_ex(@x.to_i, @y.to_i, @image, {
+        z:       @z,
         angle:   @angle,
         scale_x: @scale_x,
         scale_y: @scale_y,

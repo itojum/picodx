@@ -153,5 +153,26 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_box( 10, 115, 350, 165, [255, 220, 0])
   Window.draw_font(10, 172, "draw_box: yellow outline above should be visible", [180, 180, 180], 12)
 
+  # --- z-order: higher z drawn last (on top), regardless of call order ---
+  # Draw red at z:0, then blue at z:1 on the same area.
+  # Even though red is called first, blue (higher z) should appear on top.
+  Window.draw_box_fill(10, 100, 50, 120, [255, 0, 0], z: 0)
+  Window.draw_box_fill(10, 100, 50, 120, [0, 0, 255], z: 1)
+  results << assert_pixel("game", 30, 110, 0, 0, 255, "z-order: higher-z (blue z:1) is drawn on top of lower-z (red z:0)")
+
+  # --- z-order reversed call order: lower z called last but still renders below ---
+  # Draw green at z:1 first, then red at z:0.
+  # Red (z:0) is called second but must NOT overwrite green (z:1).
+  Window.draw_box_fill(60, 100, 100, 120, [0, 128, 0], z: 1)
+  Window.draw_box_fill(60, 100, 100, 120, [255, 0, 0], z: 0)
+  results << assert_pixel("game", 80, 110, 0, 128, 0, "z-order: lower-z (red z:0) does not overwrite higher-z (green z:1)")
+
+  # --- same z preserves call order ---
+  # Draw magenta first, then cyan, both at z:0.
+  # The second call (cyan) must appear on top because insertion order is stable.
+  Window.draw_box_fill(110, 100, 150, 120, [255, 0, 255], z: 0)
+  Window.draw_box_fill(110, 100, 150, 120, [0, 255, 255], z: 0)
+  results << assert_pixel("game", 130, 110, 0, 255, 255, "z-order: same z preserves call order (cyan overwrites magenta)")
+
   show_results(results)
 end
