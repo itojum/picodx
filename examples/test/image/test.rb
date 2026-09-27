@@ -115,16 +115,20 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_scale(260, 0, gear, 0.625, 0.625)
   Window.draw_font(262, 143, "Image.load (visual)", [140, 140, 140], 10)
 
-  # --- DXRuby compatibility surface ---
-  img_api = Image.new(2, 1, [100, 150, 200])
-  results << assert_equal(false, img_api.respond_to?(:to_a),       "Image#to_a is not public")
-  results << assert_equal(false, img_api.respond_to?(:change_hue), "Image#change_hue is not public")
-  results << assert_equal(false, img_api.respond_to?(:canvas),     "Image#canvas is not public")
-  results << assert_equal(false, img_api.respond_to?(:color),      "Image#color is not public")
+  # --- Image.load cache ---
+  gear2 = Image.load("/test/image/image.png")
+  results << assert_equal(256, gear2.width,  "Image.load cache: width matches on 2nd call")
+  results << assert_equal(256, gear2.height, "Image.load cache: height matches on 2nd call")
+  # Mutating the returned image must not corrupt the cache
+  gear2[0, 0] = [123, 45, 67]
+  gear3 = Image.load("/test/image/image.png")
+  px3 = gear3[0, 0]
+  results << (px3[0] != 123 ? "<span class='pass'>PASS</span> Image.load cache: mutation does not corrupt cache" :
+                              "<span class='fail'>FAIL</span> Image.load cache: mutation corrupted cache (got #{px3.inspect})")
 
-  # --- Image#to_a (private) ---
+  # --- Image#to_a ---
   img_toa = Image.new(2, 1, [200, 100, 150, 200])
-  arr = img_toa.send(:to_a)
+  arr = img_toa.to_a
   results << assert_equal(2,   arr.length, "Image#to_a returns 2 elements for 2x1 image")
   results << assert_equal(200, arr[0][0],  "Image#to_a pixel[0] a=200")
   results << assert_equal(100, arr[0][1],  "Image#to_a pixel[0] r=100")

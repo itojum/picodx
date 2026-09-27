@@ -16,14 +16,20 @@ module PicoDX
       @ctx.fillRect(0, 0, width, height)
     end
 
+    @@cache = {}
+
     def self.load(filename)
+      cached = @@cache[filename]
+      return cached.dup if cached
+
       promise = JS.eval("new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('load error'));i.src='#{filename}';})")
       html_img = promise.await
       w = html_img[:naturalWidth].to_i
       h = html_img[:naturalHeight].to_i
       img = Image.new(w, h, [0, 0, 0, 0])
       img._copy_all_from(html_img)
-      img
+      @@cache[filename] = img
+      img.dup
     end
 
     def self.load_tiles(filename, x_count, y_count)
@@ -158,8 +164,6 @@ module PicoDX
       end
       result
     end
-    private :to_a
-
     def compare(x, y, other, ox, oy, w, h)
       data1 = @ctx.getImageData(x, y, w, h)[:data]
       data2 = other._ctx.getImageData(ox, oy, w, h)[:data]
