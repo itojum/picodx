@@ -53,4 +53,27 @@ module PicoDX
   C_YELLOW  = [255, 255, 0  ]
   C_CYAN    = [0,   255, 255]
   C_MAGENTA = [255, 0,   255]
+
+  # ゲームパッドボタン定数（Gamepad API のボタンインデックス対応）
+  P_BUTTON1  =  0; P_BUTTON2  =  1; P_BUTTON3  =  2; P_BUTTON4  =  3
+  P_BUTTON5  =  4; P_BUTTON6  =  5; P_BUTTON7  =  6; P_BUTTON8  =  7
+  P_BUTTON9  =  8; P_BUTTON10 =  9; P_BUTTON11 = 10; P_BUTTON12 = 11
+  P_BUTTON13 = 12; P_BUTTON14 = 13; P_BUTTON15 = 14; P_BUTTON16 = 15
+  P_BUTTON17 = 16; P_BUTTON18 = 17; P_BUTTON19 = 18; P_BUTTON20 = 19
+
+  # 標準的なゲームパッドのボタンエイリアス（Standard Gamepad Layout）
+  P_A     =  0  # A / Cross
+  P_B     =  1  # B / Circle
+  P_X     =  2  # X / Square
+  P_Y     =  3  # Y / Triangle
+  P_L     =  4  # L1 / LB
+  P_R     =  5  # R1 / RB
+  P_L2    =  6  # L2 / LT
+  P_R2    =  7  # R2 / RT
+  P_SELECT = 8  # Select / Back
+  P_START  = 9  # Start / Menu
+  P_UP    = 12  # D-Pad Up
+  P_DOWN  = 13  # D-Pad Down
+  P_LEFT  = 14  # D-Pad Left
+  P_RIGHT = 15  # D-Pad Right
 end
