@@ -1,6 +1,6 @@
 module PicoDX
   class Image
-    attr_reader :width, :height, :color, :canvas
+    attr_reader :width, :height
 
     def _ctx
       @ctx
@@ -103,7 +103,7 @@ module PicoDX
     end
 
     def draw(x, y, other_image)
-      @ctx.drawImage(other_image.canvas, x, y)
+      @ctx.drawImage(other_image._ctx[:canvas], x, y)
     end
 
     def draw_font(x, y, str, font, color = [255, 255, 255])
@@ -158,6 +158,7 @@ module PicoDX
       end
       result
     end
+    private :to_a
 
     def compare(x, y, other, ox, oy, w, h)
       data1 = @ctx.getImageData(x, y, w, h)[:data]
@@ -178,11 +179,39 @@ module PicoDX
       diff
     end
 
-    def change_hue(degree)
+    def change_hls(hue = 0, luminance = 0, saturation = 0)
+      hue_shift        = hue.to_f
+      luminance_delta  = luminance.to_f / 100.0
+      saturation_delta = saturation.to_f / 100.0
+      return dup if hue_shift.zero? && luminance_delta.zero? && saturation_delta.zero?
+      base_img = hue_shift.zero? ? self : _change_hue(hue_shift)
+      return base_img if luminance_delta.zero? && saturation_delta.zero?
+
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
-      new_img._ctx[:filter] = "hue-rotate(#{degree}deg)"
-      new_img._ctx.drawImage(@canvas, 0, 0)
-      new_img._ctx[:filter] = "none"
+      src_data = base_img._ctx.getImageData(0, 0, @width, @height)[:data]
+      dst_img  = new_img._ctx.createImageData(@width, @height)
+      dst_data = dst_img[:data]
+      n = @width * @height
+      i = 0
+      while i < n
+        j = i * 4
+        r = src_data[j].to_f / 255
+        g = src_data[j + 1].to_f / 255
+        b = src_data[j + 2].to_f / 255
+        a = src_data[j + 3].to_i
+
+        h, l, s = _rgb_to_hls(r, g, b)
+        l = _clamp01(l + luminance_delta)
+        s = _clamp01(s + saturation_delta)
+        nr, ng, nb = _hls_to_rgb(h, l, s)
+
+        dst_data[j]     = (nr * 255).round
+        dst_data[j + 1] = (ng * 255).round
+        dst_data[j + 2] = (nb * 255).round
+        dst_data[j + 3] = a
+        i += 1
+      end
+      new_img._ctx.putImageData(dst_img, 0, 0)
       new_img
     end
 
@@ -223,6 +252,14 @@ module PicoDX
 
     private
 
+    def _change_hue(hue_shift)
+      new_img = Image.new(@width, @height, [0, 0, 0, 0])
+      new_img._ctx[:filter] = "hue-rotate(#{hue_shift}deg)"
+      new_img._ctx.drawImage(@canvas, 0, 0)
+      new_img._ctx[:filter] = "none"
+      new_img
+    end
+
     def _css(color)
       if color.length == 4
         a, r, g, b = color
@@ -231,6 +268,50 @@ module PicoDX
         r, g, b = color
         "rgb(#{r},#{g},#{b})"
       end
+    end
+
+    def _clamp01(value)
+      return 0.0 if value < 0.0
+      return 1.0 if value > 1.0
+      value
+    end
+
+    def _rgb_to_hls(r, g, b)
+      max = [r, g, b].max
+      min = [r, g, b].min
+      l = (max + min) / 2.0
+      return [0.0, l, 0.0] if max == min
+
+      d = max - min
+      s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min)
+      h = case max
+          when r then ((g - b) / d) + (g < b ? 6.0 : 0.0)
+          when g then ((b - r) / d) + 2.0
+          else         ((r - g) / d) + 4.0
+          end
+      [(h * 60.0) % 360.0, l, s]
+    end
+
+    def _hls_to_rgb(h, l, s)
+      return [l, l, l] if s == 0.0
+
+      q = l < 0.5 ? l * (1.0 + s) : l + s - (l * s)
+      p = 2.0 * l - q
+      hk = h / 360.0
+      [
+        _hue_to_rgb(p, q, hk + (1.0 / 3.0)),
+        _hue_to_rgb(p, q, hk),
+        _hue_to_rgb(p, q, hk - (1.0 / 3.0))
+      ]
+    end
+
+    def _hue_to_rgb(p, q, t)
+      t += 1.0 if t < 0.0
+      t -= 1.0 if t > 1.0
+      return p + (q - p) * 6.0 * t if t < (1.0 / 6.0)
+      return q if t < 0.5
+      return p + (q - p) * ((2.0 / 3.0) - t) * 6.0 if t < (2.0 / 3.0)
+      p
     end
   end
 end

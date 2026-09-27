@@ -11,8 +11,6 @@ img = Image.new(width, height, [a, r, g, b])  # a: 0–255 (DXRuby order)
 
 img.width   # => Integer
 img.height  # => Integer
-img.color   # => the color passed to new (constructor snapshot)
-img.canvas  # => OffscreenCanvas (for internal use / Window.draw)
 ```
 
 ## Class methods
@@ -53,3 +51,17 @@ img.slice(x, y, w, h)  # => new Image (sub-region)
 img.dup                 # => new Image (full copy)
 img.clone               # alias for dup
 ```
+
+## Color adjustment
+
+```ruby
+img.change_hls(hue, luminance, saturation)  # => new Image
+img.change_hls(hue = 0, luminance = 0, saturation = 0)  # all adjustments are optional
+```
+
+- `hue` is added in degrees around the color wheel and normalized modulo 360.
+- `luminance` and `saturation` are additive percentage-point adjustments.
+  - `0` keeps the original value
+  - positive values increase lightness / saturation
+  - negative values decrease lightness / saturation
+- `luminance` and `saturation` are clamped to the valid range after adjustment.

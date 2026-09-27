@@ -67,10 +67,6 @@ module PicoDX
       @playing = false
     end
 
-    def playing?
-      @playing
-    end
-
     def start=(position)
       @play_start = position.to_f
     end
@@ -85,10 +81,6 @@ module PicoDX
 
     def loop_end=(pos)
       @loop_end = pos.to_f
-    end
-
-    def volume
-      (@volume * 255).to_i
     end
 
     def set_volume(vol)

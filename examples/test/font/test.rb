@@ -3,23 +3,36 @@ Window.init("game")
 JS.document.getElementById('run').addEventListener('click') do |_e|
   results = []
 
-  # --- Font constants ---
-  results << assert_equal(400, Font::NORMAL, "Font::NORMAL == 400")
-  results << assert_equal(700, Font::BOLD,   "Font::BOLD == 700")
+  # --- Font compatibility surface ---
+  font_normal_public = true
+  begin
+    Font::NORMAL
+  rescue NameError
+    font_normal_public = false
+  end
+  results << assert_equal(false, font_normal_public, "Font::NORMAL is not public")
+
+  font_bold_public = true
+  begin
+    Font::BOLD
+  rescue NameError
+    font_bold_public = false
+  end
+  results << assert_equal(false, font_bold_public, "Font::BOLD is not public")
 
   # --- Font.new defaults ---
   f = Font.new(24)
   results << assert_equal(24,           f.size,     "Font.new(24).size")
   results << assert_equal("",           f.fontname, "Font.new(24).fontname defaults to empty")
   results << assert_equal(false,        f.italic,   "Font.new(24).italic defaults to false")
-  results << assert_equal(Font::NORMAL, f.weight,   "Font.new(24).weight defaults to NORMAL")
+  results << assert_equal(400,          f.weight,   "Font.new(24).weight defaults to 400")
 
   # --- Font.new with options ---
-  fb = Font.new(16, "Arial", italic: true, weight: Font::BOLD)
+  fb = Font.new(16, "Arial", italic: true, weight: 700)
   results << assert_equal(16,         fb.size,     "Font.new with options: size")
   results << assert_equal("Arial",    fb.fontname, "Font.new with options: fontname")
   results << assert_equal(true,       fb.italic,   "Font.new with options: italic")
-  results << assert_equal(Font::BOLD, fb.weight,   "Font.new with options: weight")
+  results << assert_equal(700,       fb.weight,   "Font.new with options: weight")
 
   # fontname / name alias
   results << assert_equal(fb.fontname, fb.name, "Font#name is alias for fontname")
@@ -31,7 +44,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   named = Font.new(14, "Helvetica")
   results << assert_equal("400 14px Helvetica, monospace", named._css_font, "Font#_css_font with named font")
 
-  italic_bold = Font.new(18, "", italic: true, weight: Font::BOLD)
+  italic_bold = Font.new(18, "", italic: true, weight: 700)
   results << assert_equal("italic 700 18px monospace", italic_bold._css_font, "Font#_css_font italic bold")
 
   # --- Font#get_width ---
@@ -43,15 +56,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (w_long > w_short ? "<span class='pass'>PASS</span> Font#get_width: longer string is wider (#{w_long} > #{w_short})" :
                                  "<span class='fail'>FAIL</span> longer string not wider: #{w_long} vs #{w_short}")
 
-  # --- Font#get_height ---
-  fh = Font.new(16)
-  h16 = fh.get_height
-  results << (h16 > 0 ? "<span class='pass'>PASS</span> Font#get_height(16) returns positive (#{h16}px)" :
-                        "<span class='fail'>FAIL</span> Font#get_height returned #{h16}, expected > 0")
-  fh2 = Font.new(32)
-  h32 = fh2.get_height
-  results << (h32 > h16 ? "<span class='pass'>PASS</span> Font#get_height: larger font is taller (#{h32} > #{h16})" :
-                          "<span class='fail'>FAIL</span> larger font not taller: #{h32} vs #{h16}")
+  results << assert_equal(false, fw.respond_to?(:get_height), "Font#get_height is not public")
 
   # --- Font.default ---
   Font.default = Font.new(16)
