@@ -132,6 +132,7 @@ module PicoDX
         Input._update
         @ctx[:fillStyle] = _css(@bgcolor)
         @ctx.fillRect(0, 0, @width, @height)
+        saved_queue = @draw_queue
         @draw_queue = []
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
@@ -139,6 +140,7 @@ module PicoDX
           blk.call
           _flush_draw_queue
         ensure
+          @draw_queue = saved_queue
           @ctx.restore
         end
       end
