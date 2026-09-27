@@ -18,6 +18,26 @@ module PicoDX
 
     @@cache = {}
 
+    def self.create_from_array(width, height, array)
+      img = Image.new(width, height, [0, 0, 0, 0])
+      raw = img._ctx.createImageData(width, height)
+      data = raw[:data]
+      n = width * height
+      i = 0
+      while i < n
+        pixel = array[i] || [0, 0, 0, 0]
+        a, r, g, b = pixel
+        j = i * 4
+        data[j]     = r.to_i
+        data[j + 1] = g.to_i
+        data[j + 2] = b.to_i
+        data[j + 3] = a.to_i
+        i += 1
+      end
+      img._ctx.putImageData(raw, 0, 0)
+      img
+    end
+
     def self.load(filename)
       cached = @@cache[filename]
       return cached.dup if cached
@@ -45,6 +65,67 @@ module PicoDX
         result << row_arr
       end
       result
+    end
+
+    def dispose
+      @disposed = true
+      @canvas = nil
+      @ctx    = nil
+    end
+
+    def disposed?
+      @disposed || false
+    end
+
+    def set_color_key(color)
+      return if @disposed
+      a, r, g, b = color.length == 4 ? color : [255, *color]
+      raw = @ctx.getImageData(0, 0, @width, @height)
+      data = raw[:data]
+      n = @width * @height
+      i = 0
+      while i < n
+        j = i * 4
+        if data[j].to_i == r && data[j+1].to_i == g && data[j+2].to_i == b && data[j+3].to_i == a
+          data[j]     = 0
+          data[j + 1] = 0
+          data[j + 2] = 0
+          data[j + 3] = 0
+        end
+        i += 1
+      end
+      @ctx.putImageData(raw, 0, 0)
+      self
+    end
+
+    def copy_rect(x, y, src, sx, sy, sw, sh)
+      return if @disposed
+      @ctx.drawImage(src._ctx[:canvas], sx, sy, sw, sh, x, y, sw, sh)
+    end
+
+    def save(filename = nil)
+      return if @disposed
+      a_el = JS.eval("document.createElement('a')")
+      a_el[:href]     = @canvas.toDataURL('image/png')
+      a_el[:download] = filename || "image.png"
+      a_el.click
+    end
+
+    def slice_tiles(x_count, y_count)
+      tw = @width / x_count
+      th = @height / y_count
+      result = []
+      y_count.times do |row|
+        row_arr = []
+        x_count.times do |col|
+          row_arr << slice(col * tw, row * th, tw, th)
+        end
+        result << row_arr
+      end
+      result
+    end
+
+    def flush
     end
 
     def fill(color)

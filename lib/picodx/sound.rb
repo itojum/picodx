@@ -93,6 +93,14 @@ module PicoDX
       @pan_node[:pan][:value] = @pan if @pan_node
     end
 
+    def frequency
+      @frequency
+    end
+
+    def pan
+      @pan
+    end
+
     def frequency=(hz)
       @frequency = hz.to_f
       if @source && @buffer

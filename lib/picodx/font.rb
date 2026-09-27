@@ -8,6 +8,14 @@ module PicoDX
       def default=(font)
         @default = font
       end
+
+      def install(filename, name = nil)
+        font_name = name || File.basename(filename, ".*")
+        JS.eval(
+          "new FontFace('#{font_name}', 'url(#{filename})').load().then(f => document.fonts.add(f))"
+        ).await
+        font_name
+      end
     end
 
     attr_reader :size, :fontname, :italic, :weight
@@ -20,6 +28,14 @@ module PicoDX
     end
 
     alias name fontname
+
+    def dispose
+      @disposed = true
+    end
+
+    def disposed?
+      @disposed || false
+    end
 
     def get_width(str)
       @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
