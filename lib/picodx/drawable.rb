@@ -126,6 +126,35 @@ module PicoDX
       end
     end
 
+    def draw_add(x, y, image, alpha = 255, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_add, z: z, x: x, y: y, image: image, alpha: alpha }
+      else
+        _render_draw_add(x, y, image, alpha)
+      end
+    end
+
+    def draw_sub(x, y, image, alpha = 255, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_sub, z: z, x: x, y: y, image: image, alpha: alpha }
+      else
+        _render_draw_sub(x, y, image, alpha)
+      end
+    end
+
+    # 4-point perspective warp: corners are (x1,y1)=TL, (x2,y2)=TR, (x3,y3)=BR, (x4,y4)=BL
+    # Approximated with two affine-mapped triangles (Canvas 2D has no projective transform).
+    def draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, alpha = 255, z: 0)
+      if _has_queue?
+        @draw_queue << { type: :draw_morph, z: z,
+                         x1: x1, y1: y1, x2: x2, y2: y2,
+                         x3: x3, y3: y3, x4: x4, y4: y4,
+                         image: image, alpha: alpha }
+      else
+        _render_draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, alpha)
+      end
+    end
+
     def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, z: 0)
       if _has_queue?
         @draw_queue << { type: :draw_tile, z: z, x: x, y: y, map: map, chips: chips,
@@ -204,6 +233,14 @@ module PicoDX
       when :draw_tile
         _render_draw_tile(cmd[:x], cmd[:y], cmd[:map], cmd[:chips],
                           cmd[:offset_x], cmd[:offset_y], cmd[:count_x], cmd[:count_y])
+      when :draw_add
+        _render_draw_add(cmd[:x], cmd[:y], cmd[:image], cmd[:alpha])
+      when :draw_sub
+        _render_draw_sub(cmd[:x], cmd[:y], cmd[:image], cmd[:alpha])
+      when :draw_morph
+        _render_draw_morph(cmd[:x1], cmd[:y1], cmd[:x2], cmd[:y2],
+                           cmd[:x3], cmd[:y3], cmd[:x4], cmd[:y4],
+                           cmd[:image], cmd[:alpha])
       end
     end
 
@@ -399,6 +436,62 @@ module PicoDX
         r, g, b = color
         "rgb(#{r},#{g},#{b})"
       end
+    end
+
+    def _render_draw_add(x, y, image, alpha = 255)
+      @ctx.save
+      @ctx[:globalCompositeOperation] = "lighter"
+      @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
+      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.restore
+    end
+
+    def _render_draw_sub(x, y, image, alpha = 255)
+      # Canvas 2D has no true subtraction; "difference" gives ABS(dst-src).
+      @ctx.save
+      @ctx[:globalCompositeOperation] = "difference"
+      @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
+      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.restore
+    end
+
+    def _render_draw_morph(x1, y1, x2, y2, x3, y3, x4, y4, image, alpha = 255)
+      w = image.width.to_f
+      h = image.height.to_f
+      src = image._ctx[:canvas]
+      @ctx.save
+      @ctx[:globalAlpha] = alpha.to_f / 255 if alpha && alpha != 255
+
+      # Triangle 1: TL(x1,y1) TR(x2,y2) BL(x4,y4)  ← image (0,0)(w,0)(0,h)
+      @ctx.save
+      @ctx.beginPath
+      @ctx.moveTo(x1, y1)
+      @ctx.lineTo(x2, y2)
+      @ctx.lineTo(x4, y4)
+      @ctx.closePath
+      @ctx.clip
+      a1 = (x2 - x1) / w; b1 = (y2 - y1) / w
+      c1 = (x4 - x1) / h; d1 = (y4 - y1) / h
+      @ctx.setTransform(a1, b1, c1, d1, x1, y1)
+      @ctx.drawImage(src, 0, 0)
+      @ctx.restore
+
+      # Triangle 2: TR(x2,y2) BR(x3,y3) BL(x4,y4)  ← image (w,0)(w,h)(0,h)
+      @ctx.save
+      @ctx.beginPath
+      @ctx.moveTo(x2, y2)
+      @ctx.lineTo(x3, y3)
+      @ctx.lineTo(x4, y4)
+      @ctx.closePath
+      @ctx.clip
+      a2 = (x3 - x4) / w; b2 = (y3 - y4) / w
+      c2 = (x3 - x2) / h; d2 = (y3 - y2) / h
+      e2 = x4 - x3 + x2;  f2 = y4 - y3 + y2
+      @ctx.setTransform(a2, b2, c2, d2, e2, f2)
+      @ctx.drawImage(src, 0, 0)
+      @ctx.restore
+
+      @ctx.restore
     end
 
     def _blend_op(blend)
