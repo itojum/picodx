@@ -67,18 +67,11 @@ module PicoDX
 
       def get_screen_shot(filename = nil)
         fname = filename || "screenshot.png"
-        JS.eval(
-          "const c=arguments[0];" \
-          "const oc=new OffscreenCanvas(c.width,c.height);" \
-          "const ctx=oc.getContext('2d');" \
-          "ctx.drawImage(c,0,0);" \
-          "oc.convertToBlob({type:'image/png'}).then(blob=>{" \
-          "const url=URL.createObjectURL(blob);" \
-          "const a=document.createElement('a');" \
-          "a.href=url;a.download=arguments[1];a.click();" \
-          "URL.revokeObjectURL(url);" \
-          "});"
-        , @canvas, fname)
+        url = @canvas.toDataURL("image/png")
+        a   = JS.document.createElement("a")
+        a[:href]     = url
+        a[:download] = fname
+        a.click
       end
 
       def resize(w, h)

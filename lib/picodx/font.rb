@@ -9,13 +9,16 @@ module PicoDX
         @default = font
       end
 
-      def install(filename, name)
+      def install(filename, name = nil)
+        family = name || filename.to_s.split('/').last.split('.').first
+        JS.global[:__picodx_font_name] = family
+        JS.global[:__picodx_font_url]  = filename.to_s
         JS.eval(
-          "new FontFace(arguments[0], 'url(' + arguments[1] + ')')" \
-          ".load().then(font => { document.fonts.add(font); return font; });",
-          name, filename
+          "new FontFace(window.__picodx_font_name," \
+          " 'url(' + window.__picodx_font_url + ')')" \
+          ".load().then(font => { document.fonts.add(font); return font; });"
         ).await
-        new(16, name)
+        new(16, family)
       end
     end
 

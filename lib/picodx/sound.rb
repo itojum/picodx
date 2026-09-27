@@ -3,8 +3,8 @@ module PicoDX
     def self.load_from_memory(data)
       snd = new(nil)
       JS.eval("window.__picodx_audio_ctx = window.__picodx_audio_ctx || new AudioContext()")
-      buffer = JS.eval("window.__picodx_audio_ctx.decodeAudioData(arguments[0])", data).await
-      snd.instance_variable_set(:@buffer, buffer)
+      ctx = JS.eval("window.__picodx_audio_ctx")
+      snd.instance_variable_set(:@buffer, ctx.decodeAudioData(data).await)
       snd
     end
 

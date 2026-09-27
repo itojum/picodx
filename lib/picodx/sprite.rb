@@ -77,11 +77,14 @@ module PicoDX
     end
 
     def param_hash
+      img = image
+      ecx = center_x || (img ? img.width  / 2 : 0)
+      ecy = center_y || (img ? img.height / 2 : 0)
       {
         x: x, y: y, z: z,
         angle: angle,
         scale_x: scale_x, scale_y: scale_y,
-        cx: center_x, cy: center_y,
+        cx: ecx, cy: ecy,
         alpha: alpha, blend: blend,
         visible: visible,
         collision: collision,

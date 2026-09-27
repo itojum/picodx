@@ -277,17 +277,13 @@ module PicoDX
 
     def save(filename = nil)
       fname = filename || "image.png"
-      JS.eval(
-        "const c=new OffscreenCanvas(#{@width},#{@height});" \
-        "const ctx=c.getContext('2d');" \
-        "ctx.drawImage(arguments[0],0,0);" \
-        "c.convertToBlob({type:'image/png'}).then(blob=>{" \
-        "const url=URL.createObjectURL(blob);" \
-        "const a=document.createElement('a');" \
-        "a.href=url;a.download=arguments[1];a.click();" \
-        "URL.revokeObjectURL(url);" \
-        "});"
-      , @canvas, fname)
+      blob = @canvas.convertToBlob(JS.eval("({type:'image/png'})")).await
+      url  = JS.global.URL.createObjectURL(blob)
+      a    = JS.document.createElement("a")
+      a[:href]     = url
+      a[:download] = fname
+      a.click
+      JS.global.URL.revokeObjectURL(url)
     end
 
     def flush; end
