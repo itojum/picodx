@@ -8,6 +8,18 @@ module PicoDX
       def default=(font)
         @default = font
       end
+
+      def install(filename, name = nil)
+        family = name || filename.to_s.split('/').last.split('.').first
+        JS.global[:__picodx_font_name] = family
+        JS.global[:__picodx_font_url]  = filename.to_s
+        JS.eval(
+          "new FontFace(window.__picodx_font_name," \
+          " 'url(' + window.__picodx_font_url + ')')" \
+          ".load().then(font => { document.fonts.add(font); return font; });"
+        ).await
+        [family]
+      end
     end
 
     attr_reader :size, :fontname, :italic, :weight
@@ -31,6 +43,26 @@ module PicoDX
       style  = @italic ? "italic " : ""
       family = @fontname.empty? ? "monospace" : "#{@fontname}, monospace"
       "#{style}#{@weight} #{@size}px #{family}"
+    end
+
+    def dispose
+      @disposed = true
+    end
+
+    def disposed?
+      @disposed || false
+    end
+
+    def info(str)
+      @measure_ctx ||= JS.eval("new OffscreenCanvas(1, 1)").getContext('2d')
+      @measure_ctx[:font] = _css_font
+      m  = @measure_ctx.measureText(str)
+      {
+        width:       m[:width].to_i,
+        height:      (m[:actualBoundingBoxAscent].to_f + m[:actualBoundingBoxDescent].to_f).to_i,
+        left_offset: m[:actualBoundingBoxLeft].to_i,
+        top_offset:  m[:actualBoundingBoxAscent].to_i
+      }
     end
   end
 end

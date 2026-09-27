@@ -29,6 +29,19 @@ module PicoDX
       @oy = value
     end
 
+    def min_filter=(filter)
+      @min_filter = filter
+      @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+    end
+
+    def mag_filter=(filter)
+      @mag_filter = filter
+      @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+    end
+
+    def discard; end
+    def decide;  end
+
     def update
     end
 
@@ -44,6 +57,7 @@ module PicoDX
       @height = h
       @canvas = JS.eval("new OffscreenCanvas(#{w}, #{h})")
       @ctx    = @canvas.getContext('2d', JS.eval("({willReadFrequently: true})"))
+      @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
     end
 
     def dispose

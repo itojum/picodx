@@ -40,10 +40,73 @@ module PicoDX
         @real_fps = 0.0
         @ox       = 0
         @oy       = 0
-        @looping  = false
+        @looping   = false
+        @closed    = false
+        @created   = true
+        @frameskip = false
         @draw_queue = nil
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
+      end
+
+      def close
+        @closed   = true
+        @created  = false
+        @looping  = false
+      end
+
+      def closed?
+        @closed || false
+      end
+
+      def created?
+        @created || false
+      end
+
+      def active?
+        JS.eval("document.hasFocus()").to_s == "true"
+      end
+
+      def get_screen_shot(filename = nil)
+        fname = filename || "screenshot.png"
+        url = @canvas.toDataURL("image/png")
+        a   = JS.document.createElement("a")
+        a[:href]     = url
+        a[:download] = fname
+        a.click
+      end
+
+      def resize(w, h)
+        @canvas[:width]  = w
+        @canvas[:height] = h
+        @width  = w
+        @height = h
+        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+      end
+
+      def scale=(s)
+        @canvas[:style][:width]  = "#{(@width  * s).to_i}px"
+        @canvas[:style][:height] = "#{(@height * s).to_i}px"
+      end
+
+      def sync
+      end
+
+      def update
+      end
+
+      def min_filter=(filter)
+        @min_filter = filter
+        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+      end
+
+      def mag_filter=(filter)
+        @mag_filter = filter
+        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+      end
+
+      def frameskip=(val)
+        @frameskip = val
       end
 
       def caption
@@ -83,7 +146,7 @@ module PicoDX
           # The exit_value carries the value from break/return so callers
           # can use: result = Window.loop { ... ; return chara_type }
           result = nil
-          while true
+          while !@closed
             JS.global.__picodx_nextFrame().await
             begin
               _tick_with(block)
@@ -101,7 +164,7 @@ module PicoDX
           @last_process_time = nil
           @accumulated       = 0.0
           @real_fps          = 0.0
-          while true
+          while !@closed
             JS.global.__picodx_nextFrame().await
             _tick
           end
