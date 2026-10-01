@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.0.0](https://github.com/itojum/picodx/compare/picodx-v0.2.0...picodx-v1.0.0) (2026-09-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **color:** 4-element color arrays are now interpreted as [A,R,G,B] instead of [R,G,B,A] to match DXRuby 1.4.6 behaviour. 3-element [R,G,B] arrays are unaffected.
+
+### Features
+
+* Canvas 2D 非対応APIに NotImplementedError スタブを追加 ([#43](https://github.com/itojum/picodx/issues/43)) ([5a55367](https://github.com/itojum/picodx/commit/5a55367179db7662171210d822f30addf91423a7))
+* Canvas 2D 非対応APIに NotImplementedError スタブを追加 ([#43](https://github.com/itojum/picodx/issues/43)) ([7703299](https://github.com/itojum/picodx/commit/77032999b87609c46b130763e157fe36147a844a))
+* draw_add / draw_sub / draw_morph を追加 ([#44](https://github.com/itojum/picodx/issues/44)) ([db1e74b](https://github.com/itojum/picodx/commit/db1e74b555158ee9f85a84fc36f9131888c6953f))
+* draw_add / draw_sub / draw_morph を追加 ([#44](https://github.com/itojum/picodx/issues/44)) ([94047b8](https://github.com/itojum/picodx/commit/94047b82cd5ce85230a037f974895eb7dfe39bec))
+* **image:** cache Image.load results by filename ([33a93ad](https://github.com/itojum/picodx/commit/33a93ada2d11a9c329799e2a64f420e23016bb19))
+* **image:** cache Image.load results by filename ([f6d382a](https://github.com/itojum/picodx/commit/f6d382ac1b797174ff4829b8a3b9ad656c1706e0)), closes [#55](https://github.com/itojum/picodx/issues/55)
+* **sprite:** collision_sync を実装（scale/angle を当たり判定に反映） ([a142612](https://github.com/itojum/picodx/commit/a142612eaec76828f99ef821841ce0f8d28f713f))
+* **sprite:** collision_sync を実装（scale/angle を当たり判定に反映） ([ed0c8fb](https://github.com/itojum/picodx/commit/ed0c8fb4982b36e0fd58e41b1db322b9c88d2636))
+* **window:** add Window.width= and Window.height= setters ([360954f](https://github.com/itojum/picodx/commit/360954fd155f181857fcdc712b19adab0ee14be7))
+* **window:** add Window.width= and Window.height= setters ([ab51759](https://github.com/itojum/picodx/commit/ab51759c009004839763d8bf5c699f6fa4c34ba3))
+* **window:** implement z-ordered draw queue ([c721c4d](https://github.com/itojum/picodx/commit/c721c4dc2bba4fffe19b53fdd29dbb633d05715a))
+* **window:** implement z-ordered draw queue ([a196173](https://github.com/itojum/picodx/commit/a1961735d2c65baf0836f9edd5389459227edd5a)), closes [#48](https://github.com/itojum/picodx/issues/48)
+* ゲームパッド対応（Gamepad API / pad_* メソッド） ([#45](https://github.com/itojum/picodx/issues/45)) ([9b82221](https://github.com/itojum/picodx/commit/9b822211c629d197d25831d2278094fa1acaeaed))
+* ゲームパッド対応（Gamepad API / pad_* メソッド） ([#45](https://github.com/itojum/picodx/issues/45)) ([718c636](https://github.com/itojum/picodx/commit/718c636ae58f7e1221bf693acc872e04e928f301))
+
+
+### Bug Fixes
+
+* **color:** change 4-element color order to [A,R,G,B] for DXRuby compat ([9d01d1d](https://github.com/itojum/picodx/commit/9d01d1d68dc12783afb4a6cea241986f61bcab29))
+* **color:** change 4-element color order to [A,R,G,B] for DXRuby compat ([03b6428](https://github.com/itojum/picodx/commit/03b64288afa15110b0d3099defbc0980b6a4b6cd)), closes [#47](https://github.com/itojum/picodx/issues/47)
+* **draw_morph:** OffscreenCanvasキャッシュとアルファブレンド修正 ([28a4b55](https://github.com/itojum/picodx/commit/28a4b55f0aed12001e6fa9103e12ec30ddae3517))
+* **drawable:** default center_x/center_y to image center in draw_scale/draw_rot ([cdb3a8d](https://github.com/itojum/picodx/commit/cdb3a8dac85b07861fab12562e147efdc953b195))
+* **drawable:** default center_x/center_y to image center in draw_scale/draw_rot ([d9d8a40](https://github.com/itojum/picodx/commit/d9d8a40947f3b88d2219f9014a8826b7bada8671)), closes [#49](https://github.com/itojum/picodx/issues/49)
+* **font:** preserve explicit weight values ([1435241](https://github.com/itojum/picodx/commit/14352412c8bf47cfdb9b39ec386dc6888872b1ff))
+* **image:** clearRect before fillRect in Image#[]= to preserve alpha ([6272f2a](https://github.com/itojum/picodx/commit/6272f2a3357f4240424e6de83ff54a5aa7fc47c0))
+* **input:** keydown / mousedown で AudioContext を resume する ([#54](https://github.com/itojum/picodx/issues/54)) ([4124336](https://github.com/itojum/picodx/commit/4124336fb2a389a1bbe405d10fff22e234cb220d))
+* **input:** keydown/mousedown で AudioContext を resume して Sound が鳴らない問題を修正 ([d8455d9](https://github.com/itojum/picodx/commit/d8455d9d8db8a8dcaac0889ba78fa265e146049f))
+* **input:** ゲームパッド切断時の状態クリアと論理インデックス統一 ([d870277](https://github.com/itojum/picodx/commit/d870277ec7432c70d8ce59ce7a658ccc57cb6e26))
+* **merge:** resolve remaining conflicts and follow-up issues ([4bef733](https://github.com/itojum/picodx/commit/4bef733be72fc81cddcee6ce4b19e729a0c8e599))
+* **sprite:** return defaults from getters so subclasses work without super ([7c5c6e5](https://github.com/itojum/picodx/commit/7c5c6e5a4f9e35a839f14a5ab7e2948f370b6efd))
+* **sprite:** return defaults from getters so subclasses work without super ([5aea8e4](https://github.com/itojum/picodx/commit/5aea8e4727b449e30c085772d6a08fd388b57541)), closes [#51](https://github.com/itojum/picodx/issues/51)
+* **window:** keep draw queue nil outside loop; flush in ensure ([6b38e9d](https://github.com/itojum/picodx/commit/6b38e9d68e7279824d77feda432b86c9f4f68c7a))
+* **window:** return break/return value from nested Window.loop ([64c946d](https://github.com/itojum/picodx/commit/64c946de338a9ea5befb39c3feb2f27754461933))
+* **window:** return break/return value from nested Window.loop ([ca8d95a](https://github.com/itojum/picodx/commit/ca8d95a57395a533c6310e6e10760b5297eb2bb0)), closes [#52](https://github.com/itojum/picodx/issues/52)
+* **window:** save/restore draw queue for nested loops; run z-order tests inside loop ([2f1e972](https://github.com/itojum/picodx/commit/2f1e972033c1b7f3a5f8aa74d5668c575347a615))
+* **window:** scope presets to the active canvas ([f376802](https://github.com/itojum/picodx/commit/f376802becb2da561af187c7ea75728b4f8fc80c))
+* **window:** separate pre-init preset from post-init canvas dimensions ([1ca4665](https://github.com/itojum/picodx/commit/1ca4665af919fbd33789045e9011e69e472c5c72))
+* **window:** track dimension presets independently ([1a9db0d](https://github.com/itojum/picodx/commit/1a9db0db5ba9fab7ef9376f0f6b4f30c0dc7f443))
+* 無効なRubyメソッド名・構文を修正 ([81f7ac2](https://github.com/itojum/picodx/commit/81f7ac2ed000e8cb4db8be6f91b242554b2dedbb))
+
 ## [0.2.0](https://github.com/itojum/picodx/compare/picodx-v0.1.2...picodx-v0.2.0) (2026-09-27)
 
 
