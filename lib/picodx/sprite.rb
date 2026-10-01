@@ -22,23 +22,24 @@ module PicoDX
     def collision_sync; @collision_sync.nil? ? true : @collision_sync; end
 
     def initialize(x = 0, y = 0, image = nil)
-      @x              = x.to_f
-      @y              = y.to_f
-      @z              = 0
-      @angle          = 0
-      @scale_x        = 1.0
-      @scale_y        = 1.0
-      @center_x       = nil
-      @center_y       = nil
-      @alpha          = 255
-      @blend          = :alpha
-      @visible        = true
-      @image          = image
-      @collision      = nil
-      @vanished       = false
-      @target         = nil
-      @offset_sync    = false
-      @collision_sync = true
+      @x           = x.to_f
+      @y           = y.to_f
+      @z           = 0
+      @angle       = 0
+      @scale_x     = 1.0
+      @scale_y     = 1.0
+      @center_x    = nil
+      @center_y    = nil
+      @alpha       = 255
+      @blend       = :alpha
+      @visible     = true
+      @image       = image
+      @collision   = nil
+      @vanished          = false
+      @target            = nil
+      @offset_sync       = false
+      @collision_enable  = true
+      @collision_sync    = nil
     end
 
     def draw
@@ -69,20 +70,52 @@ module PicoDX
       @vanished || false
     end
 
+    def collision_enable
+      @collision_enable.nil? ? true : @collision_enable
+    end
+
+    def collision_enable=(val)
+      @collision_enable = val
+    end
+
+    def collision_sync
+      @collision_sync.nil? ? true : @collision_sync
+    end
+
+    def collision_sync=(val)
+      @collision_sync = val
+    end
+
+    def param_hash
+      img = image
+      ecx = center_x || (img ? img.width  / 2 : 0)
+      ecy = center_y || (img ? img.height / 2 : 0)
+      {
+        x: x, y: y, z: z,
+        angle: angle,
+        scale_x: scale_x, scale_y: scale_y,
+        cx: ecx, cy: ecy,
+        alpha: alpha, blend: blend,
+        visible: visible,
+        collision: collision,
+        collision_enable: collision_enable
+      }
+    end
+
     def check(other)
-      return [] if vanished? || collision.nil?
+      return [] if vanished? || collision.nil? || !collision_enable
       targets = other.is_a?(Array) ? other : [other]
       result = []
       targets.each do |sp|
-        next if sp.nil? || sp.vanished? || sp.collision.nil?
+        next if sp.nil? || sp.vanished? || sp.collision.nil? || !sp.collision_enable
         result << sp if _collide?(sp)
       end
       result
     end
 
     def ===(other)
-      return false if vanished? || collision.nil?
-      return false if other.nil? || other.vanished? || other.collision.nil?
+      return false if vanished? || collision.nil? || !collision_enable
+      return false if other.nil? || other.vanished? || other.collision.nil? || !other.collision_enable
       _collide?(other)
     end
 
@@ -147,18 +180,8 @@ module PicoDX
       aoy = offset_sync       ? -(center_y || 0) : 0
       box = other.offset_sync ? -(other.center_x || 0) : 0
       boy = other.offset_sync ? -(other.center_y || 0) : 0
-      ac = collision
-      bc = other.collision
-
-      if collision_sync
-        ac  = _collide_transform(ac, aox, aoy, scale_x, scale_y, angle)
-        aox = 0; aoy = 0
-      end
-      if other.collision_sync
-        bc  = _collide_transform(bc, box, boy, other.scale_x, other.scale_y, other.angle)
-        box = 0; boy = 0
-      end
-
+      ac = _scaled_collision(self, collision)
+      bc = _scaled_collision(other, other.collision)
       al = ac.length
       bl = bc.length
 
@@ -210,61 +233,40 @@ module PicoDX
       dx * dx + dy * dy <= r * r
     end
 
-    # Applies offset_sync offset (ox, oy) and collision_sync scale/rotation to
-    # collision array c. Returns a new array in the same format with values as
-    # offsets from the sprite's screen (x, y) position.
-    # The transform origin is the sprite's (x, y) screen position, which
-    # corresponds to center_x/center_y in image space (same pivot as draw).
-    def _collide_transform(c, ox, oy, sx, sy, ang)
-      if ang == 0 && sx == 1.0 && sy == 1.0
-        return c if ox == 0 && oy == 0
-        l = c.length
-        return l == 4 ? [c[0]+ox, c[1]+oy, c[2]+ox, c[3]+oy] :
-               l == 3 ? [c[0]+ox, c[1]+oy, c[2]] :
-                        [c[0]+ox, c[1]+oy]
+    def _scaled_collision(sp, c)
+      return c unless sp.collision_sync
+      sx    = sp.scale_x
+      sy    = sp.scale_y
+      angle = sp.angle
+      origin_x = sp.center_x || (sp.image ? sp.image.width / 2.0 : 0.0)
+      origin_y = sp.center_y || (sp.image ? sp.image.height / 2.0 : 0.0)
+      rad      = angle * Math::PI / 180.0
+      cos_a    = Math.cos(rad)
+      sin_a    = Math.sin(rad)
+
+      transform_point = lambda do |px, py|
+        dx = px - origin_x
+        dy = py - origin_y
+        [
+          origin_x + dx * sx * cos_a - dy * sy * sin_a,
+          origin_y + dx * sx * sin_a + dy * sy * cos_a
+        ]
       end
 
-      if ang == 0
-        l = c.length
-        if l == 4
-          x1 = (c[0]+ox)*sx; y1 = (c[1]+oy)*sy
-          x2 = (c[2]+ox)*sx; y2 = (c[3]+oy)*sy
-          [x1 < x2 ? x1 : x2, y1 < y2 ? y1 : y2,
-           x1 < x2 ? x2 : x1, y1 < y2 ? y2 : y1]
-        elsif l == 3
-          sr = c[2] * (sx.abs > sy.abs ? sx.abs : sy.abs)
-          [(c[0]+ox)*sx, (c[1]+oy)*sy, sr]
-        else
-          [(c[0]+ox)*sx, (c[1]+oy)*sy]
-        end
+      if c.length == 4
+        p1 = transform_point.call(c[0], c[1])
+        p2 = transform_point.call(c[0], c[3])
+        p3 = transform_point.call(c[2], c[1])
+        p4 = transform_point.call(c[2], c[3])
+        xs = [p1[0], p2[0], p3[0], p4[0]]
+        ys = [p1[1], p2[1], p3[1], p4[1]]
+        [xs.min, ys.min, xs.max, ys.max]
+      elsif c.length == 3
+        pcx, pcy = transform_point.call(c[0], c[1])
+        scale = sx.abs > sy.abs ? sx.abs : sy.abs
+        [pcx, pcy, c[2] * scale]
       else
-        rad   = ang * Math::PI / 180.0
-        cos_a = Math.cos(rad)
-        sin_a = Math.sin(rad)
-        l = c.length
-        if l == 4
-          ax = (c[0]+ox)*sx; ay = (c[1]+oy)*sy
-          bx = (c[2]+ox)*sx; by = (c[3]+oy)*sy
-          r0x = ax*cos_a - ay*sin_a; r0y = ax*sin_a + ay*cos_a
-          r1x = bx*cos_a - ay*sin_a; r1y = bx*sin_a + ay*cos_a
-          r2x = bx*cos_a - by*sin_a; r2y = bx*sin_a + by*cos_a
-          r3x = ax*cos_a - by*sin_a; r3y = ax*sin_a + by*cos_a
-          mn_x = r0x; mx_x = r0x; mn_y = r0y; mx_y = r0y
-          mn_x = r1x if r1x < mn_x; mx_x = r1x if r1x > mx_x
-          mn_y = r1y if r1y < mn_y; mx_y = r1y if r1y > mx_y
-          mn_x = r2x if r2x < mn_x; mx_x = r2x if r2x > mx_x
-          mn_y = r2y if r2y < mn_y; mx_y = r2y if r2y > mx_y
-          mn_x = r3x if r3x < mn_x; mx_x = r3x if r3x > mx_x
-          mn_y = r3y if r3y < mn_y; mx_y = r3y if r3y > mx_y
-          [mn_x, mn_y, mx_x, mx_y]
-        elsif l == 3
-          px = (c[0]+ox)*sx; py = (c[1]+oy)*sy
-          sr = c[2] * (sx.abs > sy.abs ? sx.abs : sy.abs)
-          [px*cos_a - py*sin_a, px*sin_a + py*cos_a, sr]
-        else
-          px = (c[0]+ox)*sx; py = (c[1]+oy)*sy
-          [px*cos_a - py*sin_a, px*sin_a + py*cos_a]
-        end
+        transform_point.call(c[0], c[1])
       end
     end
   end

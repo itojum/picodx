@@ -244,6 +244,58 @@ module PicoDX
 
     alias clone dup
 
+    def slice_tiles(x_count, y_count)
+      tw = @width  / x_count
+      th = @height / y_count
+      result = []
+      y_count.times do |row|
+        row_arr = []
+        x_count.times do |col|
+          row_arr << slice(col * tw, row * th, tw, th)
+        end
+        result << row_arr
+      end
+      result
+    end
+
+    def set_color_key(color)
+      r_key, g_key, b_key = color.length == 4 ? [color[1], color[2], color[3]] : [color[0], color[1], color[2]]
+      data = @ctx.getImageData(0, 0, @width, @height)
+      pixels = data[:data]
+      n = @width * @height
+      i = 0
+      while i < n
+        j = i * 4
+        if pixels[j].to_i == r_key && pixels[j+1].to_i == g_key && pixels[j+2].to_i == b_key
+          pixels[j+3] = 0
+        end
+        i += 1
+      end
+      @ctx.putImageData(data, 0, 0)
+      self
+    end
+
+    def save(filename = nil)
+      fname = filename || "image.png"
+      blob = @canvas.convertToBlob(JS.eval("({type:'image/png'})")).await
+      url  = JS.global.URL.createObjectURL(blob)
+      a    = JS.document.createElement("a")
+      a[:href]     = url
+      a[:download] = fname
+      a.click
+      JS.global.URL.revokeObjectURL(url)
+    end
+
+    def flush; end
+
+    def dispose
+      @disposed = true
+    end
+
+    def disposed?
+      @disposed || false
+    end
+
     def _copy_from(src, sx, sy, sw, sh)
       @ctx.clearRect(0, 0, @width, @height)
       @ctx.drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh)
