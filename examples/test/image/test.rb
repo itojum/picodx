@@ -66,20 +66,25 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(99, px[3], "Image#[]= and [] b")
 
   # Image.new 4-element ARGB: [a, r, g, b]
+  # Semi-transparent pixels are stored premultiplied by alpha, so R/G/B may be off by one
   img_argb = Image.new(10, 10, [200, 100, 50, 25])
   px_argb = img_argb[5, 5]
   results << assert_equal(200, px_argb[0], "Image.new ARGB: a=200")
-  results << assert_equal(100, px_argb[1], "Image.new ARGB: r=100")
-  results << assert_equal(50,  px_argb[2], "Image.new ARGB: g=50")
-  results << assert_equal(25,  px_argb[3], "Image.new ARGB: b=25")
+  results << assert_near(100, px_argb[1], 1, "Image.new ARGB: r=100 (±1, premultiplied alpha)")
+  results << assert_near(50,  px_argb[2], 1, "Image.new ARGB: g=50 (±1, premultiplied alpha)")
+  results << assert_near(25,  px_argb[3], 1, "Image.new ARGB: b=25 (±1, premultiplied alpha)")
 
   # Image#[]= 4-element ARGB: [a, r, g, b]
   img_px[5, 5] = [128, 255, 0, 0]
   px4 = img_px[5, 5]
   results << assert_equal(128, px4[0], "Image#[]= ARGB: a=128")
-  results << assert_equal(255, px4[1], "Image#[]= ARGB: r=255")
-  results << assert_equal(0,   px4[2], "Image#[]= ARGB: g=0")
-  results << assert_equal(0,   px4[3], "Image#[]= ARGB: b=0")
+  results << assert_near(255, px4[1], 1, "Image#[]= ARGB: r=255 (±1, premultiplied alpha)")
+  results << assert_near(0,   px4[2], 1, "Image#[]= ARGB: g=0 (±1, premultiplied alpha)")
+  results << assert_near(0,   px4[3], 1, "Image#[]= ARGB: b=0 (±1, premultiplied alpha)")
+
+  # Opaque pixels round-trip exactly
+  img_opaque = Image.new(1, 1, [255, 100, 50, 25])
+  results << assert_equal([255, 100, 50, 25], img_opaque[0, 0], "Image.new opaque ARGB round-trips exactly")
 
   # --- Row 3 (y=135): slice / dup / Image#draw ---
 
@@ -144,10 +149,10 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   arr = img_toa.to_a
   results << assert_equal(2,   arr.length, "Image#to_a returns 2 elements for 2x1 image")
   results << assert_equal(200, arr[0][0],  "Image#to_a pixel[0] a=200")
-  results << assert_equal(100, arr[0][1],  "Image#to_a pixel[0] r=100")
-  results << assert_equal(150, arr[0][2],  "Image#to_a pixel[0] g=150")
-  results << assert_equal(200, arr[0][3],  "Image#to_a pixel[0] b=200")
-  results << assert_equal(100, arr[1][1],  "Image#to_a pixel[1] r=100")
+  results << assert_near(100, arr[0][1], 1, "Image#to_a pixel[0] r=100 (±1, premultiplied alpha)")
+  results << assert_near(150, arr[0][2], 1, "Image#to_a pixel[0] g=150 (±1, premultiplied alpha)")
+  results << assert_near(200, arr[0][3], 1, "Image#to_a pixel[0] b=200 (±1, premultiplied alpha)")
+  results << assert_near(100, arr[1][1], 1, "Image#to_a pixel[1] r=100 (±1, premultiplied alpha)")
 
   # --- Image#compare ---
   img_cmp_a = Image.new(4, 4, [255, 0, 0])

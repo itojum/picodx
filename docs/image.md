@@ -44,6 +44,12 @@ img[x, y]          # => [a, r, g, b]  (0–255 each, DXRuby order)
 img[x, y] = color  # color = [r, g, b] or [a, r, g, b]
 ```
 
+Canvas stores pixels premultiplied by alpha, so for semi-transparent pixels
+(`a` < 255) the R / G / B values read back by `img[x, y]` and `img.to_a` can be
+off by one from what was written (for example `[200, 100, 50, 25]` reads back as
+`[200, 99, 50, 25]`). Alpha and fully opaque pixels are exact. DXRuby keeps the
+values as written.
+
 ## Copy / slice
 
 ```ruby
