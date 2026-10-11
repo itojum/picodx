@@ -18,3 +18,12 @@ K_A, K_B, ..., K_Z
 ```
 
 These are `KeyboardEvent.code` strings (e.g. `K_LEFT == "ArrowLeft"`).
+
+## Mouse
+
+```ruby
+Input.mouse_x  # canvas pixels, even when the canvas is resized with CSS / Window.scale=
+Input.mouse_y
+```
+
+Right clicks on the canvas do not open the browser's context menu.
