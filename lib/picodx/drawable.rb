@@ -1,4 +1,16 @@
 module PicoDX
+  # 色配列を CSS の色文字列に変換する唯一の窓口。
+  # 4 要素は DXRuby と同じ [A, R, G, B]、3 要素は [R, G, B]（不透明）。
+  def self._css_color(color)
+    if color.length == 4
+      a, r, g, b = color
+      "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+    else
+      r, g, b = color
+      "rgb(#{r},#{g},#{b})"
+    end
+  end
+
   module Drawable
     # -------------------------------------------------------------------------
     # Queue-aware public draw methods
@@ -459,13 +471,7 @@ module PicoDX
     end
 
     def _css(color)
-      if color.length == 4
-        a, r, g, b = color
-        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
-      else
-        r, g, b = color
-        "rgb(#{r},#{g},#{b})"
-      end
+      PicoDX._css_color(color)
     end
 
     def _blend_op(blend)
