@@ -317,13 +317,7 @@ module PicoDX
     end
 
     def _css(color)
-      if color.length == 4
-        a, r, g, b = color
-        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
-      else
-        r, g, b = color
-        "rgb(#{r},#{g},#{b})"
-      end
+      PicoDX._css_color(color)
     end
 
     def _clamp01(value)
