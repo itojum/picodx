@@ -42,7 +42,8 @@ module PicoDX
         return unless canvas
 
         # 右クリックでコンテキストメニューを出さない（preventDefault は同期的に呼ぶ必要があるので JS 側で行う）
-        JS.eval("document.getElementById('#{canvas[:id]}').addEventListener('contextmenu', (e) => e.preventDefault())")
+        JS.global[:__picodx_contextmenu_canvas] = canvas
+        JS.eval("window.__picodx_contextmenu_canvas.addEventListener('contextmenu', (e) => e.preventDefault()); delete window.__picodx_contextmenu_canvas")
 
         canvas.addEventListener('mousemove') do |e|
           _update_mouse_pos(canvas, e)
