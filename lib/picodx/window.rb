@@ -196,6 +196,16 @@ module PicoDX
 
       private
 
+      # _tick_with はループ内の描画を translate(ox, oy) して確定する。ループ外の
+      # 即時描画（@draw_queue が nil）はずらさない
+      def _view_ox
+        @draw_queue ? (@ox || 0) : 0
+      end
+
+      def _view_oy
+        @draw_queue ? (@oy || 0) : 0
+      end
+
       def _apply_smoothing
         return unless @ctx
         @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)

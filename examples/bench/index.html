@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PicoDX — Benchmarks</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #eee; padding: 2rem; }
+    canvas { border: 1px solid #444; margin: 1rem 0; display: block; }
+    #test-output { white-space: pre-wrap; line-height: 1.8; margin-top: 1rem; }
+    .pass { color: #4f4; }
+    .fail { color: #f44; }
+    button { font-family: monospace; padding: 0.5rem 1.2rem; cursor: pointer; background: #333; color: #eee; border: 1px solid #555; }
+    a { color: #7af; }
+    p { color: #888; margin: 0.3rem 0; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div><a href="../index.html">← Examples</a></div>
+  <h1>Benchmarks</h1>
+  <p>Average milliseconds per frame for drawing / collision workloads (lower is better). Draws run outside Window.loop, so each call renders immediately.</p>
+  <button id="run">Run Benchmarks</button>
+  <canvas id="game" width="640" height="480"></canvas>
+  <div id="test-output"></div>
+  <script type="text/ruby" src="/lib/picodx.rb"></script>
+  <script type="text/ruby" src="/bench/bench.rb"></script>
+  <script src="/init.iife.js"></script>
+</body>
+</html>

@@ -220,5 +220,25 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_pixel("game", 80,  110, 0,   128, 0,   "z-order: lower-z (red z:0) does not overwrite higher-z (green z:1)")
   results << assert_pixel("game", 130, 110, 0,   255, 255, "z-order: same z preserves call order (cyan overwrites magenta)")
 
+  # --- draw_ex fast path / off-screen skip must not drop visible draws ---
+  Window.loop do
+    edge = Image.new(10, 10, [255, 0, 0])
+    Window.draw_ex(-5, 200, edge)                     # half off the left edge
+    Window.draw_ex(395, 200, edge, { angle: 45 })     # rotated corner reaches inside
+    Window.draw_ex(100, 400, edge)                    # fully off screen (skipped)
+    break
+  end
+  results << assert_pixel("game", 2, 205, 255, 0, 0, "draw_ex: image half off the left edge is still drawn")
+  results << assert_pixel("game", 396, 205, 255, 0, 0, "draw_ex: rotated image is not skipped while a corner is visible")
+
+  # Window.ox / oy shift draws inside Window.loop; culling must account for it
+  Window.ox = 20
+  Window.loop do
+    Window.draw_ex(-15, 200, Image.new(10, 10, [0, 255, 0]))  # drawn at 5..14 on screen
+    break
+  end
+  Window.ox = 0
+  results << assert_pixel("game", 8, 205, 0, 255, 0, "draw_ex: off-screen check accounts for Window.ox inside the loop")
+
   show_results(results)
 end

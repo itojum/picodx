@@ -6,6 +6,11 @@ module PicoDX
       @ctx
     end
 
+    # 描画元として渡す canvas（_ctx[:canvas] と同じだが JS 呼び出しを省ける）
+    def _canvas
+      @canvas
+    end
+
     def initialize(width, height, color = [0, 0, 0])
       @width  = width
       @height = height
@@ -98,7 +103,7 @@ module PicoDX
     end
 
     def draw(x, y, other_image)
-      @ctx.drawImage(other_image._ctx[:canvas], x, y)
+      @ctx.drawImage(other_image._canvas, x, y)
     end
 
     def draw_font(x, y, str, font, color = [255, 255, 255])
