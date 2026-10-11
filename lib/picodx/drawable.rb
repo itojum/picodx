@@ -494,13 +494,16 @@ module PicoDX
 
     # Canvas 2D には減算合成がないので、描画範囲を反転してから加算し、もう一度反転する。
     #   1 - min(1, (1 - dst) + src) = max(0, dst - src)
-    # 反転は白の difference 合成（|1 - dst| = 1 - dst）で行う。範囲は整数に広げて、
-    # 端のピクセルが半端に反転されないようにする。範囲内の描画先は不透明になる。
+    # 反転は白の difference 合成（|1 - dst| = 1 - dst）で行う。範囲は描画先のピクセル境界
+    # （平行移動を足した座標）で整数に広げて、端のピクセルが半端に反転されないようにする
+    # （ox / oy が小数でもずれない）。範囲内の描画先は不透明になる。
     def _invert_rect(bounds)
-      x1 = bounds[0].floor
-      y1 = bounds[1].floor
-      x2 = bounds[2].ceil
-      y2 = bounds[3].ceil
+      vx = _view_ox
+      vy = _view_oy
+      x1 = (bounds[0] + vx).floor - vx
+      y1 = (bounds[1] + vy).floor - vy
+      x2 = (bounds[2] + vx).ceil  - vx
+      y2 = (bounds[3] + vy).ceil  - vy
       @ctx.save
       @ctx[:globalCompositeOperation] = "difference"
       @ctx[:fillStyle] = "#fff"

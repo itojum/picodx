@@ -320,5 +320,26 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_pixel("game", 345, 157, 70, 120, 170, "draw_ex blend: :sub with rotation subtracts")
   results << assert_pixel("game", 339, 151, 100, 150, 200, "draw_ex blend: :sub with rotation leaves its bounding box corners untouched")
 
+  # alpha: scales the subtracted amount (100 * 128 / 255 ≈ 50)
+  Window.draw_box_fill(300, 175, 330, 195, [100, 150, 200])
+  Window.draw_ex(305, 180, Image.new(10, 10, [100, 100, 100]), { blend: :sub, alpha: 128 })
+  results << assert_pixel_near("game", 310, 185, 50, 100, 150, 2, "draw_ex blend: :sub with alpha 128 subtracts half")
+
+  # Fractional Window.ox: the inverted area must follow device pixel edges. Otherwise the
+  # edge columns are inverted only partially (twice) and change even where nothing is drawn,
+  # so a fully transparent image would alter them
+  Window.ox = 0.5
+  Window.loop do
+    Window.draw_box_fill(330, 175, 380, 195, [100, 200, 100])
+    Window.draw_sub(340, 180, Image.new(10, 10, [0, 0, 0, 0]))    # device x 340.5 .. 350.5
+    Window.draw_ex(360, 180, Image.new(10, 10, [0, 0, 0, 0]), { blend: :sub })
+    break
+  end
+  Window.ox = 0
+  results << assert_pixel_near("game", 340, 185, 100, 200, 100, 2, "draw_sub with fractional ox: left edge column is untouched")
+  results << assert_pixel_near("game", 350, 185, 100, 200, 100, 2, "draw_sub with fractional ox: right edge column is untouched")
+  results << assert_pixel_near("game", 360, 185, 100, 200, 100, 2, "draw_ex blend: :sub with fractional ox: left edge column is untouched")
+  results << assert_pixel_near("game", 370, 185, 100, 200, 100, 2, "draw_ex blend: :sub with fractional ox: right edge column is untouched")
+
   show_results(results)
 end
