@@ -92,6 +92,19 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw(0, 135, sliced)
   results << assert_pixel("game", 20, 145, 0, 220, 0, "Image#slice content is green")
 
+  # Image#slice_tiles: flat array, left to right then top to bottom
+  sheet = Image.new(40, 20, [255, 0, 0])
+  sheet.box_fill(20, 0, 40, 10, [0, 255, 0])
+  sheet.box_fill(0, 10, 20, 20, [0, 0, 255])
+  sheet.box_fill(20, 10, 40, 20, [255, 255, 255])
+  tiles = sheet.slice_tiles(2, 2)
+  results << assert_equal(4, tiles.length, "Image#slice_tiles returns a flat array")
+  results << assert_equal([20, 10], [tiles[0].width, tiles[0].height], "Image#slice_tiles tile size")
+  results << assert_equal([255, 255, 0, 0],     tiles[0][10, 5], "Image#slice_tiles [0] is top-left")
+  results << assert_equal([255, 0, 255, 0],     tiles[1][10, 5], "Image#slice_tiles [1] is top-right")
+  results << assert_equal([255, 0, 0, 255],     tiles[2][10, 5], "Image#slice_tiles [2] is bottom-left")
+  results << assert_equal([255, 255, 255, 255], tiles[3][10, 5], "Image#slice_tiles [3] is bottom-right")
+
   # Image#dup
   orig = Image.new(60, 40, [0, 0, 200])
   copy = orig.dup
