@@ -70,15 +70,16 @@ With the dev server running:
 
 ### Tests
 
-Open `http://localhost:3000/test/` and click **Run Tests** on each page. See [examples/test/README.md](examples/test/README.md) for what each test page checks.
+Open `http://localhost:3000/test/`. Automated pages have a **Run Tests** button that shows PASS / FAIL; a few input and sound pages are checked by hand instead. See [examples/test/README.md](examples/test/README.md) for what each page checks and the manual steps.
 
 ## Releasing
 
 Releases are made with [release-please](https://github.com/googleapis/release-please) from [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `feat!:` / `BREAKING CHANGE:` for breaking changes).
 
 1. Run the **Release Please** workflow (Actions → Release Please → Run workflow). It opens or updates a release PR with the version bump and `CHANGELOG.md`.
-2. Merge the release PR. This creates a GitHub Release.
-3. The **Publish to npm** workflow runs on the release and publishes the package with provenance. It can also be run by hand with a version number.
+2. Merge the release PR.
+3. Run the **Release Please** workflow again. It only runs by hand, so merging alone does not release anything; this run creates the tag and the GitHub Release.
+4. The **Publish to npm** workflow runs when the release is published and publishes the package with provenance. It can also be run by hand with a version number.
 
 ## License
 
