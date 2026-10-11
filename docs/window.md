@@ -5,12 +5,19 @@
 ## Setup
 
 ```ruby
-Window.init("canvas-id")   # connect to <canvas id="canvas-id">
+Window.init("canvas-id")   # connect to <canvas id="canvas-id"> (optional)
 Window.bgcolor = [r, g, b] # background color, cleared each frame
 Window.bgcolor             # => [r, g, b]
 Window.width               # canvas width in pixels
 Window.height              # canvas height in pixels
+Window.width  = 640        # resize the canvas (can be called before connecting)
+Window.height = 480
 ```
+
+`Window.init` can be omitted. On the first draw, `Window.loop`, or `Window.width` /
+`Window.height` read, PicoDX connects to `<canvas id="game">`, or to the first
+`<canvas>` on the page if there is no `#game`. Settings made before connecting
+(`width=`, `height=`, `bgcolor=`, `fps=`, `scale=`, …) are kept.
 
 ## Game loop
 

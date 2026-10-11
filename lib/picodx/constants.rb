@@ -45,14 +45,16 @@ module PicoDX
   K_DIVIDE    = "NumpadDivide"
   K_NUMRETURN = "NumpadEnter"
 
-  C_BLACK   = [0,   0,   0  ]
-  C_WHITE   = [255, 255, 255]
-  C_RED     = [255, 0,   0  ]
-  C_GREEN   = [0,   255, 0  ]
-  C_BLUE    = [0,   0,   255]
-  C_YELLOW  = [255, 255, 0  ]
-  C_CYAN    = [0,   255, 255]
-  C_MAGENTA = [255, 0,   255]
+  # 色定数（DXRuby と同じ [A, R, G, B]）
+  C_BLACK   = [255, 0,   0,   0  ]
+  C_WHITE   = [255, 255, 255, 255]
+  C_RED     = [255, 255, 0,   0  ]
+  C_GREEN   = [255, 0,   255, 0  ]
+  C_BLUE    = [255, 0,   0,   255]
+  C_YELLOW  = [255, 255, 255, 0  ]
+  C_CYAN    = [255, 0,   255, 255]
+  C_MAGENTA = [255, 255, 0,   255]
+  C_DEFAULT = [0,   0,   0,   0  ]
 
   # ゲームパッドボタン定数（Gamepad API のボタンインデックス対応）
   P_BUTTON1  =  0; P_BUTTON2  =  1; P_BUTTON3  =  2; P_BUTTON4  =  3

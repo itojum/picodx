@@ -39,14 +39,22 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal('NumpadDivide',   K_DIVIDE,   "K_DIVIDE")
   results << assert_equal('NumpadEnter',    K_NUMRETURN,"K_NUMRETURN")
 
-  results << assert_equal([0,   0,   0  ], C_BLACK,   "C_BLACK")
-  results << assert_equal([255, 255, 255], C_WHITE,   "C_WHITE")
-  results << assert_equal([255, 0,   0  ], C_RED,     "C_RED")
-  results << assert_equal([0,   255, 0  ], C_GREEN,   "C_GREEN")
-  results << assert_equal([0,   0,   255], C_BLUE,    "C_BLUE")
-  results << assert_equal([255, 255, 0  ], C_YELLOW,  "C_YELLOW")
-  results << assert_equal([0,   255, 255], C_CYAN,    "C_CYAN")
-  results << assert_equal([255, 0,   255], C_MAGENTA, "C_MAGENTA")
+  results << assert_equal([255, 0,   0,   0  ], C_BLACK,   "C_BLACK (ARGB)")
+  results << assert_equal([255, 255, 255, 255], C_WHITE,   "C_WHITE (ARGB)")
+  results << assert_equal([255, 255, 0,   0  ], C_RED,     "C_RED (ARGB)")
+  results << assert_equal([255, 0,   255, 0  ], C_GREEN,   "C_GREEN (ARGB)")
+  results << assert_equal([255, 0,   0,   255], C_BLUE,    "C_BLUE (ARGB)")
+  results << assert_equal([255, 255, 255, 0  ], C_YELLOW,  "C_YELLOW (ARGB)")
+  results << assert_equal([255, 0,   255, 255], C_CYAN,    "C_CYAN (ARGB)")
+  results << assert_equal([255, 255, 0,   255], C_MAGENTA, "C_MAGENTA (ARGB)")
+  results << assert_equal([0,   0,   0,   0  ], C_DEFAULT, "C_DEFAULT (transparent)")
+
+  # C_ constants round-trip through Image#[] (which returns ARGB)
+  c_img = Image.new(2, 1, C_RED)
+  c_img[1, 0] = C_CYAN
+  results << assert_equal(C_RED,  c_img[0, 0], "Image.new(C_RED)[0, 0] == C_RED")
+  results << assert_equal(C_CYAN, c_img[1, 0], "Image#[]=(C_CYAN) then [] == C_CYAN")
+  results << assert_equal(C_DEFAULT, Image.new(1, 1, C_DEFAULT)[0, 0], "Image.new(C_DEFAULT) is transparent")
 
   show_results(results)
 end
