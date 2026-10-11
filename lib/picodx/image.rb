@@ -182,11 +182,11 @@ module PicoDX
       luminance_delta  = luminance.to_f / 100.0
       saturation_delta = saturation.to_f / 100.0
       return dup if hue_shift.zero? && luminance_delta.zero? && saturation_delta.zero?
-      base_img = hue_shift.zero? ? self : _change_hls_hue(hue_shift)
-      return base_img if luminance_delta.zero? && saturation_delta.zero?
 
+      # 色相も輝度・彩度と同じく HLS 色空間で回す（DXRuby と同じ結果になるよう、
+      # CSS の hue-rotate() の近似は使わない）
       new_img = Image.new(@width, @height, [0, 0, 0, 0])
-      src_data = base_img._ctx.getImageData(0, 0, @width, @height)[:data]
+      src_data = @ctx.getImageData(0, 0, @width, @height)[:data]
       dst_img  = new_img._ctx.createImageData(@width, @height)
       dst_data = dst_img[:data]
       n = @width * @height
@@ -199,6 +199,7 @@ module PicoDX
         a = src_data[j + 3].to_i
 
         h, l, s = _rgb_to_hls(r, g, b)
+        h = (h + hue_shift) % 360.0
         l = _clamp01(l + luminance_delta)
         s = _clamp01(s + saturation_delta)
         nr, ng, nb = _hls_to_rgb(h, l, s)
@@ -300,14 +301,6 @@ module PicoDX
     end
 
     private
-
-    def _change_hls_hue(hue_shift)
-      new_img = Image.new(@width, @height, [0, 0, 0, 0])
-      new_img._ctx[:filter] = "hue-rotate(#{hue_shift}deg)"
-      new_img._ctx.drawImage(@canvas, 0, 0)
-      new_img._ctx[:filter] = "none"
-      new_img
-    end
 
     def _css(color)
       PicoDX._css_color(color)
