@@ -294,7 +294,7 @@ module PicoDX
     # -------------------------------------------------------------------------
 
     def _render_draw(x, y, image)
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image._canvas, x, y)
     end
 
     def _render_draw_box(x1, y1, x2, y2, color)
@@ -410,7 +410,7 @@ module PicoDX
       @ctx.save
       @ctx.translate(x + cx, y + cy)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image._canvas, -cx, -cy)
       @ctx.restore
     end
 
@@ -421,14 +421,14 @@ module PicoDX
       @ctx.save
       @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image._canvas, -cx, -cy)
       @ctx.restore
     end
 
     def _render_draw_alpha(x, y, image, alpha)
       @ctx.save
       @ctx[:globalAlpha] = alpha.to_f / 255
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image._canvas, x, y)
       @ctx.restore
     end
 
@@ -437,24 +437,41 @@ module PicoDX
       scale_x = options[:scale_x] || 1.0
       scale_y = options[:scale_y] || 1.0
       alpha   = options[:alpha]
-      cx      = options[:cx]      || image.width  / 2
-      cy      = options[:cy]      || image.height / 2
       blend   = options[:blend]
+      return if alpha && alpha <= 0
+      w = image.width
+      h = image.height
+
+      if angle == 0 && scale_x == 1 && scale_y == 1
+        return unless _on_screen?(x, y, x + w, y + h)
+        # 変形・半透明・合成なしなら save / restore を省いて drawImage 1 回で描く
+        if (alpha.nil? || alpha >= 255) && (blend.nil? || blend == :alpha)
+          @ctx.drawImage(image._canvas, x, y)
+          return
+        end
+      end
+
+      cx = options[:cx] || w / 2
+      cy = options[:cy] || h / 2
       rad = angle * Math::PI / 180.0
+      unless angle == 0 && scale_x == 1 && scale_y == 1
+        return unless _transformed_on_screen?(x + cx, y + cy, -cx * scale_x, -cy * scale_y,
+                                              (w - cx) * scale_x, (h - cy) * scale_y, rad)
+      end
       @ctx.save
       @ctx[:globalCompositeOperation] = _blend_op(blend) if blend
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha
       @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
       @ctx.scale(scale_x, scale_y)
-      @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
+      @ctx.drawImage(image._canvas, -cx, -cy)
       @ctx.restore
     end
 
     def _render_draw_add(x, y, image)
       @ctx.save
       @ctx[:globalCompositeOperation] = "lighter"
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image._canvas, x, y)
       @ctx.restore
     end
 
@@ -462,7 +479,7 @@ module PicoDX
       # Canvas 2D に真の減算合成はない。"difference" は差の絶対値で近似。
       @ctx.save
       @ctx[:globalCompositeOperation] = "difference"
-      @ctx.drawImage(image._ctx[:canvas], x, y)
+      @ctx.drawImage(image._canvas, x, y)
       @ctx.restore
     end
 
@@ -477,10 +494,10 @@ module PicoDX
       @_morph_ctx.clearRect(0, 0, w, h)
       @_morph_ctx[:globalCompositeOperation] = "source-over"
       @_morph_ctx[:globalAlpha] = 1.0 - r
-      @_morph_ctx.drawImage(image1._ctx[:canvas], 0, 0)
+      @_morph_ctx.drawImage(image1._canvas, 0, 0)
       @_morph_ctx[:globalCompositeOperation] = "lighter"
       @_morph_ctx[:globalAlpha] = r
-      @_morph_ctx.drawImage(image2._ctx[:canvas], 0, 0)
+      @_morph_ctx.drawImage(image2._canvas, 0, 0)
       @_morph_ctx[:globalCompositeOperation] = "source-over"
       @_morph_ctx[:globalAlpha] = 1.0
       @ctx.drawImage(@_morph_canvas, x, y)
@@ -505,9 +522,42 @@ module PicoDX
           next if idx.nil?
           chip = flat[idx]
           next if chip.nil?
-          @ctx.drawImage(chip._ctx[:canvas], x + col * tw - px_ox, y + row * th - px_oy)
+          @ctx.drawImage(chip._canvas, x + col * tw - px_ox, y + row * th - px_oy)
         end
       end
+    end
+
+    # 描画範囲 (x1, y1)-(x2, y2) が描画先に少しでも掛かるか（画面外の描画を省くため）
+    def _on_screen?(x1, y1, x2, y2)
+      w = @width
+      h = @height
+      return true if w.nil? || h.nil?
+      ox = _view_ox
+      oy = _view_oy
+      x2 + ox > 0 && x1 + ox < w && y2 + oy > 0 && y1 + oy < h
+    end
+
+    # 中心 (px, py) まわりに拡縮済みの矩形 (ax1, ay1)-(ax2, ay2) を rad だけ回転したときの
+    # 外接矩形が描画先に掛かるか
+    def _transformed_on_screen?(px, py, ax1, ay1, ax2, ay2, rad)
+      c = Math.cos(rad)
+      s = Math.sin(rad)
+      x_a = ax1 * c; x_b = ax2 * c; y_a = ay1 * s; y_b = ay2 * s
+      min_x = (x_a < x_b ? x_a : x_b) - (y_a > y_b ? y_a : y_b)
+      max_x = (x_a > x_b ? x_a : x_b) - (y_a < y_b ? y_a : y_b)
+      x_a = ax1 * s; x_b = ax2 * s; y_a = ay1 * c; y_b = ay2 * c
+      min_y = (x_a < x_b ? x_a : x_b) + (y_a < y_b ? y_a : y_b)
+      max_y = (x_a > x_b ? x_a : x_b) + (y_a > y_b ? y_a : y_b)
+      _on_screen?(px + min_x, py + min_y, px + max_x, py + max_y)
+    end
+
+    # 描画時に掛かっている平行移動量。Window はループ内で (ox, oy) だけずらして描く
+    def _view_ox
+      0
+    end
+
+    def _view_oy
+      0
     end
 
     def _css(color)

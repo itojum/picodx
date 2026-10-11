@@ -27,6 +27,7 @@ module PicoDX
         if @canvas
           @canvas[:width] = value
           @width = value
+          _restore_ctx_state
         end
       end
 
@@ -36,6 +37,7 @@ module PicoDX
         if @canvas
           @canvas[:height] = value
           @height = value
+          _restore_ctx_state
         end
       end
 
@@ -101,7 +103,7 @@ module PicoDX
         @canvas[:height] = h
         @width  = w
         @height = h
-        _apply_smoothing
+        _restore_ctx_state
       end
 
       def scale=(s)
@@ -196,6 +198,27 @@ module PicoDX
 
       private
 
+      # ctx に現在掛かっている平行移動量（_tick_with が translate した分の累計）。
+      # ループ外の即時描画では 0。ブロック内で ox を変えても、ネストしたループで
+      # translate が重なっても、実際の描画位置と一致する
+      def _view_ox
+        @view_ox || 0
+      end
+
+      def _view_oy
+        @view_oy || 0
+      end
+
+      # canvas のサイズを変えると ctx の状態（平行移動・補間設定）がリセットされるので掛け直す。
+      # ループのブロック内で変えた場合も、そのフレームの描画と画面外判定が同じ平行移動量になる
+      def _restore_ctx_state
+        _apply_smoothing
+        return unless @ctx
+        vox = @view_ox || 0
+        voy = @view_oy || 0
+        @ctx.translate(vox, voy) if vox != 0 || voy != 0
+      end
+
       def _apply_smoothing
         return unless @ctx
         @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
@@ -250,15 +273,24 @@ module PicoDX
         @ctx[:fillStyle] = _css(@bgcolor)
         @ctx.fillRect(0, 0, @width, @height)
         saved_queue = @draw_queue
+        saved_view_ox = @view_ox
+        saved_view_oy = @view_oy
         @draw_queue = []
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
+        @view_ox = (saved_view_ox || 0) + @ox
+        @view_oy = (saved_view_oy || 0) + @oy
         begin
           blk.call
         ensure
           _flush_draw_queue
           @draw_queue = saved_queue
+          @view_ox = saved_view_ox
+          @view_oy = saved_view_oy
           @ctx.restore
+          # ブロック内で canvas のサイズを変えると save したスタックごと ctx がリセットされ、
+          # restore が効かない。外側のフレームの平行移動量（ループ外なら 0）に明示的に戻す
+          @ctx.setTransform(1, 0, 0, 1, saved_view_ox || 0, saved_view_oy || 0)
         end
       end
     end
