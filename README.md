@@ -70,31 +70,7 @@ With the dev server running:
 
 ### Tests
 
-Open `http://localhost:3000/test/` and click **Run Tests** on each page. Results are shown as PASS / FAIL below the canvas.
-
-| Page | What it checks |
-|------|----------------|
-| `window/` | Window drawing, `draw_scale` / `draw_rot` / `draw_ex` coordinates, z order, blending, off-screen skipping, re-entrant `Window.loop` |
-| `window-loop-exit/` | Leaving `Window.loop` with `break` / `return` / exceptions |
-| `window-auto-init/` | Connecting to `#game` without `Window.init`, keeping settings made before connecting |
-| `window-auto-init-canvas/` | Connecting to the first `<canvas>` when there is no `#game` |
-| `image/` | Image drawing, pixel access, `slice_tiles`, `to_a`, `compare`, `change_hls`, load cache |
-| `image-load-context/` | `Image.load` / `Image.load_tiles` from top level, `initialize` and `Window.loop` |
-| `sprite/` | Sprite attributes, drawing, `offset_sync`, collision (rect / circle / point, `collision_sync`, unset collision) |
-| `render_target/` | RenderTarget drawing, `ox` / `oy`, `resize`, `draw_tile` |
-| `font/` | Font, `draw_font` / `draw_font_ex` |
-| `constants/` | Key and `C_*` color constants |
-| `input-default/` | Arrow / Space / Tab do not scroll the page, `Input.prevent_default`, switching canvases |
-| `input-mouse/` | Mouse coordinates on a CSS-scaled canvas, no context menu on right click |
-| `sound/` | Sound API (plays a short beep at the end) |
-
-These pages are checked by hand:
-
-| Page | What to do |
-|------|------------|
-| `input/` | Hold / tap keys and move the mouse; watch `key_down?` / `key_push?` / `key_release?` and the mouse state |
-| `repeat/` | Press 1–4 to switch `Input.set_repeat` presets, then hold Space and watch the repeat count |
-| `sound-keydown/` | Enter plays a beep, Space stops it, Esc quits the loop |
+Open `http://localhost:3000/test/` and click **Run Tests** on each page. See [examples/test/README.md](examples/test/README.md) for what each test page checks.
 
 ## Releasing
 
