@@ -173,8 +173,9 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(0, img_red.compare(0, 0, img_default, 0, 0, 10, 10), "Image#change_hls defaults all args to zero")
   img_same = img_red.change_hls(0, 0, 0)
   results << assert_equal(0, img_red.compare(0, 0, img_same, 0, 0, 10, 10), "Image#change_hls(0, 0, 0) keeps pixels unchanged")
+  # Image#[] returns [A, R, G, B]
   px_rot = img_rot[5, 5]
-  results << (px_rot[1] > px_rot[0] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
+  results << (px_rot[2] > px_rot[1] ? "<span class='pass'>PASS</span> Image#change_hls(120, 0, 0) on red → green dominant #{px_rot.inspect}" :
                                       "<span class='fail'>FAIL</span> Image#change_hls(120, 0, 0) expected green dominant, got #{px_rot.inspect}")
   wrap_a = Image.new(1, 1, [255, 0, 0]).change_hls(120, 0, 0)
   wrap_b = Image.new(1, 1, [255, 0, 0]).change_hls(480, 0, 0)
@@ -182,20 +183,38 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(0, wrap_a.compare(0, 0, wrap_b, 0, 0, 1, 1), "Image#change_hls wraps hue above 360")
   results << assert_equal(0, wrap_a.compare(0, 0, wrap_c, 0, 0, 1, 1), "Image#change_hls wraps negative hue")
   bright_px = Image.new(1, 1, [64, 64, 64]).change_hls(0, 20, 0)[0, 0]
-  results << (bright_px[0] > 64 && bright_px[1] > 64 && bright_px[2] > 64 ? "<span class='pass'>PASS</span> Image#change_hls luminance raises lightness #{bright_px.inspect}" :
+  results << (bright_px[1] > 64 && bright_px[2] > 64 && bright_px[3] > 64 ? "<span class='pass'>PASS</span> Image#change_hls luminance raises lightness #{bright_px.inspect}" :
                                                                               "<span class='fail'>FAIL</span> Image#change_hls luminance did not raise lightness: #{bright_px.inspect}")
   white_px = Image.new(1, 1, [64, 64, 64]).change_hls(0, 200, 0)[0, 0]
   results << assert_equal([255, 255, 255, 255], white_px, "Image#change_hls clamps luminance high")
   black_px = Image.new(1, 1, [64, 64, 64]).change_hls(0, -200, 0)[0, 0]
-  results << assert_equal([0, 0, 0, 255], black_px, "Image#change_hls clamps luminance low")
+  results << assert_equal([255, 0, 0, 0], black_px, "Image#change_hls clamps luminance low")
   gray_px = Image.new(1, 1, [255, 0, 0]).change_hls(0, 0, -100)[0, 0]
-  results << (gray_px[0] == gray_px[1] && gray_px[1] == gray_px[2] ? "<span class='pass'>PASS</span> Image#change_hls saturation -100 desaturates #{gray_px.inspect}" :
+  results << (gray_px[1] == gray_px[2] && gray_px[2] == gray_px[3] ? "<span class='pass'>PASS</span> Image#change_hls saturation -100 desaturates #{gray_px.inspect}" :
                                                                       "<span class='fail'>FAIL</span> Image#change_hls saturation -100 did not desaturate: #{gray_px.inspect}")
   sat_a = Image.new(1, 1, [192, 96, 96]).change_hls(0, 0, 100)
   sat_b = Image.new(1, 1, [192, 96, 96]).change_hls(0, 0, 200)
   results << assert_equal(0, sat_a.compare(0, 0, sat_b, 0, 0, 1, 1), "Image#change_hls clamps saturation high")
   Window.draw(0, 200, img_red)
   Window.draw(15, 200, img_rot)
+
+  # Hue is rotated in HLS space like DXRuby (pure red → pure green / blue), not with
+  # CSS hue-rotate(), which keeps luminance and gives a dark green
+  hue_green = Image.new(1, 1, [255, 0, 0]).change_hls(120, 0, 0)[0, 0]
+  hue_blue  = Image.new(1, 1, [255, 0, 0]).change_hls(240, 0, 0)[0, 0]
+  hue_neg   = Image.new(1, 1, [255, 0, 0]).change_hls(-120, 0, 0)[0, 0]
+  hue_mid   = Image.new(1, 1, [255, 0, 0]).change_hls(60, 0, 0)[0, 0]
+  near = lambda { |a, b| a.length == b.length && (0...a.length).all? { |i| (a[i] - b[i]).abs <= 1 } }
+  results << (near.call(hue_green, [255, 0, 255, 0]) ? "<span class='pass'>PASS</span> Image#change_hls(120) turns red into pure green #{hue_green.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(120) expected [255, 0, 255, 0], got #{hue_green.inspect}")
+  results << (near.call(hue_blue, [255, 0, 0, 255])  ? "<span class='pass'>PASS</span> Image#change_hls(240) turns red into pure blue #{hue_blue.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(240) expected [255, 0, 0, 255], got #{hue_blue.inspect}")
+  results << (near.call(hue_neg, [255, 0, 0, 255])   ? "<span class='pass'>PASS</span> Image#change_hls(-120) equals 240 #{hue_neg.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(-120) expected [255, 0, 0, 255], got #{hue_neg.inspect}")
+  results << (near.call(hue_mid, [255, 255, 255, 0]) ? "<span class='pass'>PASS</span> Image#change_hls(60) turns red into yellow #{hue_mid.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(60) expected [255, 255, 255, 0], got #{hue_mid.inspect}")
+  hue_alpha = Image.new(1, 1, [128, 255, 0, 0]).change_hls(120, 0, 0)[0, 0]
+  results << assert_equal(128, hue_alpha[0], "Image#change_hls keeps alpha (semi-transparent red → alpha 128)")
 
   # --- Visual labels ---
   Window.draw_font(0,  60, "new / fill / box_fill / circle_fill", [140, 140, 140], 10)
