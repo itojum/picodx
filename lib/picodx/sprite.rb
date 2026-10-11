@@ -104,20 +104,17 @@ module PicoDX
     end
 
     def check(other)
-      return [] if vanished? || _collision(self).nil? || !collision_enable
       targets = other.is_a?(Array) ? other : [other]
-      result = []
-      targets.each do |sp|
-        next if sp.nil? || sp.vanished? || _collision(sp).nil? || !sp.collision_enable
-        result << sp if _collide?(sp)
-      end
-      result
+      _check_against(targets, nil)
     end
 
     def ===(other)
-      return false if vanished? || _collision(self).nil? || !collision_enable
-      return false if other.nil? || other.vanished? || _collision(other).nil? || !other.collision_enable
-      _collide?(other)
+      return false if other.nil?
+      a = _world_shape(self)
+      return false if a.nil?
+      b = _world_shape(other)
+      return false if b.nil?
+      _shapes_hit?(a, b)
     end
 
     class << self
@@ -134,9 +131,13 @@ module PicoDX
 
       def check(array_a, array_b)
         results = []
+        shapes_b = nil
         array_a.each do |a|
           next if a.nil? || a.vanished?
-          hits = a.check(array_b)
+          # array_b の判定範囲はすべての a で共通なので 1 回だけ求める
+          # （PicoRuby には protected がないため、private の計算を __send__ で呼ぶ）
+          shapes_b ||= a.__send__(:_world_shapes, array_b)
+          hits = a.__send__(:_check_against, array_b, shapes_b)
           results << [a, hits] unless hits.empty?
         end
         results
@@ -193,55 +194,131 @@ module PicoDX
       img ? [0, 0, img.width, img.height] : nil
     end
 
-    def _collide?(other)
-      aox = offset_sync       ? -_center_x       : 0
-      aoy = offset_sync       ? -_center_y       : 0
-      box = other.offset_sync ? -other._center_x : 0
-      boy = other.offset_sync ? -other._center_y : 0
-      ac = _scaled_collision(self, _collision(self))
-      bc = _scaled_collision(other, _collision(other))
-      al = ac.length
-      bl = bc.length
+    def _check_against(targets, shapes)
+      result = []
+      mine = _world_shape(self)
+      return result if mine.nil?
+      i = 0
+      n = targets.length
+      while i < n
+        sp = targets[i]
+        if sp
+          other = shapes ? shapes[i] : _world_shape(sp)
+          result << sp if other && _shapes_hit?(mine, other)
+        end
+        i += 1
+      end
+      result
+    end
 
+    def _world_shapes(sprites)
+      sprites.map { |sp| sp ? _world_shape(sp) : nil }
+    end
+
+    # 判定範囲をワールド座標で返す。判定しない Sprite は nil。
+    #   矩形 [x1, y1, x2, y2] / 円 [cx, cy, r] / 点 [px, py]
+    # collision_sync が真なら、中心まわりに拡縮・回転する（矩形は外接矩形で近似）
+    def _world_shape(sp)
+      return nil if sp.vanished? || !sp.collision_enable
+      c = _collision(sp)
+      return nil if c.nil?
+
+      cx = sp._center_x
+      cy = sp._center_y
+      bx = sp.x
+      by = sp.y
+      if sp.offset_sync
+        bx -= cx
+        by -= cy
+      end
+
+      sx = 1
+      sy = 1
+      angle = 0
+      if sp.collision_sync
+        sx = sp.scale_x
+        sy = sp.scale_y
+        angle = sp.angle
+      end
+
+      if angle == 0 && sx == 1 && sy == 1
+        if c.length == 4
+          return [bx + c[0], by + c[1], bx + c[2], by + c[3]]
+        elsif c.length == 3
+          return [bx + c[0], by + c[1], c[2]]
+        else
+          return [bx + c[0], by + c[1]]
+        end
+      end
+
+      # 中心 (cx, cy) まわりに拡縮してから回転する
+      ox = bx + cx
+      oy = by + cy
+      if angle == 0
+        cos_a = 1.0
+        sin_a = 0.0
+      else
+        rad   = angle * Math::PI / 180.0
+        cos_a = Math.cos(rad)
+        sin_a = Math.sin(rad)
+      end
+
+      if c.length == 4
+        # 拡縮後の矩形 (u1..u2, v1..v2) を回転した外接矩形
+        u1 = (c[0] - cx) * sx; u2 = (c[2] - cx) * sx
+        v1 = (c[1] - cy) * sy; v2 = (c[3] - cy) * sy
+        xa = u1 * cos_a; xb = u2 * cos_a; ya = v1 * sin_a; yb = v2 * sin_a
+        min_x = (xa < xb ? xa : xb) - (ya > yb ? ya : yb)
+        max_x = (xa > xb ? xa : xb) - (ya < yb ? ya : yb)
+        xa = u1 * sin_a; xb = u2 * sin_a; ya = v1 * cos_a; yb = v2 * cos_a
+        min_y = (xa < xb ? xa : xb) + (ya < yb ? ya : yb)
+        max_y = (xa > xb ? xa : xb) + (ya > yb ? ya : yb)
+        [ox + min_x, oy + min_y, ox + max_x, oy + max_y]
+      else
+        u = (c[0] - cx) * sx
+        v = (c[1] - cy) * sy
+        px = ox + u * cos_a - v * sin_a
+        py = oy + u * sin_a + v * cos_a
+        if c.length == 3
+          asx = sx < 0 ? -sx : sx
+          asy = sy < 0 ? -sy : sy
+          [px, py, c[2] * (asx > asy ? asx : asy)]
+        else
+          [px, py]
+        end
+      end
+    end
+
+    def _shapes_hit?(a, b)
+      al = a.length
+      bl = b.length
       if al == 4
-        ax1 = x + aox + ac[0]; ay1 = y + aoy + ac[1]
-        ax2 = x + aox + ac[2]; ay2 = y + aoy + ac[3]
+        if bl == 4
+          a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
+        elsif bl == 3
+          _rect_circle?(a[0], a[1], a[2], a[3], b[0], b[1], b[2])
+        else
+          b[0] >= a[0] && b[0] <= a[2] && b[1] >= a[1] && b[1] <= a[3]
+        end
       elsif al == 3
-        acx = x + aox + ac[0]; acy = y + aoy + ac[1]; ar = ac[2]
+        if bl == 4
+          _rect_circle?(b[0], b[1], b[2], b[3], a[0], a[1], a[2])
+        elsif bl == 3
+          dx = a[0] - b[0]; dy = a[1] - b[1]; sr = a[2] + b[2]
+          dx * dx + dy * dy <= sr * sr
+        else
+          dx = b[0] - a[0]; dy = b[1] - a[1]
+          dx * dx + dy * dy <= a[2] * a[2]
+        end
       else
-        apx = x + aox + ac[0]; apy = y + aoy + ac[1]
-      end
-
-      if bl == 4
-        bx1 = other.x + box + bc[0]; by1 = other.y + boy + bc[1]
-        bx2 = other.x + box + bc[2]; by2 = other.y + boy + bc[3]
-      elsif bl == 3
-        bcx = other.x + box + bc[0]; bcy = other.y + boy + bc[1]; br = bc[2]
-      else
-        bpx = other.x + box + bc[0]; bpy = other.y + boy + bc[1]
-      end
-
-      if al == 4 && bl == 4
-        ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1
-      elsif al == 4 && bl == 3
-        _rect_circle?(ax1, ay1, ax2, ay2, bcx, bcy, br)
-      elsif al == 4 && bl == 2
-        bpx >= ax1 && bpx <= ax2 && bpy >= ay1 && bpy <= ay2
-      elsif al == 3 && bl == 4
-        _rect_circle?(bx1, by1, bx2, by2, acx, acy, ar)
-      elsif al == 3 && bl == 3
-        dx = acx - bcx; dy = acy - bcy; sr = ar + br
-        dx * dx + dy * dy <= sr * sr
-      elsif al == 3 && bl == 2
-        dx = bpx - acx; dy = bpy - acy
-        dx * dx + dy * dy <= ar * ar
-      elsif al == 2 && bl == 4
-        apx >= bx1 && apx <= bx2 && apy >= by1 && apy <= by2
-      elsif al == 2 && bl == 3
-        dx = apx - bcx; dy = apy - bcy
-        dx * dx + dy * dy <= br * br
-      else
-        apx == bpx && apy == bpy
+        if bl == 4
+          a[0] >= b[0] && a[0] <= b[2] && a[1] >= b[1] && a[1] <= b[3]
+        elsif bl == 3
+          dx = a[0] - b[0]; dy = a[1] - b[1]
+          dx * dx + dy * dy <= b[2] * b[2]
+        else
+          a[0] == b[0] && a[1] == b[1]
+        end
       end
     end
 
@@ -249,43 +326,6 @@ module PicoDX
       dx = cx < rx1 ? rx1 - cx : (cx > rx2 ? cx - rx2 : 0)
       dy = cy < ry1 ? ry1 - cy : (cy > ry2 ? cy - ry2 : 0)
       dx * dx + dy * dy <= r * r
-    end
-
-    def _scaled_collision(sp, c)
-      return c unless sp.collision_sync
-      sx    = sp.scale_x
-      sy    = sp.scale_y
-      angle = sp.angle
-      origin_x = sp._center_x
-      origin_y = sp._center_y
-      rad      = angle * Math::PI / 180.0
-      cos_a    = Math.cos(rad)
-      sin_a    = Math.sin(rad)
-
-      transform_point = lambda do |px, py|
-        dx = px - origin_x
-        dy = py - origin_y
-        [
-          origin_x + dx * sx * cos_a - dy * sy * sin_a,
-          origin_y + dx * sx * sin_a + dy * sy * cos_a
-        ]
-      end
-
-      if c.length == 4
-        p1 = transform_point.call(c[0], c[1])
-        p2 = transform_point.call(c[0], c[3])
-        p3 = transform_point.call(c[2], c[1])
-        p4 = transform_point.call(c[2], c[3])
-        xs = [p1[0], p2[0], p3[0], p4[0]]
-        ys = [p1[1], p2[1], p3[1], p4[1]]
-        [xs.min, ys.min, xs.max, ys.max]
-      elsif c.length == 3
-        pcx, pcy = transform_point.call(c[0], c[1])
-        scale = sx.abs > sy.abs ? sx.abs : sy.abs
-        [pcx, pcy, c[2] * scale]
-      else
-        transform_point.call(c[0], c[1])
-      end
     end
   end
 end

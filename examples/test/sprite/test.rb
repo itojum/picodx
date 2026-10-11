@@ -243,6 +243,41 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (cs_c === cs_d ? "<span class='pass'>PASS</span> collision_sync rotates circle center around sprite center" :
                               "<span class='fail'>FAIL</span> collision_sync should rotate circle center around sprite center")
 
+  # --- Sprite.check (shapes computed once) agrees with pairwise === ---
+  mix_img = Image.new(20, 12, [255, 0, 0])
+  group_a = []
+  group_b = []
+  12.times do |i|
+    a = Sprite.new(10 + (i * 37) % 200, 10 + (i * 23) % 120, mix_img)
+    a.angle   = (i * 30) % 360
+    a.scale_x = i.even? ? 1.5 : -1
+    a.offset_sync = (i % 3 == 0)
+    a.collision = [0, 0, 6] if i % 4 == 1
+    group_a << a
+    b = Sprite.new(15 + (i * 29) % 200, 5 + (i * 31) % 120, mix_img)
+    b.scale_y = i.odd? ? 0.5 : -2
+    b.collision = [5, 5] if i % 5 == 2
+    b.collision_sync = false if i % 6 == 3
+    group_b << b
+  end
+  group_b << nil
+  dead = Sprite.new(50, 50, mix_img); dead.vanish; group_b << dead
+  consistent = true
+  pairs = 0
+  Sprite.check(group_a, group_b).each do |a, hits|
+    hits.each { |b| consistent = false unless a === b }
+  end
+  group_a.each do |a|
+    expected = group_b.select { |b| b && a === b }
+    actual   = a.check(group_b)
+    pairs += expected.length
+    consistent = false unless expected == actual
+    found = Sprite.check([a], group_b)
+    consistent = false unless (found.empty? ? [] : found[0][1]) == expected
+  end
+  results << (consistent && pairs > 0 ? "<span class='pass'>PASS</span> Sprite.check / Sprite#check agree with === (#{pairs} hits)" :
+                                        "<span class='fail'>FAIL</span> Sprite.check / Sprite#check disagree with === (#{pairs} hits)")
+
   # --- Sprite.clean(array) ---
   live = Sprite.new(0, 0, nil)
   dead = Sprite.new(0, 0, nil)
