@@ -44,10 +44,12 @@ module PicoDX
 
     def draw
       return if @vanished || !visible || image.nil?
-      cx = center_x || (image.width  / 2)
-      cy = center_y || (image.height / 2)
+      cx = _center_x
+      cy = _center_y
+      dx = offset_sync ? x - cx : x
+      dy = offset_sync ? y - cy : y
       t  = target || Window
-      t.draw_ex(x.to_i, y.to_i, image, {
+      t.draw_ex(dx.to_i, dy.to_i, image, {
         z:       z,
         angle:   angle,
         scale_x: scale_x,
@@ -87,9 +89,8 @@ module PicoDX
     end
 
     def param_hash
-      img = image
-      ecx = center_x || (img ? img.width  / 2 : 0)
-      ecy = center_y || (img ? img.height / 2 : 0)
+      ecx = _center_x
+      ecy = _center_y
       {
         x: x, y: y, z: z,
         angle: angle,
@@ -173,13 +174,22 @@ module PicoDX
       end
     end
 
+    # center_x / center_y が nil のときの実効値（画像中央、画像がなければ 0）
+    def _center_x
+      center_x || (image ? image.width  / 2 : 0)
+    end
+
+    def _center_y
+      center_y || (image ? image.height / 2 : 0)
+    end
+
     private
 
     def _collide?(other)
-      aox = offset_sync       ? -(center_x || 0) : 0
-      aoy = offset_sync       ? -(center_y || 0) : 0
-      box = other.offset_sync ? -(other.center_x || 0) : 0
-      boy = other.offset_sync ? -(other.center_y || 0) : 0
+      aox = offset_sync       ? -_center_x       : 0
+      aoy = offset_sync       ? -_center_y       : 0
+      box = other.offset_sync ? -other._center_x : 0
+      boy = other.offset_sync ? -other._center_y : 0
       ac = _scaled_collision(self, collision)
       bc = _scaled_collision(other, other.collision)
       al = ac.length
@@ -238,8 +248,8 @@ module PicoDX
       sx    = sp.scale_x
       sy    = sp.scale_y
       angle = sp.angle
-      origin_x = sp.center_x || (sp.image ? sp.image.width / 2.0 : 0.0)
-      origin_y = sp.center_y || (sp.image ? sp.image.height / 2.0 : 0.0)
+      origin_x = sp._center_x
+      origin_y = sp._center_y
       rad      = angle * Math::PI / 180.0
       cos_a    = Math.cos(rad)
       sin_a    = Math.sin(rad)

@@ -25,12 +25,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(100, sp.x, "Sprite#x= setter")
   results << assert_equal(60,  sp.y, "Sprite#y= setter")
 
-  # --- Sprite#draw renders image at (x, y) with center origin ---
-  # image 30×20, center=(15,10), drawn via draw_ex(100,60,image,{cx:15,cy:10})
-  # → drawImage at (100-15, 60-10)=(85,50); center pixel = (100,60)
+  # --- Sprite#draw renders image with its top-left at (x, y) (offset_sync = false) ---
+  # image 30×20 occupies (100..129, 60..79); its center pixel is (115, 70)
   sp.draw
-  results << assert_pixel("game", 100, 60, 255, 0, 0, "Sprite#draw: center pixel is red")
-  results << assert_pixel("game", 84,  49, 0,   0, 0, "Sprite#draw: just outside top-left is black")
+  results << assert_pixel("game", 115, 70, 255, 0, 0, "Sprite#draw: center pixel is red")
+  results << assert_pixel("game", 100, 60, 255, 0, 0, "Sprite#draw: top-left pixel at (x, y) is red")
+  results << assert_pixel("game", 99,  59, 0,   0, 0, "Sprite#draw: just outside top-left is black")
 
   # --- visible=false skips draw ---
   sp2 = Sprite.new(200, 80, Image.new(20, 20, [0, 255, 0]))
@@ -175,6 +175,35 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
 
   results << (!(os_c === os_b) ? "<span class='pass'>PASS</span> offset_sync=false: no shift, no overlap" :
                                  "<span class='fail'>FAIL</span> offset_sync=false: should not overlap without shift")
+
+  # offset_sync=true without center_x/center_y: collision uses the image center
+  # 20x20 image at (100,100) → collision rect (90,90)-(110,110)
+  os_img = Image.new(20, 20, [0, 255, 0])
+  os_d = Sprite.new(100, 100, os_img)
+  os_d.offset_sync = true
+  os_d.collision   = [0, 0, 20, 20]
+  os_e = Sprite.new(85, 85, nil)
+  os_e.collision   = [0, 0, 6, 6]
+  results << (os_d === os_e ? "<span class='pass'>PASS</span> offset_sync=true: default center is image center for collision" :
+                              "<span class='fail'>FAIL</span> offset_sync=true: collision should shift by image center")
+
+  # offset_sync=true: draw puts the image center at (x, y)
+  # 20x20 image at (420,150) → drawn at (410..429, 140..159)
+  os_f = Sprite.new(420, 150, os_img)
+  os_f.offset_sync = true
+  os_f.draw
+  results << assert_pixel("game", 410, 140, 0, 255, 0, "offset_sync=true: draw top-left is (x - cx, y - cy)")
+  results << assert_pixel("game", 429, 159, 0, 255, 0, "offset_sync=true: draw bottom-right inside")
+  results << assert_pixel("game", 430, 159, 0, 0,   0, "offset_sync=true: right of image is black")
+
+  # offset_sync=true with explicit center: center (0, 0) → top-left at (x, y)
+  os_g = Sprite.new(450, 150, os_img)
+  os_g.center_x = 0
+  os_g.center_y = 0
+  os_g.offset_sync = true
+  os_g.draw
+  results << assert_pixel("game", 450, 150, 0, 255, 0, "offset_sync=true, center (0,0): top-left at (x, y)")
+  results << assert_pixel("game", 449, 149, 0, 0,   0, "offset_sync=true, center (0,0): outside top-left is black")
 
   # --- Sprite#collision_sync uses sprite center as transform origin ---
   cs_a = Sprite.new(100, 100, nil)

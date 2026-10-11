@@ -352,11 +352,13 @@ module PicoDX
       @ctx.fill
     end
 
+    # DXRuby の座標系: (x, y) は変形前の画像の左上、(cx, cy) は画像内の
+    # 拡縮・回転の中心（既定は画像中央）。
     def _render_draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil)
       cx = image.width  / 2 if cx.nil?
       cy = image.height / 2 if cy.nil?
       @ctx.save
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
@@ -367,7 +369,7 @@ module PicoDX
       cy = image.height / 2 if cy.nil?
       rad = angle * Math::PI / 180.0
       @ctx.save
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
@@ -385,14 +387,14 @@ module PicoDX
       scale_x = options[:scale_x] || 1.0
       scale_y = options[:scale_y] || 1.0
       alpha   = options[:alpha]
-      cx      = options[:cx]      || 0
-      cy      = options[:cy]      || 0
+      cx      = options[:cx]      || image.width  / 2
+      cy      = options[:cy]      || image.height / 2
       blend   = options[:blend]
       rad = angle * Math::PI / 180.0
       @ctx.save
       @ctx[:globalCompositeOperation] = _blend_op(blend) if blend
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
