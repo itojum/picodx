@@ -52,10 +52,32 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   JS.eval("#{canvas2}.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))")
   results << assert_equal("game2", JS.eval("document.activeElement.id").to_s, "Window.init(game2): clicking the new canvas focuses it")
 
+  # Mouse events on the previous canvas no longer update Input
+  move = lambda do |target, x, y|
+    JS.eval(
+      "(() => { const c = #{target}; const r = c.getBoundingClientRect();" \
+      " c.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + c.clientLeft + #{x}, clientY: r.top + c.clientTop + #{y} })); })()"
+    )
+    Window.loop { break }
+  end
+  # (the earlier click test left the left button down on game2; release it first)
+  JS.eval("#{canvas2}.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0 }))")
+  move.call(canvas2, 31, 21)
+  # synthetic clientX/Y are rounded while the canvas may sit at a fractional position
+  new_pos = [Input.mouse_x, Input.mouse_y]
+  results << ((new_pos[0] - 31).abs <= 1 && (new_pos[1] - 21).abs <= 1 ?
+              "<span class='pass'>PASS</span> Window.init(game2): mouse on the new canvas updates Input" :
+              "<span class='fail'>FAIL</span> Window.init(game2): mouse on the new canvas did not update Input: #{new_pos.inspect}")
+  move.call(canvas, 101, 41)
+  results << assert_equal(new_pos, [Input.mouse_x, Input.mouse_y], "Window.init(game2): mouse on the old canvas is ignored")
+  JS.eval("#{canvas}.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))")
+  Window.loop { break }
+  results << assert_equal(false, Input.mouse_down?(M_LBUTTON), "Window.init(game2): mouse buttons on the old canvas are ignored")
+
   # Switching back re-targets the first canvas without registering its listeners twice
   Window.init("game")
   results << assert_equal(true, keydown_prevented?("ArrowDown", canvas), "Window.init(game) again: keys on the first canvas are prevented")
-  results << assert_equal(true, JS.eval("#{canvas}.__picodx_input === true").to_s == "true", "Window.init(game) again: canvas listeners are registered once (marker kept)")
+  results << assert_equal(1, JS.eval("#{canvas}.__picodx_input_id").to_i, "Window.init(game) again: canvas keeps its input id (listeners registered once)")
 
   show_results(results)
 end
