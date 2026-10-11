@@ -193,6 +193,24 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw(0, 200, img_red)
   Window.draw(15, 200, img_rot)
 
+  # Hue is rotated in HLS space like DXRuby (pure red → pure green / blue), not with
+  # CSS hue-rotate(), which keeps luminance and gives a dark green
+  hue_green = Image.new(1, 1, [255, 0, 0]).change_hls(120, 0, 0)[0, 0]
+  hue_blue  = Image.new(1, 1, [255, 0, 0]).change_hls(240, 0, 0)[0, 0]
+  hue_neg   = Image.new(1, 1, [255, 0, 0]).change_hls(-120, 0, 0)[0, 0]
+  hue_mid   = Image.new(1, 1, [255, 0, 0]).change_hls(60, 0, 0)[0, 0]
+  near = lambda { |a, b| a.length == b.length && (0...a.length).all? { |i| (a[i] - b[i]).abs <= 1 } }
+  results << (near.call(hue_green, [255, 0, 255, 0]) ? "<span class='pass'>PASS</span> Image#change_hls(120) turns red into pure green #{hue_green.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(120) expected [255, 0, 255, 0], got #{hue_green.inspect}")
+  results << (near.call(hue_blue, [255, 0, 0, 255])  ? "<span class='pass'>PASS</span> Image#change_hls(240) turns red into pure blue #{hue_blue.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(240) expected [255, 0, 0, 255], got #{hue_blue.inspect}")
+  results << (near.call(hue_neg, [255, 0, 0, 255])   ? "<span class='pass'>PASS</span> Image#change_hls(-120) equals 240 #{hue_neg.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(-120) expected [255, 0, 0, 255], got #{hue_neg.inspect}")
+  results << (near.call(hue_mid, [255, 255, 255, 0]) ? "<span class='pass'>PASS</span> Image#change_hls(60) turns red into yellow #{hue_mid.inspect}" :
+                                                       "<span class='fail'>FAIL</span> Image#change_hls(60) expected [255, 255, 255, 0], got #{hue_mid.inspect}")
+  hue_alpha = Image.new(1, 1, [128, 255, 0, 0]).change_hls(120, 0, 0)[0, 0]
+  results << assert_equal(128, hue_alpha[0], "Image#change_hls keeps alpha (semi-transparent red → alpha 128)")
+
   # --- Visual labels ---
   Window.draw_font(0,  60, "new / fill / box_fill / circle_fill", [140, 140, 140], 10)
   Window.draw_font(0, 128, "line / box / circle / triangle_fill", [140, 140, 140], 10)
