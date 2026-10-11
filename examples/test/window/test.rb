@@ -85,19 +85,39 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.draw_circle_fill(180, 185, 12, [0, 0, 255])
   results << assert_pixel("game", 180, 185, 0, 0, 255, "Window.draw_circle_fill: center pixel is blue")
 
-  # Window.draw_scale: scaled image — default center is image center (5,5 for 10x10)
-  # translate(250,178), scale(2,2), drawImage at (-5,-5) => top-left (240,168), size 20x20
+  # Window.draw_scale: (x, y) is the unscaled top-left; default center is image center (5,5 for 10x10)
+  # translate(255,183), scale(2,2), drawImage at (-5,-5) => top-left (245,173), size 20x20
   img2x = Image.new(10, 10, [255, 128, 0])
   Window.draw_scale(250, 178, img2x, 2.0, 2.0)
-  results << assert_pixel("game", 250, 178, 255, 128, 0, "Window.draw_scale: anchor pixel is orange (image center at draw pos)")
+  results << assert_pixel("game", 250, 178, 255, 128, 0, "Window.draw_scale: unscaled top-left pixel is orange")
+  results << assert_pixel("game", 245, 173, 255, 128, 0, "Window.draw_scale: scaled top-left corner is orange")
+  results << assert_pixel("game", 244, 178, 0,   0,   0, "Window.draw_scale: left of scaled area is black")
   results << assert_pixel("game", 239, 167, 0,   0,   0, "Window.draw_scale: outside scaled area is black")
 
-  # Window.draw_scale with cx/cy: anchor=(5,5) center of 10x10 image, scale=2x
-  # scaled 20x20; anchor maps to (350,140); top-left at (340,130)
+  # Window.draw_scale with cx/cy=(0,0): scales from the top-left, so (x, y) stays the top-left
   img_cx = Image.new(10, 10, [255, 128, 0])
-  Window.draw_scale(350, 140, img_cx, 2.0, 2.0, 5, 5)
-  results << assert_pixel("game", 350, 140, 255, 128, 0, "Window.draw_scale(cx,cy): anchor pixel is orange")
-  results << assert_pixel("game", 339, 129, 0,   0,   0, "Window.draw_scale(cx,cy): outside anchor is black")
+  Window.draw_scale(340, 130, img_cx, 2.0, 2.0, 0, 0)
+  results << assert_pixel("game", 340, 130, 255, 128, 0, "Window.draw_scale(cx=0,cy=0): top-left pixel is orange")
+  results << assert_pixel("game", 359, 149, 255, 128, 0, "Window.draw_scale(cx=0,cy=0): bottom-right pixel is orange")
+  results << assert_pixel("game", 339, 129, 0,   0,   0, "Window.draw_scale(cx=0,cy=0): outside top-left is black")
+
+  # Window.draw_rot: 10x20 image rotated 90 degrees around its center (5,10)
+  # center maps to (305,30); rotated footprint is 20x10 => (295..314, 25..34)
+  img_rot = Image.new(10, 20, [0, 200, 200])
+  Window.draw_rot(300, 20, img_rot, 90)
+  results << assert_pixel("game", 296, 30, 0, 200, 200, "Window.draw_rot: rotated footprint extends left of x")
+  results << assert_pixel("game", 305, 22, 0, 0,   0,   "Window.draw_rot: unrotated top edge is no longer covered")
+
+  # Window.draw_ex: no transform => same as draw (top-left at (x, y))
+  img_ex = Image.new(10, 10, [200, 0, 200])
+  Window.draw_ex(360, 20, img_ex)
+  results << assert_pixel("game", 360, 20, 200, 0, 200, "Window.draw_ex: top-left pixel at (x, y)")
+  results << assert_pixel("game", 359, 19, 0,   0, 0,   "Window.draw_ex: outside top-left is black")
+
+  # Window.draw_ex scale 2: default center is image center => footprint (355..374, 45..64)
+  Window.draw_ex(360, 50, img_ex, { scale_x: 2, scale_y: 2 })
+  results << assert_pixel("game", 355, 45, 200, 0, 200, "Window.draw_ex scale: scales around image center")
+  results << assert_pixel("game", 354, 55, 0,   0, 0,   "Window.draw_ex scale: outside scaled area is black")
 
   # Window.draw_rot: rotated image — visual only (transform makes pixel math hard)
   # Window.draw_alpha: semi-transparent draw — visual only

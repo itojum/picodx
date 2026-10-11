@@ -102,7 +102,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   # col0: map[0][0]=0 (red), dx=0*16-8=-8 → tile drawn at x=-8; pixel at x=0 is within tile (0-(-8)=8px in)
   results << assert_pixel("game", 0, 193, 255, 0, 0, "draw_tile sub-tile offset: red tile still visible at x=0")
 
-  # 2D chips array (Image.load_tiles format: [[row0], [row1], ...])
+  # Nested chips array (e.g. [[row0], [row1], ...]) is flattened
   Window.draw_tile(200, 100, map, [chips], 0, 0, 4, 2)
   results << assert_pixel("game", 208, 108, 255, 0, 0, "draw_tile with 2D chips (flattened correctly)")
 
