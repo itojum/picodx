@@ -56,11 +56,13 @@ module PicoDX
           JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
         end
         canvas.addEventListener('mouseup') do |e|
+          _update_mouse_pos(canvas, e)
           raw = e[:button].to_i
           btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
           @mouse_down.delete(btn)
         end
         canvas.addEventListener('wheel') do |e|
+          _update_mouse_pos(canvas, e)
           @mouse_wheel_pos += e[:deltaY].to_i
         end
       end
