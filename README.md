@@ -42,7 +42,7 @@ Sprite, Font, Sound and RenderTarget follow the DXRuby API; see the [DXRuby refe
 PicoDX draws with the browser's Canvas 2D, so a few things behave differently:
 
 - **Rotated collision:** with `collision_sync`, a rotated rectangle's hit area is approximated by its axis-aligned bounding box.
-- **Semi-transparent pixels:** Canvas stores pixels premultiplied by alpha, so R / G / B read back from semi-transparent pixels (`Image#[]`, `Image#to_a`) can differ slightly from what was written.
+- **Semi-transparent pixels:** Canvas stores pixels premultiplied by alpha, so R / G / B read back from semi-transparent pixels (`Image#[]`, `Image#to_a`) can differ from what was written; the smaller the alpha, the larger the error ([details](docs/image.md#pixel-access)).
 - **Subtractive blending:** `draw_sub` / `blend: :sub` give DXRuby's colors, but the destination area becomes opaque ([details](docs/window.md#blending)).
 - **`RenderTarget#update`** does nothing: drawing on a RenderTarget accumulates and is not cleared with `bgcolor` on each update.
 - **Desktop-only and shader APIs** (`Window.full_screen=`, `Window.hWnd`, `Shader`, `draw_shader`, …) raise `NotImplementedError`.
