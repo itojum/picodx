@@ -196,14 +196,15 @@ module PicoDX
 
       private
 
-      # _tick_with はループ内の描画を translate(ox, oy) して確定する。ループ外の
-      # 即時描画（@draw_queue が nil）はずらさない
+      # ctx に現在掛かっている平行移動量（_tick_with が translate した分の累計）。
+      # ループ外の即時描画では 0。ブロック内で ox を変えても、ネストしたループで
+      # translate が重なっても、実際の描画位置と一致する
       def _view_ox
-        @draw_queue ? (@ox || 0) : 0
+        @view_ox || 0
       end
 
       def _view_oy
-        @draw_queue ? (@oy || 0) : 0
+        @view_oy || 0
       end
 
       def _apply_smoothing
@@ -260,14 +261,20 @@ module PicoDX
         @ctx[:fillStyle] = _css(@bgcolor)
         @ctx.fillRect(0, 0, @width, @height)
         saved_queue = @draw_queue
+        saved_view_ox = @view_ox
+        saved_view_oy = @view_oy
         @draw_queue = []
         @ctx.save
         @ctx.translate(@ox, @oy) if @ox != 0 || @oy != 0
+        @view_ox = (saved_view_ox || 0) + @ox
+        @view_oy = (saved_view_oy || 0) + @oy
         begin
           blk.call
         ensure
           _flush_draw_queue
           @draw_queue = saved_queue
+          @view_ox = saved_view_ox
+          @view_oy = saved_view_oy
           @ctx.restore
         end
       end

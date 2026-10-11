@@ -260,5 +260,42 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.ox = 0
   results << assert_pixel("game", 8, 205, 0, 255, 0, "draw_ex: off-screen check accounts for Window.ox inside the loop")
 
+  # Changing Window.ox inside the block does not move draws of the current frame
+  # (translate was applied before the block), so culling must use the applied offset
+  Window.ox = 20
+  Window.loop do
+    Window.ox = 0
+    Window.draw_ex(-15, 180, Image.new(10, 10, [0, 255, 0]))  # still drawn at 5..14
+    break
+  end
+  Window.ox = 0
+  results << assert_pixel("game", 8, 185, 0, 255, 0, "draw_ex: culling uses the offset applied this frame, not a changed ox")
+
+  # Nested Window.loop applies the offset twice (10 + 10)
+  Window.ox = 10
+  Window.loop do
+    Window.loop do
+      Window.draw_ex(-25, 160, Image.new(10, 10, [0, 255, 0]))  # drawn at -5..4 on screen
+      break
+    end
+    break
+  end
+  Window.ox = 0
+  results << assert_pixel("game", 2, 165, 0, 255, 0, "draw_ex: culling accounts for nested Window.loop offsets")
+
+  # Negative scale (flipped) images crossing an edge are still drawn
+  Window.loop do
+    flip = Image.new(10, 10, [0, 0, 255])
+    Window.draw_ex(-5, 140, flip, { scale_x: -1 })                   # footprint -5..4
+    Window.draw_ex(-14, 120, flip, { scale_x: -2, scale_y: -2 })     # footprint -19..0
+    Window.draw_ex(395, 140, flip, { scale_x: -2 })                  # footprint 390..409
+    Window.draw_ex(-30, 100, Image.new(10, 10, [255, 0, 0]), { scale_x: -1 })  # fully off screen
+    break
+  end
+  results << assert_pixel("game", 2,   145, 0, 0, 255, "draw_ex scale_x -1: flipped image crossing the left edge is drawn")
+  results << assert_pixel("game", 0,   125, 0, 0, 255, "draw_ex scale -2: flipped image reaching x = 0 is drawn")
+  results << assert_pixel("game", 392, 145, 0, 0, 255, "draw_ex scale_x -2: flipped image crossing the right edge is drawn")
+  results << assert_pixel("game", 0,   105, 0, 0, 0,   "draw_ex scale_x -1: fully off-screen flipped image draws nothing")
+
   show_results(results)
 end

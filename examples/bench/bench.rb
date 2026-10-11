@@ -48,7 +48,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   end
 
   shots   = sprites[0, 50]
-  bench("Sprite.check (50 x #{COUNT}, image collision)", lines) do
+  bench("Sprite.check (50 x #{COUNT}, collision unset = whole image)", lines) do
     Sprite.check(shots, sprites)
   end
   boxed = on_screen.map { |p| s = Sprite.new(p[0], p[1], img); s.collision = [0, 0, 16, 16]; s }
