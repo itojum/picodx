@@ -159,7 +159,8 @@ module PicoDX
 
     # draw_morph: 2画像間の線形補間（rate: 0.0=image1のみ, 1.0=image2のみ）
     # DXRubyの4コーナー変換とは異なり、Canvas 2D でのアルファブレンドで近似する
-    def draw_morph(x, y, image1, image2, rate, z: 0)
+    def draw_morph(x, y, image1, image2, rate, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       if _has_queue?
         @draw_queue << { type: :draw_morph, z: z, x: x, y: y, image1: image1, image2: image2, rate: rate }
       else
