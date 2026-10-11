@@ -41,25 +41,41 @@ module PicoDX
 
         return unless canvas
 
+        # 右クリックでコンテキストメニューを出さない（preventDefault は同期的に呼ぶ必要があるので JS 側で行う）
+        JS.global[:__picodx_contextmenu_canvas] = canvas
+        JS.eval("window.__picodx_contextmenu_canvas.addEventListener('contextmenu', (e) => e.preventDefault()); delete window.__picodx_contextmenu_canvas")
+
         canvas.addEventListener('mousemove') do |e|
-          rect = canvas.getBoundingClientRect()
-          @mouse_x = (e[:clientX].to_f - rect[:left].to_f).to_i
-          @mouse_y = (e[:clientY].to_f - rect[:top].to_f).to_i
+          _update_mouse_pos(canvas, e)
         end
         canvas.addEventListener('mousedown') do |e|
+          _update_mouse_pos(canvas, e)
           raw = e[:button].to_i
           btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
           @mouse_down[btn] = true
           JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
         end
         canvas.addEventListener('mouseup') do |e|
+          _update_mouse_pos(canvas, e)
           raw = e[:button].to_i
           btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
           @mouse_down.delete(btn)
         end
         canvas.addEventListener('wheel') do |e|
+          _update_mouse_pos(canvas, e)
           @mouse_wheel_pos += e[:deltaY].to_i
         end
+      end
+
+      # CSS で拡大・縮小された canvas でも、canvas の内部解像度での座標を返す
+      def _update_mouse_pos(canvas, e)
+        rect = canvas.getBoundingClientRect()
+        cw   = canvas[:clientWidth].to_f
+        ch   = canvas[:clientHeight].to_f
+        sx   = cw > 0 ? canvas[:width].to_f  / cw : 1.0
+        sy   = ch > 0 ? canvas[:height].to_f / ch : 1.0
+        @mouse_x = ((e[:clientX].to_f - rect[:left].to_f - canvas[:clientLeft].to_f) * sx).to_i
+        @mouse_y = ((e[:clientY].to_f - rect[:top].to_f  - canvas[:clientTop].to_f)  * sy).to_i
       end
 
       def set_repeat(initial, interval)
