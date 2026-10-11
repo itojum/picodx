@@ -27,9 +27,33 @@ module PicoDX
     class << self
       attr_reader :mouse_x, :mouse_y, :mouse_wheel_pos
 
+      # ゲームで使うキーでページがスクロールしたり、フォーカスが移ったりしないよう、
+      # ブラウザの既定動作を止める（既定は true）。
+      def prevent_default
+        @prevent_default.nil? ? true : @prevent_default
+      end
+
+      def prevent_default=(value)
+        @prevent_default = value ? true : false
+        JS.global[:__picodx_prevent_default] = @prevent_default
+      end
+
       def setup(canvas = nil)
         return if @listening
         @listening = true
+
+        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う
+        JS.global[:__picodx_prevent_default] = prevent_default
+        JS.eval(
+          "document.addEventListener('keydown', (e) => {" \
+          " if (!window.__picodx_prevent_default) return;" \
+          " const t = e.target;" \
+          " if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;" \
+          " if (e.ctrlKey || e.metaKey || e.altKey) return;" \
+          " if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'," \
+          "      'PageUp', 'PageDown', 'Home', 'End', 'Backspace'].includes(e.code)) e.preventDefault();" \
+          "});"
+        )
 
         JS.document.addEventListener('keydown') do |e|
           @keys_down[e[:code].to_s] = true
