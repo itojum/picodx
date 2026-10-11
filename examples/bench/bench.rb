@@ -56,5 +56,13 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
     Sprite.check(boxed[0, 50], boxed)
   end
 
+  rotated = on_screen.map { |p| s = Sprite.new(p[0], p[1], img); s.angle = 30; s.scale_x = 1.5; s }
+  bench("Sprite.check (50 x #{COUNT}, rotated / scaled)", lines) do
+    Sprite.check(rotated[0, 50], rotated)
+  end
+  bench("Sprite#check (50 sprites x check(#{COUNT}))", lines) do
+    boxed[0, 50].each { |s| s.check(boxed) }
+  end
+
   JS.document.getElementById('test-output')[:innerText] = lines.join("\n")
 end
