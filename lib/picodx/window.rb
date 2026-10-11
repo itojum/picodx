@@ -207,7 +207,7 @@ module PicoDX
         return if @ctx
         id = JS.eval(
           "(() => {" \
-          " const c = document.getElementById('game') || document.querySelector('canvas');" \
+          " const c = document.querySelector('canvas#game') || document.querySelector('canvas');" \
           " if (!c) return '';" \
           " if (!c.id) c.id = 'picodx-game';" \
           " return c.id;" \
