@@ -17,9 +17,13 @@ module PicoDX
     # Each method pushes a descriptor onto @draw_queue when available
     # (Window), or falls through to the immediate _render_* variant
     # (RenderTarget, which has no queue).
+    #
+    # z は DXRuby と同じく末尾の位置引数で受け取る（例: draw(x, y, image, z)）。
+    # 互換のため z: キーワードも受け付け、両方あれば位置引数を優先する。
     # -------------------------------------------------------------------------
 
-    def draw(x, y, image, z: 0)
+    def draw(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw, z: z, x: x, y: y, image: image }
@@ -28,7 +32,8 @@ module PicoDX
       end
     end
 
-    def draw_box(x1, y1, x2, y2, color, z: 0)
+    def draw_box(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_box, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
@@ -37,7 +42,8 @@ module PicoDX
       end
     end
 
-    def draw_box_fill(x1, y1, x2, y2, color, z: 0)
+    def draw_box_fill(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_box_fill, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
@@ -76,7 +82,8 @@ module PicoDX
       end
     end
 
-    def draw_line(x1, y1, x2, y2, color, z: 0)
+    def draw_line(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_line, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
@@ -85,7 +92,8 @@ module PicoDX
       end
     end
 
-    def draw_pixel(x, y, color, z: 0)
+    def draw_pixel(x, y, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_pixel, z: z, x: x, y: y, color: color }
@@ -94,7 +102,8 @@ module PicoDX
       end
     end
 
-    def draw_circle(x, y, r, color, z: 0)
+    def draw_circle(x, y, r, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_circle, z: z, x: x, y: y, r: r, color: color }
@@ -103,7 +112,8 @@ module PicoDX
       end
     end
 
-    def draw_circle_fill(x, y, r, color, z: 0)
+    def draw_circle_fill(x, y, r, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_circle_fill, z: z, x: x, y: y, r: r, color: color }
@@ -112,7 +122,8 @@ module PicoDX
       end
     end
 
-    def draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil, z: 0)
+    def draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_scale, z: z, x: x, y: y, image: image,
@@ -122,7 +133,8 @@ module PicoDX
       end
     end
 
-    def draw_rot(x, y, image, angle, cx = nil, cy = nil, z: 0)
+    def draw_rot(x, y, image, angle, cx = nil, cy = nil, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_rot, z: z, x: x, y: y, image: image,
@@ -132,7 +144,8 @@ module PicoDX
       end
     end
 
-    def draw_alpha(x, y, image, alpha, z: 0)
+    def draw_alpha(x, y, image, alpha, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_alpha, z: z, x: x, y: y, image: image, alpha: alpha }
@@ -151,7 +164,8 @@ module PicoDX
       end
     end
 
-    def draw_add(x, y, image, z: 0)
+    def draw_add(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_add, z: z, x: x, y: y, image: image }
@@ -160,7 +174,8 @@ module PicoDX
       end
     end
 
-    def draw_sub(x, y, image, z: 0)
+    def draw_sub(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_sub, z: z, x: x, y: y, image: image }
@@ -171,7 +186,8 @@ module PicoDX
 
     # draw_morph: 2画像間の線形補間（rate: 0.0=image1のみ, 1.0=image2のみ）
     # DXRubyの4コーナー変換とは異なり、Canvas 2D でのアルファブレンドで近似する
-    def draw_morph(x, y, image1, image2, rate, z: 0)
+    def draw_morph(x, y, image1, image2, rate, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_morph, z: z, x: x, y: y, image1: image1, image2: image2, rate: rate }
@@ -180,7 +196,8 @@ module PicoDX
       end
     end
 
-    def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, z: 0)
+    def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
       _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_tile, z: z, x: x, y: y, map: map, chips: chips,

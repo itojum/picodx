@@ -214,8 +214,28 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
     # same z preserves call order (cyan overwrites magenta)
     Window.draw_box_fill(110, 100, 150, 120, [255, 0, 255], z: 0)
     Window.draw_box_fill(110, 100, 150, 120, [0, 255, 255], z: 0)
+
+    # positional z (DXRuby signature): later call with lower z renders below
+    z_top = Image.new(20, 20, [0, 0, 255])
+    z_bot = Image.new(20, 20, [255, 0, 0])
+    Window.draw(160, 100, z_top, 1)
+    Window.draw(160, 100, z_bot, 0)
+    Window.draw_box_fill(190, 100, 210, 120, [0, 0, 255], 1)
+    Window.draw_box_fill(190, 100, 210, 120, [255, 0, 0], 0)
+    Window.draw_scale(220, 100, z_top, 1, 1, nil, nil, 1)
+    Window.draw(220, 100, z_bot, 0)
+    Window.draw_alpha(250, 100, z_top, 255, 1)
+    Window.draw(250, 100, z_bot, 0)
+    # positional z wins over z: keyword
+    Window.draw(280, 100, z_top, 2, z: 0)
+    Window.draw(280, 100, z_bot, 1)
     break
   end
+  results << assert_pixel("game", 170, 110, 0, 0, 255, "positional z: Window.draw(x, y, image, z)")
+  results << assert_pixel("game", 200, 110, 0, 0, 255, "positional z: Window.draw_box_fill(..., color, z)")
+  results << assert_pixel("game", 225, 105, 0, 0, 255, "positional z: Window.draw_scale(..., cx, cy, z)")
+  results << assert_pixel("game", 260, 110, 0, 0, 255, "positional z: Window.draw_alpha(..., alpha, z)")
+  results << assert_pixel("game", 290, 110, 0, 0, 255, "positional z: takes precedence over z: keyword")
   results << assert_pixel("game", 30,  110, 0,   0,   255, "z-order: higher-z (blue z:1) is drawn on top of lower-z (red z:0)")
   results << assert_pixel("game", 80,  110, 0,   128, 0,   "z-order: lower-z (red z:0) does not overwrite higher-z (green z:1)")
   results << assert_pixel("game", 130, 110, 0,   255, 255, "z-order: same z preserves call order (cyan overwrites magenta)")
