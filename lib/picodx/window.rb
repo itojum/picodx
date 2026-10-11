@@ -3,7 +3,23 @@ module PicoDX
     class << self
       include Drawable
 
-      attr_reader :width, :height, :fps, :real_fps, :ox, :oy, :bgcolor
+      attr_reader :real_fps
+
+      def fps;     @fps     || 60;        end
+      def ox;      @ox      || 0;         end
+      def oy;      @oy      || 0;         end
+      def bgcolor; @bgcolor || [0, 0, 0]; end
+
+      # init 前に読まれた場合も canvas の実サイズを返せるよう、自動接続する
+      def width
+        _ensure_ready
+        @width
+      end
+
+      def height
+        _ensure_ready
+        @height
+      end
 
       def width=(value)
         @preset_width = value
@@ -35,16 +51,20 @@ module PicoDX
         @preset_height_canvas_id = canvas_id if apply_height && @preset_height
         @width    = @canvas[:width].to_i
         @height   = @canvas[:height].to_i
-        @bgcolor  = [0, 0, 0]
-        @fps      = 60
+        # init 前に setter で設定された値は保持する（Window.init を省略して
+        # 自動接続したときも、先に書いた bgcolor= / fps= などが効くように）
+        @bgcolor ||= [0, 0, 0]
+        @fps     ||= 60
         @real_fps = 0.0
-        @ox       = 0
-        @oy       = 0
+        @ox      ||= 0
+        @oy      ||= 0
         @looping   = false
         @closed    = false
         @created   = true
-        @frameskip = false
+        @frameskip = false if @frameskip.nil?
         @draw_queue = nil
+        _apply_smoothing
+        self.scale = @scale if @scale
         JS.eval("window.__picodx_nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve))")
         Input.setup(@canvas)
       end
@@ -81,10 +101,12 @@ module PicoDX
         @canvas[:height] = h
         @width  = w
         @height = h
-        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+        _apply_smoothing
       end
 
       def scale=(s)
+        @scale = s
+        return unless @canvas
         @canvas[:style][:width]  = "#{(@width  * s).to_i}px"
         @canvas[:style][:height] = "#{(@height * s).to_i}px"
       end
@@ -97,12 +119,12 @@ module PicoDX
 
       def min_filter=(filter)
         @min_filter = filter
-        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+        _apply_smoothing
       end
 
       def mag_filter=(filter)
         @mag_filter = filter
-        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+        _apply_smoothing
       end
 
       def frameskip=(val)
@@ -139,6 +161,7 @@ module PicoDX
       end
 
       def loop(&block)
+        _ensure_ready
         if @looping
           # Re-entrant call: run a nested frame loop until the block exits.
           # break/return inside the block raises LocalJumpError via .call,
@@ -172,6 +195,29 @@ module PicoDX
       end
 
       private
+
+      def _apply_smoothing
+        return unless @ctx
+        @ctx[:imageSmoothingEnabled] = (@min_filter != :nearest && @mag_filter != :nearest)
+      end
+
+      # Window.init を省略したとき、最初の描画か Window.loop の時点で
+      # #game、なければページ内の最初の <canvas> に自動で接続する。
+      def _ensure_ready
+        return if @ctx
+        id = JS.eval(
+          "(() => {" \
+          " const c = document.getElementById('game') || document.querySelector('canvas');" \
+          " if (!c) return '';" \
+          " if (!c.id) c.id = 'picodx-game';" \
+          " return c.id;" \
+          "})()"
+        ).to_s
+        if id.empty?
+          raise "PicoDX: no <canvas> found. Add <canvas id=\"game\"> to the page or call Window.init(canvas_id)."
+        end
+        init(id)
+      end
 
       def _tick
         _tick_with(@user_block)
