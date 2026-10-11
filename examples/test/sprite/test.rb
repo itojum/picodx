@@ -63,10 +63,23 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << (!(a === c) ? "<span class='pass'>PASS</span> Sprite#=== false for non-overlapping" :
                            "<span class='fail'>FAIL</span> Sprite#=== true for non-overlapping")
 
-  # --- nil collision skips check ---
+  # --- nil collision without image skips check ---
   d = Sprite.new(15, 15, nil)
-  results << (a.check(d).empty? ? "<span class='pass'>PASS</span> Sprite#check skips nil collision" :
-                                  "<span class='fail'>FAIL</span> Sprite#check wrong result for nil collision")
+  results << (a.check(d).empty? ? "<span class='pass'>PASS</span> Sprite#check skips nil collision without image" :
+                                  "<span class='fail'>FAIL</span> Sprite#check wrong result for nil collision without image")
+
+  # --- nil collision with image uses the whole image ---
+  # 30×20 image at (35,35) → (35,35)-(65,55); a is (10,10)-(40,40) → overlap
+  e = Sprite.new(35, 35, img)
+  results << (a === e ? "<span class='pass'>PASS</span> nil collision with image: whole image is the hit area" :
+                        "<span class='fail'>FAIL</span> nil collision with image: should collide with whole image")
+  f = Sprite.new(41, 41, img)
+  results << (!(a === f) ? "<span class='pass'>PASS</span> nil collision with image: no hit outside the image" :
+                           "<span class='fail'>FAIL</span> nil collision with image: should not collide outside the image")
+  e2 = Sprite.new(60, 40, img)
+  results << (e.check([e2, f]).length == 2 ? "<span class='pass'>PASS</span> nil collision on both sides: Sprite#check uses images" :
+                                             "<span class='fail'>FAIL</span> nil collision on both sides: Sprite#check should use images")
+  results << assert_equal(nil, e.collision, "nil collision with image: collision getter stays nil")
 
   # --- Sprite#check with array ---
   hits_arr = a.check([b, c, d])

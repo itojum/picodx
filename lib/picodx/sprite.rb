@@ -104,19 +104,19 @@ module PicoDX
     end
 
     def check(other)
-      return [] if vanished? || collision.nil? || !collision_enable
+      return [] if vanished? || _collision(self).nil? || !collision_enable
       targets = other.is_a?(Array) ? other : [other]
       result = []
       targets.each do |sp|
-        next if sp.nil? || sp.vanished? || sp.collision.nil? || !sp.collision_enable
+        next if sp.nil? || sp.vanished? || _collision(sp).nil? || !sp.collision_enable
         result << sp if _collide?(sp)
       end
       result
     end
 
     def ===(other)
-      return false if vanished? || collision.nil? || !collision_enable
-      return false if other.nil? || other.vanished? || other.collision.nil? || !other.collision_enable
+      return false if vanished? || _collision(self).nil? || !collision_enable
+      return false if other.nil? || other.vanished? || _collision(other).nil? || !other.collision_enable
       _collide?(other)
     end
 
@@ -185,13 +185,21 @@ module PicoDX
 
     private
 
+    # collision 未設定なら画像全体を判定範囲にする（画像もなければ nil）
+    def _collision(sp)
+      c = sp.collision
+      return c if c
+      img = sp.image
+      img ? [0, 0, img.width, img.height] : nil
+    end
+
     def _collide?(other)
       aox = offset_sync       ? -_center_x       : 0
       aoy = offset_sync       ? -_center_y       : 0
       box = other.offset_sync ? -other._center_x : 0
       boy = other.offset_sync ? -other._center_y : 0
-      ac = _scaled_collision(self, collision)
-      bc = _scaled_collision(other, other.collision)
+      ac = _scaled_collision(self, _collision(self))
+      bc = _scaled_collision(other, _collision(other))
       al = ac.length
       bl = bc.length
 
