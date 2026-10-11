@@ -171,10 +171,11 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.init("game")
 
   # Window.loop re-entrancy with break value ---
-  # The inner loop exits via `break value` and the return value of Window.loop
-  # should be that value (not nil).
-  break_val = Window.loop do
-    Window.loop do
+  # The inner loop exits via `break value` and the return value of the inner
+  # Window.loop should be that value (not nil).
+  break_val = nil
+  Window.loop do
+    break_val = Window.loop do
       break 42
     end
     break

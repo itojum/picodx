@@ -47,6 +47,28 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_pixel("game", 110, 10, 255, 0,   255, "RenderTarget: first pixel persists after update")
   results << assert_pixel("game", 120, 10, 0,   255, 255, "RenderTarget: second pixel also present")
 
+  # --- RenderTarget#ox / oy shift drawing: (ox, oy) maps to the top-left ---
+  rt_off = RenderTarget.new(60, 30, [0, 0, 0])
+  rt_off.ox = 5
+  rt_off.oy = 3
+  rt_off.draw_box_fill(15, 13, 25, 23, [255, 128, 0])        # lands at (10..19, 10..19)
+  rt_off.draw_ex(110, 3, Image.new(10, 10, [0, 128, 255]))    # x 110 is off the 60px target...
+  rt_off.ox = 100                                             # ...until ox moves the view
+  rt_off.draw_ex(110, 3, Image.new(10, 10, [0, 128, 255]))    # lands at (10..19, 0..9)
+  Window.draw(200, 100, rt_off.to_image)
+  results << assert_pixel("game", 210, 110, 255, 128, 0, "RenderTarget#ox/oy: draw at (ox+10, oy+10) lands at (10, 10)")
+  results << assert_pixel("game", 205, 107, 0,   0,   0, "RenderTarget#ox/oy: (ox, oy) itself is the top-left, nothing drawn there")
+  results << assert_pixel("game", 215, 102, 0,   128, 255, "RenderTarget#ox: draw_ex culling uses the offset view")
+
+  # --- RenderTarget#resize fills with bgcolor and keeps the offset ---
+  rt_rs = RenderTarget.new(20, 20, [40, 80, 160])
+  rt_rs.ox = 10
+  rt_rs.resize(40, 20)
+  rt_rs.draw_pixel(12, 5, [255, 255, 255])                    # lands at (2, 5)
+  Window.draw(280, 100, rt_rs.to_image)
+  results << assert_pixel("game", 315, 110, 40, 80, 160, "RenderTarget#resize: new area is filled with bgcolor")
+  results << assert_pixel("game", 282, 105, 255, 255, 255, "RenderTarget#resize: ox is still applied after resize")
+
   # --- RenderTarget#dispose ---
   rt4 = RenderTarget.new(10, 10, [0, 0, 0])
   rt4.dispose

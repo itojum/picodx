@@ -27,8 +27,25 @@ module PicoDX
     class << self
       attr_reader :mouse_x, :mouse_y, :mouse_wheel_pos
 
+      # ゲームで使うキーでページがスクロールしたり、フォーカスが移ったりしないよう、
+      # ブラウザの既定動作を止める（既定は true）。
+      def prevent_default
+        @prevent_default.nil? ? true : @prevent_default
+      end
+
+      def prevent_default=(value)
+        @prevent_default = value ? true : false
+        JS.global[:__picodx_prevent_default] = @prevent_default
+      end
+
+      # document 側のリスナーは最初の 1 回だけ登録し、canvas 側の設定は
+      # Window.init で canvas を切り替えるたびに行う
       def setup(canvas = nil)
-        return if @listening
+        _setup_document unless @listening
+        _setup_canvas(canvas) if canvas
+      end
+
+      def _setup_document
         @listening = true
 
         JS.document.addEventListener('keydown') do |e|
@@ -39,32 +56,80 @@ module PicoDX
           @keys_down.delete(e[:code].to_s)
         end
 
-        return unless canvas
+        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う。
+        # 対象は現在のゲーム canvas（window.__picodx_game_canvas）にフォーカスがあるときだけ
+        JS.global[:__picodx_prevent_default] = prevent_default
+        JS.eval(
+          "document.addEventListener('keydown', (e) => {" \
+          " if (!window.__picodx_prevent_default || document.activeElement !== window.__picodx_game_canvas) return;" \
+          " if (e.ctrlKey || e.metaKey || e.altKey) return;" \
+          " if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'," \
+          "      'PageUp', 'PageDown', 'Home', 'End', 'Backspace'].includes(e.code)) e.preventDefault();" \
+          "});"
+        )
+      end
 
-        # 右クリックでコンテキストメニューを出さない（preventDefault は同期的に呼ぶ必要があるので JS 側で行う）
-        JS.global[:__picodx_contextmenu_canvas] = canvas
-        JS.eval("window.__picodx_contextmenu_canvas.addEventListener('contextmenu', (e) => e.preventDefault()); delete window.__picodx_contextmenu_canvas")
+      def _setup_canvas(canvas)
+        # キー入力の抑止は、いま使っている canvas を対象にする
+        JS.global[:__picodx_game_canvas] = canvas
 
-        canvas.addEventListener('mousemove') do |e|
-          _update_mouse_pos(canvas, e)
+        # canvas ごとに番号を振り、リスナーは 1 回だけ登録する（同じ canvas で init し直しても
+        # 重複しない）。負の値は登録済みの canvas を表す
+        seq = JS.eval(
+          "(c => {" \
+          " if (c.__picodx_input_id) return -c.__picodx_input_id;" \
+          " window.__picodx_input_seq = (window.__picodx_input_seq || 0) + 1;" \
+          " c.__picodx_input_id = window.__picodx_input_seq;" \
+          " return c.__picodx_input_id;" \
+          "})(window.__picodx_game_canvas)"
+        ).to_i
+        first_time = seq > 0
+        input_id   = seq.abs
+        # マウスの入力は、いま使っている canvas のものだけを反映する
+        @active_input_id = input_id
+
+        if first_time
+          # フォーカスできるようにし、クリックでフォーカスする。右クリックでコンテキストメニューを
+          # 出さない（どちらもイベント配送中に同期的に行う必要があるので JS 側で登録する）
+          JS.eval(
+            "(c => {" \
+            " c.tabIndex = 0;" \
+            " c.addEventListener('mousedown', () => c.focus({ preventScroll: true }));" \
+            " c.addEventListener('contextmenu', (e) => e.preventDefault());" \
+            "})(window.__picodx_game_canvas)"
+          )
+
+          # Window.init で別の canvas に切り替えた後は、古い canvas のイベントを無視する
+          canvas.addEventListener('mousemove') do |e|
+            _update_mouse_pos(canvas, e) if input_id == @active_input_id
+          end
+          canvas.addEventListener('mousedown') do |e|
+            if input_id == @active_input_id
+              _update_mouse_pos(canvas, e)
+              raw = e[:button].to_i
+              btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
+              @mouse_down[btn] = true
+              JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
+            end
+          end
+          canvas.addEventListener('mouseup') do |e|
+            if input_id == @active_input_id
+              _update_mouse_pos(canvas, e)
+              raw = e[:button].to_i
+              btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
+              @mouse_down.delete(btn)
+            end
+          end
+          canvas.addEventListener('wheel') do |e|
+            if input_id == @active_input_id
+              _update_mouse_pos(canvas, e)
+              @mouse_wheel_pos += e[:deltaY].to_i
+            end
+          end
         end
-        canvas.addEventListener('mousedown') do |e|
-          _update_mouse_pos(canvas, e)
-          raw = e[:button].to_i
-          btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
-          @mouse_down[btn] = true
-          JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
-        end
-        canvas.addEventListener('mouseup') do |e|
-          _update_mouse_pos(canvas, e)
-          raw = e[:button].to_i
-          btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
-          @mouse_down.delete(btn)
-        end
-        canvas.addEventListener('wheel') do |e|
-          _update_mouse_pos(canvas, e)
-          @mouse_wheel_pos += e[:deltaY].to_i
-        end
+
+        # 読み込み直後からキー入力でページが動かないよう、canvas にフォーカスしておく
+        JS.eval("window.__picodx_game_canvas.focus({ preventScroll: true })")
       end
 
       # CSS で拡大・縮小された canvas でも、canvas の内部解像度での座標を返す
