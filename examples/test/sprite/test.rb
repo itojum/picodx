@@ -25,12 +25,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(100, sp.x, "Sprite#x= setter")
   results << assert_equal(60,  sp.y, "Sprite#y= setter")
 
-  # --- Sprite#draw renders image at (x, y) with center origin ---
-  # image 30×20, center=(15,10), drawn via draw_ex(100,60,image,{cx:15,cy:10})
-  # → drawImage at (100-15, 60-10)=(85,50); center pixel = (100,60)
+  # --- Sprite#draw renders image with its top-left at (x, y) (offset_sync = false) ---
+  # image 30×20 occupies (100..129, 60..79); its center pixel is (115, 70)
   sp.draw
-  results << assert_pixel("game", 100, 60, 255, 0, 0, "Sprite#draw: center pixel is red")
-  results << assert_pixel("game", 84,  49, 0,   0, 0, "Sprite#draw: just outside top-left is black")
+  results << assert_pixel("game", 115, 70, 255, 0, 0, "Sprite#draw: center pixel is red")
+  results << assert_pixel("game", 100, 60, 255, 0, 0, "Sprite#draw: top-left pixel at (x, y) is red")
+  results << assert_pixel("game", 99,  59, 0,   0, 0, "Sprite#draw: just outside top-left is black")
 
   # --- visible=false skips draw ---
   sp2 = Sprite.new(200, 80, Image.new(20, 20, [0, 255, 0]))
