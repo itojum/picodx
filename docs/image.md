@@ -45,10 +45,17 @@ img[x, y] = color  # color = [r, g, b] or [a, r, g, b]
 ```
 
 Canvas stores pixels premultiplied by alpha, so for semi-transparent pixels
-(`a` < 255) the R / G / B values read back by `img[x, y]` and `img.to_a` can be
-off by one from what was written (for example `[200, 100, 50, 25]` reads back as
-`[200, 99, 50, 25]`). Alpha and fully opaque pixels are exact. DXRuby keeps the
-values as written.
+(`a` < 255) the R / G / B values read back by `img[x, y]` and `img.to_a` can
+differ from what was written (for example `[200, 100, 50, 25]` reads back as
+`[200, 99, 50, 25]`). The error grows as alpha gets smaller, roughly `128 / a`
+(measured in Chrome):
+
+| alpha | 255 | 128–254 | 64 | 32 | 16 | 1 | 0 |
+|---|---|---|---|---|---|---|---|
+| max R / G / B error | 0 | 1 | 2 | 4 | 8 | 127 | RGB is lost (reads as 0) |
+
+Alpha itself is always exact, and fully opaque pixels round-trip exactly.
+DXRuby keeps the values as written.
 
 ## Copy / slice
 

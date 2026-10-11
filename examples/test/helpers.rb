@@ -33,7 +33,7 @@ end
 
 # Like assert_equal for numbers, but allows a difference of up to `tolerance`.
 # Canvas stores semi-transparent pixels premultiplied by alpha, so their R/G/B
-# can come back off by one (see docs/image.md).
+# can come back slightly off; the error grows as alpha gets smaller (see docs/image.md).
 def assert_near(expected, actual, tolerance, label)
   if (expected - actual).abs <= tolerance
     "<span class='pass'>PASS</span> #{label}"

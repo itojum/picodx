@@ -86,6 +86,12 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   img_opaque = Image.new(1, 1, [255, 100, 50, 25])
   results << assert_equal([255, 100, 50, 25], img_opaque[0, 0], "Image.new opaque ARGB round-trips exactly")
 
+  # The error grows as alpha gets smaller (about 128 / a); at alpha 0 RGB is lost
+  px_a64 = Image.new(1, 1, [64, 100, 50, 25])[0, 0]
+  results << assert_equal(64, px_a64[0], "Image.new alpha 64: alpha is exact")
+  results << assert_near(100, px_a64[1], 2, "Image.new alpha 64: r=100 (±2)")
+  results << assert_equal([0, 0, 0, 0], Image.new(1, 1, [0, 100, 50, 25])[0, 0], "Image.new alpha 0: RGB is lost")
+
   # --- Row 3 (y=135): slice / dup / Image#draw ---
 
   # Image#slice
