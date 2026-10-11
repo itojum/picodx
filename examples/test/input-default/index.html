@@ -18,11 +18,12 @@
 <body>
   <div><a href="../index.html">← Tests</a></div>
   <h1>Input default action Tests</h1>
-  <p>Assertions: arrow / Space / Tab keydown on the focused game canvas is prevented, Input.prevent_default = false restores it, text inputs and buttons are not affected</p>
+  <p>Assertions: arrow / Space / Tab keydown on the focused game canvas is prevented, Input.prevent_default = false restores it, text inputs and buttons are not affected, switching canvases with Window.init moves suppression and focus to the new canvas</p>
   <p>Manual: reload the page and press ↓ / Space without clicking — the page should not scroll (the canvas is focused on init). Click the text box or a button — Tab / Space behave normally there.</p>
   <button id="run">Run Tests</button>
   <input id="text" type="text" placeholder="type here">
   <canvas id="game" width="200" height="60"></canvas>
+  <canvas id="game2" width="200" height="60"></canvas>
   <div id="test-output"></div>
   <div id="spacer"></div>
   <script type="text/ruby" src="/lib/picodx.rb"></script>

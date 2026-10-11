@@ -40,5 +40,22 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(false, keydown_prevented?("Tab", "document.getElementById('run')"), "Tab on a focused button is not prevented (no focus trap)")
   results << assert_equal(false, keydown_prevented?("Space", "document.getElementById('run')"), "Space on a focused button is not prevented")
 
+  # Switching canvases with Window.init moves suppression / focus to the new canvas
+  canvas2 = "document.getElementById('game2')"
+  Window.init("game2")
+  results << assert_equal("game2", JS.eval("document.activeElement.id").to_s, "Window.init(game2): new canvas is focused")
+  results << assert_equal(0, JS.eval("#{canvas2}.tabIndex").to_i, "Window.init(game2): new canvas is focusable")
+  results << assert_equal(true, keydown_prevented?("ArrowDown", canvas2), "Window.init(game2): keys on the new canvas are prevented")
+  JS.eval("#{canvas}.focus()")
+  results << assert_equal(false, keydown_prevented?("ArrowDown", canvas), "Window.init(game2): keys on the old canvas are no longer prevented")
+  JS.eval("document.getElementById('text').focus()")
+  JS.eval("#{canvas2}.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))")
+  results << assert_equal("game2", JS.eval("document.activeElement.id").to_s, "Window.init(game2): clicking the new canvas focuses it")
+
+  # Switching back re-targets the first canvas without registering its listeners twice
+  Window.init("game")
+  results << assert_equal(true, keydown_prevented?("ArrowDown", canvas), "Window.init(game) again: keys on the first canvas are prevented")
+  results << assert_equal(true, JS.eval("#{canvas}.__picodx_input === true").to_s == "true", "Window.init(game) again: canvas listeners are registered once (marker kept)")
+
   show_results(results)
 end

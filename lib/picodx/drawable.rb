@@ -1,13 +1,30 @@
 module PicoDX
+  # 色配列を CSS の色文字列に変換する唯一の窓口。
+  # 4 要素は DXRuby と同じ [A, R, G, B]、3 要素は [R, G, B]（不透明）。
+  def self._css_color(color)
+    if color.length == 4
+      a, r, g, b = color
+      "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
+    else
+      r, g, b = color
+      "rgb(#{r},#{g},#{b})"
+    end
+  end
+
   module Drawable
     # -------------------------------------------------------------------------
     # Queue-aware public draw methods
     # Each method pushes a descriptor onto @draw_queue when available
     # (Window), or falls through to the immediate _render_* variant
     # (RenderTarget, which has no queue).
+    #
+    # z は DXRuby と同じく末尾の位置引数で受け取る（例: draw(x, y, image, z)）。
+    # 互換のため z: キーワードも受け付け、両方あれば位置引数を優先する。
     # -------------------------------------------------------------------------
 
-    def draw(x, y, image, z: 0)
+    def draw(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw, z: z, x: x, y: y, image: image }
       else
@@ -15,7 +32,9 @@ module PicoDX
       end
     end
 
-    def draw_box(x1, y1, x2, y2, color, z: 0)
+    def draw_box(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_box, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
       else
@@ -23,7 +42,9 @@ module PicoDX
       end
     end
 
-    def draw_box_fill(x1, y1, x2, y2, color, z: 0)
+    def draw_box_fill(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_box_fill, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
       else
@@ -37,6 +58,7 @@ module PicoDX
         opts = color_or_size.is_a?(Hash) ? color_or_size : {}
         z = opts[:z] || 0
       end
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_font, z: z, x: x, y: y, str: str,
                          font_or_color: font_or_color, color_or_size: color_or_size }
@@ -51,6 +73,7 @@ module PicoDX
         opts = options_or_size.is_a?(Hash) ? options_or_size : {}
         z = opts[:z] || 0
       end
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_font_ex, z: z, x: x, y: y, str: str,
                          font_or_color: font_or_color, options_or_size: options_or_size }
@@ -59,7 +82,9 @@ module PicoDX
       end
     end
 
-    def draw_line(x1, y1, x2, y2, color, z: 0)
+    def draw_line(x1, y1, x2, y2, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_line, z: z, x1: x1, y1: y1, x2: x2, y2: y2, color: color }
       else
@@ -67,7 +92,9 @@ module PicoDX
       end
     end
 
-    def draw_pixel(x, y, color, z: 0)
+    def draw_pixel(x, y, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_pixel, z: z, x: x, y: y, color: color }
       else
@@ -75,7 +102,9 @@ module PicoDX
       end
     end
 
-    def draw_circle(x, y, r, color, z: 0)
+    def draw_circle(x, y, r, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_circle, z: z, x: x, y: y, r: r, color: color }
       else
@@ -83,7 +112,9 @@ module PicoDX
       end
     end
 
-    def draw_circle_fill(x, y, r, color, z: 0)
+    def draw_circle_fill(x, y, r, color, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_circle_fill, z: z, x: x, y: y, r: r, color: color }
       else
@@ -91,7 +122,9 @@ module PicoDX
       end
     end
 
-    def draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil, z: 0)
+    def draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_scale, z: z, x: x, y: y, image: image,
                          scale_x: scale_x, scale_y: scale_y, cx: cx, cy: cy }
@@ -100,7 +133,9 @@ module PicoDX
       end
     end
 
-    def draw_rot(x, y, image, angle, cx = nil, cy = nil, z: 0)
+    def draw_rot(x, y, image, angle, cx = nil, cy = nil, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_rot, z: z, x: x, y: y, image: image,
                          angle: angle, cx: cx, cy: cy }
@@ -109,7 +144,9 @@ module PicoDX
       end
     end
 
-    def draw_alpha(x, y, image, alpha, z: 0)
+    def draw_alpha(x, y, image, alpha, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_alpha, z: z, x: x, y: y, image: image, alpha: alpha }
       else
@@ -119,6 +156,7 @@ module PicoDX
 
     def draw_ex(x, y, image, options = {})
       z = options[:z] || 0
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_ex, z: z, x: x, y: y, image: image, options: options }
       else
@@ -126,7 +164,9 @@ module PicoDX
       end
     end
 
-    def draw_add(x, y, image, z: 0)
+    def draw_add(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_add, z: z, x: x, y: y, image: image }
       else
@@ -134,7 +174,9 @@ module PicoDX
       end
     end
 
-    def draw_sub(x, y, image, z: 0)
+    def draw_sub(x, y, image, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_sub, z: z, x: x, y: y, image: image }
       else
@@ -144,7 +186,9 @@ module PicoDX
 
     # draw_morph: 2画像間の線形補間（rate: 0.0=image1のみ, 1.0=image2のみ）
     # DXRubyの4コーナー変換とは異なり、Canvas 2D でのアルファブレンドで近似する
-    def draw_morph(x, y, image1, image2, rate, z: 0)
+    def draw_morph(x, y, image1, image2, rate, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_morph, z: z, x: x, y: y, image1: image1, image2: image2, rate: rate }
       else
@@ -152,7 +196,9 @@ module PicoDX
       end
     end
 
-    def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, z: 0)
+    def draw_tile(x, y, map, chips, offset_x, offset_y, count_x, count_y, pos_z = nil, z: 0)
+      z = pos_z unless pos_z.nil?
+      _ensure_ready
       if _has_queue?
         @draw_queue << { type: :draw_tile, z: z, x: x, y: y, map: map, chips: chips,
                          offset_x: offset_x, offset_y: offset_y,
@@ -177,6 +223,10 @@ module PicoDX
 
     def _has_queue?
       defined?(@draw_queue) && !@draw_queue.nil?
+    end
+
+    # 描画先の準備が必要なら行うフック。Window は未接続なら canvas に自動接続する。
+    def _ensure_ready
     end
 
     # Stable insertion sort (ascending z)
@@ -352,11 +402,13 @@ module PicoDX
       @ctx.fill
     end
 
+    # DXRuby の座標系: (x, y) は変形前の画像の左上、(cx, cy) は画像内の
+    # 拡縮・回転の中心（既定は画像中央）。
     def _render_draw_scale(x, y, image, scale_x, scale_y, cx = nil, cy = nil)
       cx = image.width  / 2 if cx.nil?
       cy = image.height / 2 if cy.nil?
       @ctx.save
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
@@ -367,7 +419,7 @@ module PicoDX
       cy = image.height / 2 if cy.nil?
       rad = angle * Math::PI / 180.0
       @ctx.save
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
       @ctx.restore
@@ -385,14 +437,14 @@ module PicoDX
       scale_x = options[:scale_x] || 1.0
       scale_y = options[:scale_y] || 1.0
       alpha   = options[:alpha]
-      cx      = options[:cx]      || 0
-      cy      = options[:cy]      || 0
+      cx      = options[:cx]      || image.width  / 2
+      cy      = options[:cy]      || image.height / 2
       blend   = options[:blend]
       rad = angle * Math::PI / 180.0
       @ctx.save
       @ctx[:globalCompositeOperation] = _blend_op(blend) if blend
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha
-      @ctx.translate(x, y)
+      @ctx.translate(x + cx, y + cy)
       @ctx.rotate(rad)
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._ctx[:canvas], -cx, -cy)
@@ -459,13 +511,7 @@ module PicoDX
     end
 
     def _css(color)
-      if color.length == 4
-        a, r, g, b = color
-        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
-      else
-        r, g, b = color
-        "rgb(#{r},#{g},#{b})"
-      end
+      PicoDX._css_color(color)
     end
 
     def _blend_op(blend)

@@ -38,8 +38,14 @@ module PicoDX
         JS.global[:__picodx_prevent_default] = @prevent_default
       end
 
+      # document 側のリスナーは最初の 1 回だけ登録し、canvas 側の設定は
+      # Window.init で canvas を切り替えるたびに行う
       def setup(canvas = nil)
-        return if @listening
+        _setup_document unless @listening
+        _setup_canvas(canvas) if canvas
+      end
+
+      def _setup_document
         @listening = true
 
         JS.document.addEventListener('keydown') do |e|
@@ -50,12 +56,9 @@ module PicoDX
           @keys_down.delete(e[:code].to_s)
         end
 
-        return unless canvas
-
-        canvas[:tabIndex] = 0
+        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う。
+        # 対象は現在のゲーム canvas（window.__picodx_game_canvas）にフォーカスがあるときだけ
         JS.global[:__picodx_prevent_default] = prevent_default
-        JS.global[:__picodx_game_canvas] = canvas
-        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う
         JS.eval(
           "document.addEventListener('keydown', (e) => {" \
           " if (!window.__picodx_prevent_default || document.activeElement !== window.__picodx_game_canvas) return;" \
@@ -64,30 +67,63 @@ module PicoDX
           "      'PageUp', 'PageDown', 'Home', 'End', 'Backspace'].includes(e.code)) e.preventDefault();" \
           "});"
         )
+      end
+
+      def _setup_canvas(canvas)
+        # キー入力の抑止は、いま使っている canvas を対象にする
+        JS.global[:__picodx_game_canvas] = canvas
+
+        # canvas ごとのリスナーは 1 回だけ登録する（同じ canvas で init し直しても重複しない）
+        first_time = JS.eval(
+          "(c => { if (c.__picodx_input) return false; c.__picodx_input = true; return true; })(window.__picodx_game_canvas)"
+        ).to_s == "true"
+
+        if first_time
+          # フォーカスできるようにし、クリックでフォーカスする。右クリックでコンテキストメニューを
+          # 出さない（どちらもイベント配送中に同期的に行う必要があるので JS 側で登録する）
+          JS.eval(
+            "(c => {" \
+            " c.tabIndex = 0;" \
+            " c.addEventListener('mousedown', () => c.focus({ preventScroll: true }));" \
+            " c.addEventListener('contextmenu', (e) => e.preventDefault());" \
+            "})(window.__picodx_game_canvas)"
+          )
+
+          canvas.addEventListener('mousemove') do |e|
+            _update_mouse_pos(canvas, e)
+          end
+          canvas.addEventListener('mousedown') do |e|
+            _update_mouse_pos(canvas, e)
+            raw = e[:button].to_i
+            btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
+            @mouse_down[btn] = true
+            JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
+          end
+          canvas.addEventListener('mouseup') do |e|
+            _update_mouse_pos(canvas, e)
+            raw = e[:button].to_i
+            btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
+            @mouse_down.delete(btn)
+          end
+          canvas.addEventListener('wheel') do |e|
+            _update_mouse_pos(canvas, e)
+            @mouse_wheel_pos += e[:deltaY].to_i
+          end
+        end
 
         # 読み込み直後からキー入力でページが動かないよう、canvas にフォーカスしておく
         JS.eval("window.__picodx_game_canvas.focus({ preventScroll: true })")
+      end
 
-        canvas.addEventListener('mousemove') do |e|
-          rect = canvas.getBoundingClientRect()
-          @mouse_x = (e[:clientX].to_f - rect[:left].to_f).to_i
-          @mouse_y = (e[:clientY].to_f - rect[:top].to_f).to_i
-        end
-        canvas.addEventListener('mousedown') do |e|
-          canvas.focus
-          raw = e[:button].to_i
-          btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
-          @mouse_down[btn] = true
-          JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
-        end
-        canvas.addEventListener('mouseup') do |e|
-          raw = e[:button].to_i
-          btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
-          @mouse_down.delete(btn)
-        end
-        canvas.addEventListener('wheel') do |e|
-          @mouse_wheel_pos += e[:deltaY].to_i
-        end
+      # CSS で拡大・縮小された canvas でも、canvas の内部解像度での座標を返す
+      def _update_mouse_pos(canvas, e)
+        rect = canvas.getBoundingClientRect()
+        cw   = canvas[:clientWidth].to_f
+        ch   = canvas[:clientHeight].to_f
+        sx   = cw > 0 ? canvas[:width].to_f  / cw : 1.0
+        sy   = ch > 0 ? canvas[:height].to_f / ch : 1.0
+        @mouse_x = ((e[:clientX].to_f - rect[:left].to_f - canvas[:clientLeft].to_f) * sx).to_i
+        @mouse_y = ((e[:clientY].to_f - rect[:top].to_f  - canvas[:clientTop].to_f)  * sy).to_i
       end
 
       def set_repeat(initial, interval)

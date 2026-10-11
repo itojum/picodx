@@ -31,3 +31,12 @@ shortcuts with Ctrl / Meta / Alt, are left alone.
 Input.prevent_default = false  # let the browser handle those keys again
 Input.prevent_default          # => true (default)
 ```
+
+## Mouse
+
+```ruby
+Input.mouse_x  # canvas pixels, even when the canvas is resized with CSS / Window.scale=
+Input.mouse_y
+```
+
+Right clicks on the canvas do not open the browser's context menu.

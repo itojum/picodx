@@ -33,18 +33,7 @@ module PicoDX
     end
 
     def self.load_tiles(filename, x_count, y_count)
-      base = load(filename)
-      tw = base.width / x_count
-      th = base.height / y_count
-      result = []
-      y_count.times do |row|
-        row_arr = []
-        x_count.times do |col|
-          row_arr << base.slice(col * tw, row * th, tw, th)
-        end
-        result << row_arr
-      end
-      result
+      load(filename).slice_tiles(x_count, y_count)
     end
 
     def fill(color)
@@ -244,16 +233,15 @@ module PicoDX
 
     alias clone dup
 
+    # 左上から右へ、行が終わったら次の行へ並べた 1 次元配列を返す（DXRuby 互換）
     def slice_tiles(x_count, y_count)
       tw = @width  / x_count
       th = @height / y_count
       result = []
       y_count.times do |row|
-        row_arr = []
         x_count.times do |col|
-          row_arr << slice(col * tw, row * th, tw, th)
+          result << slice(col * tw, row * th, tw, th)
         end
-        result << row_arr
       end
       result
     end
@@ -317,13 +305,7 @@ module PicoDX
     end
 
     def _css(color)
-      if color.length == 4
-        a, r, g, b = color
-        "rgba(#{r},#{g},#{b},#{a.to_f / 255})"
-      else
-        r, g, b = color
-        "rgb(#{r},#{g},#{b})"
-      end
+      PicoDX._css_color(color)
     end
 
     def _clamp01(value)

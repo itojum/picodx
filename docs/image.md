@@ -17,7 +17,7 @@ img.height  # => Integer
 
 ```ruby
 Image.load(filename)                         # => Image  (awaits fetch)
-Image.load_tiles(filename, x_count, y_count) # => [[Image, ...], ...]
+Image.load_tiles(filename, x_count, y_count) # => [Image, ...]  (left to right, then top to bottom)
 ```
 
 `load` is asynchronous — call it before `Window.loop`.
@@ -48,6 +48,7 @@ img[x, y] = color  # color = [r, g, b] or [a, r, g, b]
 
 ```ruby
 img.slice(x, y, w, h)  # => new Image (sub-region)
+img.slice_tiles(x_count, y_count)  # => [Image, ...] (left to right, then top to bottom)
 img.dup                 # => new Image (full copy)
 img.clone               # alias for dup
 ```
