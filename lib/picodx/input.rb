@@ -42,19 +42,6 @@ module PicoDX
         return if @listening
         @listening = true
 
-        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う
-        JS.global[:__picodx_prevent_default] = prevent_default
-        JS.eval(
-          "document.addEventListener('keydown', (e) => {" \
-          " if (!window.__picodx_prevent_default) return;" \
-          " const t = e.target;" \
-          " if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;" \
-          " if (e.ctrlKey || e.metaKey || e.altKey) return;" \
-          " if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'," \
-          "      'PageUp', 'PageDown', 'Home', 'End', 'Backspace'].includes(e.code)) e.preventDefault();" \
-          "});"
-        )
-
         JS.document.addEventListener('keydown') do |e|
           @keys_down[e[:code].to_s] = true
           JS.eval("window.__picodx_audio_ctx && window.__picodx_audio_ctx.state === 'suspended' && window.__picodx_audio_ctx.resume()")
@@ -65,12 +52,26 @@ module PicoDX
 
         return unless canvas
 
+        canvas[:tabIndex] = 0
+        JS.global[:__picodx_prevent_default] = prevent_default
+        JS.global[:__picodx_game_canvas] = canvas
+        # preventDefault はイベント配送中に同期的に呼ぶ必要があるので JS 側で行う
+        JS.eval(
+          "document.addEventListener('keydown', (e) => {" \
+          " if (!window.__picodx_prevent_default || document.activeElement !== window.__picodx_game_canvas) return;" \
+          " if (e.ctrlKey || e.metaKey || e.altKey) return;" \
+          " if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'," \
+          "      'PageUp', 'PageDown', 'Home', 'End', 'Backspace'].includes(e.code)) e.preventDefault();" \
+          "});"
+        )
+
         canvas.addEventListener('mousemove') do |e|
           rect = canvas.getBoundingClientRect()
           @mouse_x = (e[:clientX].to_f - rect[:left].to_f).to_i
           @mouse_y = (e[:clientY].to_f - rect[:top].to_f).to_i
         end
         canvas.addEventListener('mousedown') do |e|
+          canvas.focus
           raw = e[:button].to_i
           btn = raw == 2 ? 1 : (raw == 1 ? 2 : 0)
           @mouse_down[btn] = true
