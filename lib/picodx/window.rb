@@ -187,9 +187,22 @@ module PicoDX
           @last_process_time = nil
           @accumulated       = 0.0
           @real_fps          = 0.0
-          while !@closed
-            JS.global.__picodx_nextFrame().await
-            _tick
+          # break / return / 例外のどれで抜けても、次の Window.loop が最上位の
+          # ループとして始まるよう状態を戻す。ブロックの break / return は
+          # PicoRuby ではそのまま Window.loop を抜けるが、Proc#call 経由で
+          # LocalJumpError になる場合もネスト時と同じく値を返して抜ける
+          begin
+            while !@closed
+              JS.global.__picodx_nextFrame().await
+              begin
+                _tick
+              rescue LocalJumpError => e
+                return e.exit_value
+              end
+            end
+          ensure
+            @looping    = false
+            @user_block = nil
           end
         end
       end
