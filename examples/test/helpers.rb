@@ -17,6 +17,20 @@ def assert_pixel(canvas_id, x, y, er, eg, eb, label)
   end
 end
 
+# Like assert_pixel, but allows each channel to differ by up to `tolerance`
+# (blending and alpha are subject to rounding).
+def assert_pixel_near(canvas_id, x, y, er, eg, eb, tolerance, label)
+  data = "document.getElementById('#{canvas_id}').getContext('2d').getImageData(#{x},#{y},1,1).data"
+  r = JS.eval("#{data}[0]").to_i
+  g = JS.eval("#{data}[1]").to_i
+  b = JS.eval("#{data}[2]").to_i
+  if (r - er).abs <= tolerance && (g - eg).abs <= tolerance && (b - eb).abs <= tolerance
+    "<span class='pass'>PASS</span> #{label}"
+  else
+    "<span class='fail'>FAIL</span> #{label}\n  expected: rgb(#{er},#{eg},#{eb}) ±#{tolerance}\n  actual:   rgb(#{r},#{g},#{b})"
+  end
+end
+
 def show_results(results)
   pass_count = 0
   fail_count = 0

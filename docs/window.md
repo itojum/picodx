@@ -60,3 +60,19 @@ Window.draw_font(x, y, str, color, size)      # custom size
 ```
 
 Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order) with `a` in 0–255.
+
+## Blending
+
+```ruby
+Window.draw_add(x, y, image)                    # additive: dst + src (clamped at 255)
+Window.draw_sub(x, y, image)                    # subtractive: dst - src (clamped at 0)
+Window.draw_ex(x, y, image, { blend: :add })    # also :sub; alpha: scales the amount
+```
+
+Canvas 2D has no subtractive blend mode, so PicoDX draws `:sub` by inverting the
+destination area, adding the image, and inverting the area again
+(`1 - min(1, (1 - dst) + src) = max(0, dst - src)`). The colors match DXRuby, with
+one difference: the inverted area (the image's rectangle, or its bounding box when
+rotated or scaled with `draw_ex`) becomes fully opaque. This does not matter on the
+Window, which is always opaque, but on a RenderTarget with a transparent background
+that rectangle turns opaque.
