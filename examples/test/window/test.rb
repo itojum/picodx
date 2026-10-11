@@ -271,6 +271,17 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   Window.ox = 0
   results << assert_pixel("game", 8, 185, 0, 255, 0, "draw_ex: culling uses the offset applied this frame, not a changed ox")
 
+  # Resizing the canvas inside the block resets the context; the frame's offset is re-applied
+  # so drawing and culling keep using the same translation
+  Window.ox = 20
+  Window.loop do
+    Window.width = 400
+    Window.draw_ex(-15, 180, Image.new(10, 10, [0, 255, 0]))  # drawn at 5..14
+    break
+  end
+  Window.ox = 0
+  results << assert_pixel("game", 8, 185, 0, 255, 0, "draw_ex: offset is re-applied after Window.width= inside the loop")
+
   # Nested Window.loop applies the offset twice (10 + 10)
   Window.ox = 10
   Window.loop do
