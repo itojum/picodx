@@ -454,10 +454,16 @@ module PicoDX
       cx = options[:cx] || w / 2
       cy = options[:cy] || h / 2
       rad = angle * Math::PI / 180.0
-      unless angle == 0 && scale_x == 1 && scale_y == 1
-        return unless _transformed_on_screen?(x + cx, y + cy, -cx * scale_x, -cy * scale_y,
-                                              (w - cx) * scale_x, (h - cy) * scale_y, rad)
+      if angle == 0 && scale_x == 1 && scale_y == 1
+        bounds = blend == :sub ? [x, y, x + w, y + h] : nil
+      else
+        bounds = _transformed_bounds(x + cx, y + cy, -cx * scale_x, -cy * scale_y,
+                                     (w - cx) * scale_x, (h - cy) * scale_y, rad)
+        return unless _on_screen?(bounds[0], bounds[1], bounds[2], bounds[3])
       end
+
+      # 減算は「反転 → 加算 → 反転」で表す（_invert_rect のコメント参照）
+      _invert_rect(bounds) if blend == :sub
       @ctx.save
       @ctx[:globalCompositeOperation] = _blend_op(blend) if blend
       @ctx[:globalAlpha] = alpha.to_f / 255 if alpha
@@ -466,6 +472,7 @@ module PicoDX
       @ctx.scale(scale_x, scale_y)
       @ctx.drawImage(image._canvas, -cx, -cy)
       @ctx.restore
+      _invert_rect(bounds) if blend == :sub
     end
 
     def _render_draw_add(x, y, image)
@@ -476,10 +483,28 @@ module PicoDX
     end
 
     def _render_draw_sub(x, y, image)
-      # Canvas 2D に真の減算合成はない。"difference" は差の絶対値で近似。
+      bounds = [x, y, x + image.width, y + image.height]
+      _invert_rect(bounds)
+      @ctx.save
+      @ctx[:globalCompositeOperation] = "lighter"
+      @ctx.drawImage(image._canvas, x, y)
+      @ctx.restore
+      _invert_rect(bounds)
+    end
+
+    # Canvas 2D には減算合成がないので、描画範囲を反転してから加算し、もう一度反転する。
+    #   1 - min(1, (1 - dst) + src) = max(0, dst - src)
+    # 反転は白の difference 合成（|1 - dst| = 1 - dst）で行う。範囲は整数に広げて、
+    # 端のピクセルが半端に反転されないようにする。範囲内の描画先は不透明になる。
+    def _invert_rect(bounds)
+      x1 = bounds[0].floor
+      y1 = bounds[1].floor
+      x2 = bounds[2].ceil
+      y2 = bounds[3].ceil
       @ctx.save
       @ctx[:globalCompositeOperation] = "difference"
-      @ctx.drawImage(image._canvas, x, y)
+      @ctx[:fillStyle] = "#fff"
+      @ctx.fillRect(x1, y1, x2 - x1, y2 - y1)
       @ctx.restore
     end
 
@@ -538,8 +563,8 @@ module PicoDX
     end
 
     # 中心 (px, py) まわりに拡縮済みの矩形 (ax1, ay1)-(ax2, ay2) を rad だけ回転したときの
-    # 外接矩形が描画先に掛かるか
-    def _transformed_on_screen?(px, py, ax1, ay1, ax2, ay2, rad)
+    # 外接矩形 [x1, y1, x2, y2]
+    def _transformed_bounds(px, py, ax1, ay1, ax2, ay2, rad)
       c = Math.cos(rad)
       s = Math.sin(rad)
       x_a = ax1 * c; x_b = ax2 * c; y_a = ay1 * s; y_b = ay2 * s
@@ -548,7 +573,7 @@ module PicoDX
       x_a = ax1 * s; x_b = ax2 * s; y_a = ay1 * c; y_b = ay2 * c
       min_y = (x_a < x_b ? x_a : x_b) + (y_a < y_b ? y_a : y_b)
       max_y = (x_a > x_b ? x_a : x_b) + (y_a > y_b ? y_a : y_b)
-      _on_screen?(px + min_x, py + min_y, px + max_x, py + max_y)
+      [px + min_x, py + min_y, px + max_x, py + max_y]
     end
 
     # 描画時に掛かっている平行移動量。Window はループ内で (ox, oy) だけずらして描く
@@ -567,7 +592,7 @@ module PicoDX
     def _blend_op(blend)
       case blend
       when :add then "lighter"
-      when :sub then "difference"
+      when :sub then "lighter"  # 前後で描画範囲を反転して減算にする（_invert_rect）
       else "source-over"
       end
     end

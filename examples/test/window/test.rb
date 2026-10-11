@@ -308,5 +308,16 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_pixel("game", 392, 145, 0, 0, 255, "draw_ex scale_x -2: flipped image crossing the right edge is drawn")
   results << assert_pixel("game", 0,   105, 0, 0, 0,   "draw_ex scale_x -1: fully off-screen flipped image draws nothing")
 
+  # --- subtractive blending: dst - src, clamped at 0 ---
+  Window.draw_box_fill(300, 140, 360, 170, [100, 150, 200])
+  Window.draw_sub(305, 142, Image.new(10, 10, [50, 200, 50]))
+  results << assert_pixel("game", 310, 147, 50, 0, 150,  "Window.draw_sub subtracts (clamped at 0)")
+  results << assert_pixel("game", 350, 165, 100, 150, 200, "Window.draw_sub leaves the rest untouched")
+  Window.draw_ex(320, 142, Image.new(10, 10, [30, 200, 30]), { blend: :sub })
+  results << assert_pixel("game", 325, 147, 70, 0, 170, "draw_ex blend: :sub subtracts (clamped at 0)")
+  Window.draw_ex(340, 152, Image.new(10, 10, [30, 30, 30]), { blend: :sub, angle: 45 })
+  results << assert_pixel("game", 345, 157, 70, 120, 170, "draw_ex blend: :sub with rotation subtracts")
+  results << assert_pixel("game", 339, 151, 100, 150, 200, "draw_ex blend: :sub with rotation leaves its bounding box corners untouched")
+
   show_results(results)
 end
