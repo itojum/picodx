@@ -18,8 +18,8 @@
 <body>
   <div><a href="../index.html">← Tests</a></div>
   <h1>Input default action Tests</h1>
-  <p>Assertions: arrow / Space / Tab keydown does not scroll the page (preventDefault), Input.prevent_default = false restores it, text inputs are not affected</p>
-  <p>Manual: after running, press ↓ / Space — the page should not scroll. Type in the text box — it should still work.</p>
+  <p>Assertions: arrow / Space / Tab keydown on the focused game canvas is prevented, Input.prevent_default = false restores it, text inputs and buttons are not affected</p>
+  <p>Manual: reload the page and press ↓ / Space without clicking — the page should not scroll (the canvas is focused on init). Click the text box or a button — Tab / Space behave normally there.</p>
   <button id="run">Run Tests</button>
   <input id="text" type="text" placeholder="type here">
   <canvas id="game" width="200" height="60"></canvas>

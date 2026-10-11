@@ -65,6 +65,9 @@ module PicoDX
           "});"
         )
 
+        # 読み込み直後からキー入力でページが動かないよう、canvas にフォーカスしておく
+        JS.eval("window.__picodx_game_canvas.focus({ preventScroll: true })")
+
         canvas.addEventListener('mousemove') do |e|
           rect = canvas.getBoundingClientRect()
           @mouse_x = (e[:clientX].to_f - rect[:left].to_f).to_i
