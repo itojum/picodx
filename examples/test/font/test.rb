@@ -42,7 +42,7 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal("400 20px monospace", plain._css_font, "Font#_css_font default")
 
   named = Font.new(14, "Helvetica")
-  results << assert_equal("400 14px Helvetica, monospace", named._css_font, "Font#_css_font with named font")
+  results << assert_equal("400 14px \"Helvetica\", monospace", named._css_font, "Font#_css_font with named font (quoted)")
 
   italic_bold = Font.new(18, "", italic: true, weight: 700)
   results << assert_equal("italic 700 18px monospace", italic_bold._css_font, "Font#_css_font italic bold")
@@ -170,6 +170,27 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   end
   results << (win_ex_found ? "<span class='pass'>PASS</span> Window.draw_font_ex renders text" :
                              "<span class='fail'>FAIL</span> Window.draw_font_ex produced no visible text")
+
+  # --- Font aliases (Windows font names → browser fonts) ---
+  results << assert_equal("400 16px monospace", Font.new(16, "ＭＳ ゴシック")._css_font,
+                          "default alias: ＭＳ ゴシック → monospace")
+  results << assert_equal("400 16px serif, monospace", Font.new(16, "ＭＳ 明朝")._css_font,
+                          "default alias: ＭＳ 明朝 → serif")
+  Font.add_alias("PicoDXTestFont", ["Noto Sans JP", "sans-serif"])
+  results << assert_equal("400 16px \"Noto Sans JP\", sans-serif, monospace", Font.new(16, "PicoDXTestFont")._css_font,
+                          "Font.add_alias with a list of families")
+  results << assert_equal("PicoDXTestFont", Font.new(16, "PicoDXTestFont").fontname,
+                          "Font#fontname keeps the original name")
+
+  # The alias takes effect when measuring / drawing: an alias to serif measures like serif
+  Font.add_alias("PicoDXSerifAlias", "serif")
+  sample = "iiiiiWWWWW"
+  w_alias = Font.new(20, "PicoDXSerifAlias").get_width(sample)
+  w_serif = Font.new(20, "serif").get_width(sample)
+  w_mono  = Font.new(20).get_width(sample)
+  results << assert_equal(w_serif, w_alias, "aliased font measures like its target (serif)")
+  results << (w_alias != w_mono ? "<span class='pass'>PASS</span> aliased font differs from the monospace fallback" :
+                                  "<span class='fail'>FAIL</span> aliased font measured like monospace (#{w_alias})")
 
   # Visual labels
   Window.draw_font(0, 140, "Window.draw_font new API (white above)", [120, 120, 120], 11)

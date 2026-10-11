@@ -20,6 +20,67 @@ module PicoDX
         ).await
         [family]
       end
+
+      # フォント名の別名表。DXRuby のゲームに多い Windows のフォント名を、
+      # ブラウザで使えるフォントに読み替える。
+      #   Font.add_alias("ＭＳ ゴシック", "Noto Sans JP")
+      #   Font.add_alias("メイリオ", ["Hiragino Sans", "sans-serif"])
+      def aliases
+        @aliases ||= _default_aliases
+      end
+
+      def aliases=(table)
+        @aliases = table
+      end
+
+      def add_alias(name, families)
+        aliases[name.to_s] = families
+      end
+
+      # Font#_css_font で使う font-family の文字列
+      def _css_family(name)
+        families = aliases[name]
+        families = [name] if families.nil?
+        families = [families] unless families.is_a?(Array)
+        list = families.map { |f| _css_family_name(f.to_s) }
+        list << "monospace" unless families.include?("monospace")
+        list.join(", ")
+      end
+
+      private
+
+      # 総称ファミリはそのまま、それ以外は引用符で囲む（空白や全角文字を含む名前のため）
+      def _css_family_name(name)
+        case name
+        when "serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui",
+             "ui-serif", "ui-sans-serif", "ui-monospace", "ui-rounded", "emoji", "math", "fangsong"
+          name
+        else
+          "\"#{name.split('"').join}\""
+        end
+      end
+
+      # Windows の代表的な日本語フォントを、等幅・プロポーショナル・明朝の
+      # 総称ファミリに読み替える既定の表
+      def _default_aliases
+        {
+          "ＭＳ ゴシック"   => "monospace",
+          "MS Gothic"       => "monospace",
+          "ＭＳ Ｐゴシック" => "sans-serif",
+          "MS PGothic"      => "sans-serif",
+          "MS UI Gothic"    => "sans-serif",
+          "メイリオ"        => "sans-serif",
+          "Meiryo"          => "sans-serif",
+          "游ゴシック"      => "sans-serif",
+          "Yu Gothic"       => "sans-serif",
+          "ＭＳ 明朝"       => "serif",
+          "MS Mincho"       => "serif",
+          "ＭＳ Ｐ明朝"     => "serif",
+          "MS PMincho"      => "serif",
+          "游明朝"          => "serif",
+          "Yu Mincho"       => "serif"
+        }
+      end
     end
 
     attr_reader :size, :fontname, :italic, :weight
@@ -41,7 +102,7 @@ module PicoDX
 
     def _css_font
       style  = @italic ? "italic " : ""
-      family = @fontname.empty? ? "monospace" : "#{@fontname}, monospace"
+      family = @fontname.empty? ? "monospace" : Font._css_family(@fontname)
       "#{style}#{@weight} #{@size}px #{family}"
     end
 
