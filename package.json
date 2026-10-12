@@ -1,6 +1,6 @@
 {
   "name": "picodx",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A minimal 2D game library for PicoRuby.wasm, modelled after DXRuby's API",
   "main": "lib/picodx.rb",
   "files": [
