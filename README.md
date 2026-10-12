@@ -29,11 +29,22 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 
 Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order), and the `C_*` constants are ARGB as in DXRuby.
 
+### Games split into files
+
+`require './player.rb'` cannot load files in the browser. Bundle the game into one script first; its `require` lines stay as they are, so the source still runs on DXRuby:
+
+```bash
+npx picodx bundle main.rb -o game.bundle.rb
+```
+
+Then load `game.bundle.rb` instead of `main.rb`. See [Bundling](docs/bundle.md) for how requires are resolved and what is not supported.
+
 ## Documentation
 
 - [Window](docs/window.md) — game loop, drawing, z order, blending
 - [Image](docs/image.md) — image object, pixel access, tiles
 - [Input](docs/input.md) — keyboard / mouse input and key constants
+- [Bundling](docs/bundle.md) — `picodx bundle` for games split into files
 
 Sprite, Font, Sound and RenderTarget follow the DXRuby API; see the [DXRuby reference](https://mirichi.github.io/dxruby-doc/index.html) until their pages are added.
 
@@ -54,9 +65,12 @@ Requires Node.js (see `.node-version`) and Ruby (see `.ruby-version`).
 
 ```bash
 npm run setup   # install dependencies
-npm run build   # build lib/picodx.rb from lib/picodx/**/*.rb
+npm run build   # bundle lib/picodx/all.rb into lib/picodx.rb
+npm test        # unit tests for `picodx bundle` (the library itself is tested in the browser, see below)
 npm run serve   # build and start the dev server at http://localhost:3000
 ```
+
+`lib/picodx/all.rb` lists the library files in load order; add new files there.
 
 ### Examples
 
