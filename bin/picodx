@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+# PicoDX command line tool.
+#
+#   picodx bundle ENTRY [-o OUTPUT] [--root DIR] [-I DIR] [--ignore NAME]
+
+require 'optparse'
+require_relative '../cli/bundler'
+
+USAGE = <<~TEXT
+  Usage: picodx bundle ENTRY [options]
+
+  Inlines the files required by ENTRY into one Ruby script that PicoRuby.wasm
+  can load with a single <script type="text/ruby"> tag.
+TEXT
+
+def bundle(argv)
+  output     = nil
+  root       = nil
+  load_paths = []
+  ignore     = []
+
+  parser = OptionParser.new do |opts|
+    opts.banner = USAGE
+    opts.separator ''
+    opts.on('-o', '--output FILE', 'Write the bundle to FILE (default: stdout)') { |v| output = v }
+    opts.on('--root DIR', "Resolve require './x' against DIR (default: ENTRY's directory)") { |v| root = v }
+    opts.on('-I', '--include DIR', "Search DIR for require 'x' (repeatable; default: root)") { |v| load_paths << v }
+    opts.on('--ignore NAME', "Drop require NAME (repeatable; 'dxruby' is always dropped)") { |v| ignore << v }
+    opts.on('-h', '--help', 'Show this help') do
+      puts opts
+      exit
+    end
+  end
+  args = parser.parse(argv)
+  abort(parser.to_s) unless args.size == 1
+
+  bundler = PicoDX::Bundler.new(root: root, load_paths: load_paths.empty? ? nil : load_paths, ignore: ignore)
+  code = bundler.bundle(args.first)
+
+  bundler.warnings.each { |w| warn "warning: #{w}" }
+  warn "kept as runtime require: #{bundler.kept.join(', ')}" unless bundler.kept.empty?
+  warn "ignored: #{bundler.ignored.join(', ')}" unless bundler.ignored.empty?
+
+  if output
+    File.write(output, code)
+    warn "Bundled #{bundler.files.size} file(s) into #{output}"
+  else
+    $stdout.write(code)
+  end
+rescue PicoDX::Bundler::Error, OptionParser::ParseError => e
+  abort "picodx bundle: #{e.message}"
+end
+
+case ARGV.first
+when 'bundle'
+  bundle(ARGV.drop(1))
+when '-h', '--help', nil
+  puts USAGE
+  puts "\nRun `picodx bundle --help` for the options."
+else
+  abort "picodx: unknown command #{ARGV.first.inspect}\n\n#{USAGE}"
+end

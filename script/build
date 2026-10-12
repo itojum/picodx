@@ -1,15 +1,7 @@
 #!/usr/bin/env ruby
-# Concatenates lib/picodx/**/*.rb into lib/picodx.rb for npm distribution.
+# Builds lib/picodx.rb by bundling lib/picodx/all.rb and the files it requires.
 
 root = File.expand_path('..', __dir__)
-LOAD_ORDER = %w[drawable.rb font.rb image.rb input.rb constants.rb window.rb render_target.rb sprite.rb sound.rb not_implemented.rb init.rb].freeze
-sources = LOAD_ORDER.map { |f| File.join(root, 'lib/picodx', f) }
-
-output = +"require 'js'\n"
-sources.each do |path|
-  output << "\n" << File.read(path)
-end
-
-dest = File.join(root, 'lib/picodx.rb')
-File.write(dest, output)
-puts "Built #{dest} from #{sources.size} file(s)"
+exec 'ruby', File.join(root, 'bin/picodx'), 'bundle',
+     File.join(root, 'lib/picodx/all.rb'),
+     '-o', File.join(root, 'lib/picodx.rb')
