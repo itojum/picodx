@@ -6,7 +6,6 @@
 ### Features
 
 * **cli:** require をたどって 1 ファイルにまとめる picodx bundle を追加 ([5845f9b](https://github.com/itojum/picodx/commit/5845f9b4ff3dca898a73f9a83dfc41994f1c52e0))
-* **cli:** require をたどって 1 ファイルにまとめる picodx bundle を追加 ([adedb7c](https://github.com/itojum/picodx/commit/adedb7c5f9a69be90d580f9fbfccf563d52b5389))
 
 ## [2.0.0](https://github.com/itojum/picodx/compare/picodx-v1.0.0...picodx-v2.0.0) (2026-10-12)
 
