@@ -31,8 +31,5 @@
   },
   "devDependencies": {
     "@picoruby/wasm-wasi": "^4.0.2"
-  },
-  "engines": {
-    "node": ">=26.1.0"
   }
 }
