@@ -35,8 +35,11 @@ jobs:
         if: steps.release.outputs.pr
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+          # step env is evaluated even when the step is skipped, so parse the
+          # JSON in the shell instead of calling fromJSON on an empty output
+          PR_JSON: ${{ steps.release.outputs.pr }}
         run: |
+          PR_NUMBER=$(jq -r .number <<< "$PR_JSON")
           # gh pr edit also reads org data and needs read:org, so use the REST API
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq .body > "$RUNNER_TEMP/body.md"
           cp "$RUNNER_TEMP/body.md" "$RUNNER_TEMP/body.orig.md"
