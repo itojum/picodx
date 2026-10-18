@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/itojum/picodx/compare/picodx-v2.1.0...picodx-v2.1.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **image:** パスの \ が JS のエスケープとして解釈されないようにする ([f2abfd2](https://github.com/itojum/picodx/commit/f2abfd2e0906034b182ab5f321b7630b332393dc))
+
 ## [2.1.0](https://github.com/itojum/picodx/compare/picodx-v2.0.0...picodx-v2.1.0) (2026-10-12)
 
 
