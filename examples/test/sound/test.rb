@@ -5,6 +5,10 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
 
   snd = Sound.new("/test/sound/beep.wav")
 
+  # DXRuby games written for Windows use \ as the path separator.
+  Sound.new('..\sound\beep.wav')
+  results << "<span class='pass'>PASS</span> Sound.new with \\ separators does not raise"
+
   # --- DXRuby compatibility surface ---
   results << assert_equal(false, snd.respond_to?(:playing?), "Sound#playing? is not public")
   results << assert_equal(false, snd.respond_to?(:volume),   "Sound#volume is not public")
