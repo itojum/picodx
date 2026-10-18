@@ -90,9 +90,9 @@ Open `http://localhost:3000/test/`. Automated pages have a **Run Tests** button 
 
 Releases are made with [release-please](https://github.com/googleapis/release-please) from [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `feat!:` / `BREAKING CHANGE:` for breaking changes).
 
-1. Run the **Release Please** workflow (Actions → Release Please → Run workflow). It opens or updates a release PR with the version bump and `CHANGELOG.md`.
-2. Merge the release PR.
-3. Run the **Release Please** workflow again. It only runs by hand, so merging alone does not release anything; this run creates the tag and the GitHub Release.
+1. Merge PRs into `main` with **squash merge**, using a Conventional Commits PR title (it becomes the commit message and the changelog entry).
+2. Every push to `main` runs the **Release Please** workflow, which opens or updates a release PR with the version bump and `CHANGELOG.md`. It can also be run by hand (Actions → Release Please → Run workflow).
+3. Merge the release PR. The workflow runs again and creates the tag and the GitHub Release.
 4. The **Publish to npm** workflow runs when the release is published and publishes the package with provenance. It can also be run by hand with a version number.
 
 ## License

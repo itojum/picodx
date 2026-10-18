@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# Removes duplicate entries from the newest release section of release notes.
+#
+# A PR merged with a merge commit is counted twice by release-please: once for
+# the commit on the branch and once for the merge commit, whose message body is
+# the PR title. Entries with the same text are folded into one, keeping the
+# longest line (the merge commit's entry carries "closes #N").
+#
+#   script/dedupe_release_notes CHANGELOG.md pr_body.md
+
+ENTRY = /\A\* (.+?) \(\[[0-9a-f]{7,}\]\(/
+
+def dedupe_section(lines)
+  kept = {}
+  lines.each_with_index do |line, i|
+    key = line[ENTRY, 1] or next
+    kept[key] = i if kept[key].nil? || line.length > lines[kept[key]].length
+  end
+  first = {}
+  lines.each_with_index.filter_map do |line, i|
+    key = line[ENTRY, 1]
+    next line unless key
+    next if first.key?(key)
+    first[key] = true
+    lines[kept[key]]
+  end
+end
+
+def dedupe(text)
+  lines = text.lines
+  start = lines.index { |l| l.start_with?('## ') } or return text
+  stop = (start + 1...lines.size).find { |i| lines[i].start_with?('## ') } || lines.size
+  (lines[0...start] + dedupe_section(lines[start...stop]) + lines[stop..]).join
+end
+
+ARGV.each do |path|
+  text = File.read(path, encoding: 'UTF-8')
+  result = dedupe(text)
+  File.write(path, result) unless result == text
+end

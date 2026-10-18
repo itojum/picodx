@@ -1,7 +1,13 @@
 name: Release Please
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -12,5 +18,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      # release-please lists a PR merged with a merge commit twice (the branch
+      # commit and the merge commit), so fold the duplicates in both the
+      # CHANGELOG and the PR body, which becomes the GitHub Release notes.
+      - if: steps.release.outputs.pr
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Remove duplicate release notes
+        if: steps.release.outputs.pr
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          PR_NUMBER: ${{ fromJSON(steps.release.outputs.pr).number }}
+        run: |
+          gh pr view "$PR_NUMBER" --json body --jq .body > "$RUNNER_TEMP/body.md"
+          cp "$RUNNER_TEMP/body.md" "$RUNNER_TEMP/body.orig.md"
+          ruby script/dedupe_release_notes CHANGELOG.md "$RUNNER_TEMP/body.md"
+          if ! cmp -s "$RUNNER_TEMP/body.md" "$RUNNER_TEMP/body.orig.md"; then
+            gh pr edit "$PR_NUMBER" --body-file "$RUNNER_TEMP/body.md"
+          fi
+          if ! git diff --quiet CHANGELOG.md; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: remove duplicate changelog entries" CHANGELOG.md
+            git push
+          fi
