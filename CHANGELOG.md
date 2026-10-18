@@ -6,7 +6,6 @@
 ### Bug Fixes
 
 * **image:** パスの \ が JS のエスケープとして解釈されないようにする ([f2abfd2](https://github.com/itojum/picodx/commit/f2abfd2e0906034b182ab5f321b7630b332393dc))
-* **image:** パスの \ が JS のエスケープとして解釈されないようにする ([44d2073](https://github.com/itojum/picodx/commit/44d2073eeab88dfb7cce1ef5acc7a206dc82dc46))
 
 ## [2.1.0](https://github.com/itojum/picodx/compare/picodx-v2.0.0...picodx-v2.1.0) (2026-10-12)
 
