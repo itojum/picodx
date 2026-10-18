@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2](https://github.com/itojum/picodx/compare/picodx-v2.1.1...picodx-v2.1.2) (2026-10-18)
+
+
+### Bug Fixes
+
+* package.json の engines を外す ([5e798a0](https://github.com/itojum/picodx/commit/5e798a02a0440f2b4d83549aa420e326628c463d))
+* package.json の engines を外す ([5e30775](https://github.com/itojum/picodx/commit/5e307751543e9251a5611aab88ace832975e3a8e))
+
 ## [2.1.1](https://github.com/itojum/picodx/compare/picodx-v2.1.0...picodx-v2.1.1) (2026-10-18)
 
 
