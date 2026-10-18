@@ -25,7 +25,6 @@ module PicoDX
       return if filename.nil?
 
       JS.eval("window.__picodx_audio_ctx = window.__picodx_audio_ctx || new AudioContext()")
-      # Image.load と同じく、パスは JS のコードに埋め込まず window 経由で渡す。
       JS.global[:__picodx_load_url] = filename.to_s
       @buffer = JS.eval(
         "fetch(window.__picodx_load_url)" \

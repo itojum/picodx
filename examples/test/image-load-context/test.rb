@@ -60,8 +60,6 @@ JS.document.getElementById('run').addEventListener('click') do |_e|
   results << assert_equal(16,  $loop_tiles.length,          "Window.loop Image.load_tiles: 4x4 tiles in a flat array")
   results << assert_equal(64,  $loop_tiles[0].width,        "Window.loop Image.load_tiles: tile width 64")
 
-  # DXRuby games written for Windows use \ as the path separator.
-  # The \i in '..\image' must reach the browser as-is, not as a JS escape.
   win_image = Image.load('..\image\image.png')
   results << assert_equal(256, win_image.width, "Image.load with \\ separators: width")
 

@@ -27,8 +27,6 @@ module PicoDX
       cached = @@cache[filename]
       return cached.dup if cached
 
-      # パスを JS のコードに埋め込むと、DXRuby のゲームが使う 'image\bg.png' の \b が
-      # エスケープとして解釈されるので、window 経由で文字列のまま渡す。
       JS.global[:__picodx_load_url] = filename.to_s
       promise = JS.eval("new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('load error'));i.src=window.__picodx_load_url;})")
       html_img = promise.await
