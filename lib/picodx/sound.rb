@@ -25,8 +25,9 @@ module PicoDX
       return if filename.nil?
 
       JS.eval("window.__picodx_audio_ctx = window.__picodx_audio_ctx || new AudioContext()")
+      JS.global[:__picodx_load_url] = filename.to_s
       @buffer = JS.eval(
-        "fetch('#{filename}')" \
+        "fetch(window.__picodx_load_url)" \
         ".then(r=>r.arrayBuffer())" \
         ".then(buf=>window.__picodx_audio_ctx.decodeAudioData(buf))"
       ).await

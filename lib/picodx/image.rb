@@ -27,7 +27,8 @@ module PicoDX
       cached = @@cache[filename]
       return cached.dup if cached
 
-      promise = JS.eval("new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('load error'));i.src='#{filename}';})")
+      JS.global[:__picodx_load_url] = filename.to_s
+      promise = JS.eval("new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('load error'));i.src=window.__picodx_load_url;})")
       html_img = promise.await
       w = html_img[:naturalWidth].to_i
       h = html_img[:naturalHeight].to_i
