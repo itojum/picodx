@@ -30,7 +30,7 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
 
-PicoDX is split into several files, so it is loaded with [importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby): the import map names where `picodx` comes from, the loader fetches its files, and `require "picodx"` in a `text/ruby-app` script loads them.
+PicoDX is plain Ruby files that load each other with `require` (`lib/picodx.rb` requires `picodx/window` and so on), so `require "picodx"` works wherever PicoRuby.wasm's `require` can find `lib/`. PicoRuby.wasm starts with an empty file system; the example above puts the files there with [importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby), but any other way of doing so works too.
 
 `Window.init("canvas-id")` is optional: on the first draw or `Window.loop`, PicoDX connects to `<canvas id="game">`, or to the first `<canvas>` on the page.
 
@@ -38,7 +38,7 @@ Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order), and the `C_*` constants
 
 ### Games split into files
 
-Files the game requires are fetched by the loader too, so a game split into files runs as it is. Map `dxruby` to PicoDX as well, and a game written for DXRuby keeps its `require 'dxruby'`:
+A game split into files loads them with `require` in the same way. With importmap-picoruby, the loader also fetches the files the game requires, so the game runs as it is. Map `dxruby` to `lib/dxruby.rb` as well, and a game written for DXRuby keeps its `require 'dxruby'`:
 
 ```html
 <script type="text/ruby-importmap">
@@ -61,7 +61,7 @@ require './class/enemy'
 - `require './x'` is resolved against the page's directory, and the required file's own `require './y'` too.
 - Only requires with a string literal are fetched. For a name built at run time, list the files under `"preload"` in the import map ([importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby)).
 - `require_relative` is not available in PicoRuby yet; use `require './x'`.
-- A library PicoRuby does not have (`require 'set'`, …) raises `LoadError`; remove the require or add the library to the import map.
+- A library PicoRuby does not have (`require 'set'`, …) raises `LoadError`; remove the require, or make the library available to `require` (e.g. add it to the import map).
 
 ## Documentation
 
