@@ -8,8 +8,14 @@ npx picodx bundle main.rb -o game.bundle.rb
 ```
 
 ```html
-<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/picodx@latest/lib/picodx.rb"></script>
-<script type="text/ruby" src="game.bundle.rb"></script>
+<script type="text/ruby-importmap">
+  { "imports": { "picodx": "npm:picodx@latest" } }
+</script>
+<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/importmap-picoruby@0.1.0/loader.rb"></script>
+<script type="text/ruby-app">
+  require "picodx"
+  require "./game.bundle"
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
 

@@ -6,7 +6,7 @@ Browser test pages for PicoDX. Start the dev server from the repository root and
 npm run serve
 ```
 
-Each page loads the freshly built `lib/picodx.rb`, so run `npm run serve` (or `npm run build`) again after changing `lib/picodx/`.
+Each page loads `lib/picodx.rb` and the files in `lib/picodx/` as they are, so reload the page after changing them.
 
 ## Automated pages
 
@@ -40,7 +40,7 @@ These pages are checked by hand:
 
 ## Writing tests
 
-- Every page has an `index.html` and a `test.rb`, and loads the built `lib/picodx.rb`.
+- Every page has an `index.html` and a `test.rb`, and loads `lib/picodx.rb` through the import map (`require "picodx"` in a `text/ruby-app` script).
 - Automated pages also have a **Run Tests** button and a `#test-output` element, and load [`helpers.rb`](helpers.rb). `test.rb` collects the results of the assertions in the button's click handler and passes them to `show_results`.
 - Manual pages have neither; their `test.rb` runs a `Window.loop` that draws the current state for you to check by eye.
 - `helpers.rb` provides `assert_equal`, `assert_near` (numbers with a tolerance), `assert_pixel` / `assert_pixel_near` (read a canvas pixel, optionally with a tolerance for blended colors) and `show_results`.

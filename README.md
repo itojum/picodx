@@ -8,9 +8,14 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 
 ```html
 <canvas id="game" width="640" height="480"></canvas>
-<!-- Pin a version (e.g. picodx@1.0.0) for anything you publish -->
-<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/picodx@latest/lib/picodx.rb"></script>
-<script type="text/ruby">
+<!-- Pin a version (e.g. picodx@3.0.0) for anything you publish -->
+<script type="text/ruby-importmap">
+  { "imports": { "picodx": "npm:picodx@latest" } }
+</script>
+<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/importmap-picoruby@0.1.0/loader.rb"></script>
+<script type="text/ruby-app">
+  require "picodx"
+
   Window.bgcolor = [20, 20, 40]
 
   ball = Image.new(24, 24, [255, 80, 80])
@@ -24,6 +29,8 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
+
+PicoDX is split into several files, so it is loaded with [importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby): the import map names where `picodx` comes from, the loader fetches its files, and `require "picodx"` in a `text/ruby-app` script loads them.
 
 `Window.init("canvas-id")` is optional: on the first draw or `Window.loop`, PicoDX connects to `<canvas id="game">`, or to the first `<canvas>` on the page.
 
@@ -65,12 +72,11 @@ Requires Node.js (see `.node-version`) and Ruby (see `.ruby-version`).
 
 ```bash
 npm run setup   # install dependencies
-npm run build   # bundle lib/picodx/all.rb into lib/picodx.rb
 npm test        # unit tests for `picodx bundle` (the library itself is tested in the browser, see below)
-npm run serve   # build and start the dev server at http://localhost:3000
+npm run serve   # start the dev server at http://localhost:3000
 ```
 
-`lib/picodx/all.rb` lists the library files in load order; add new files there.
+`lib/picodx.rb` requires the library files in `lib/picodx/` in load order; add new files there. The dev server serves `lib/` as it is, so changes show up on reload.
 
 ### Examples
 

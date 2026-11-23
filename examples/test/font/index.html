@@ -22,9 +22,11 @@
   <button id="run">Run Tests</button>
   <canvas id="game" width="480" height="270"></canvas>
   <div id="test-output"></div>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/test/helpers.rb"></script>
-  <script type="text/ruby" src="/test/font/test.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/test/helpers.rb"></script>
+  <script type="text/ruby-app" src="/test/font/test.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>

@@ -19,8 +19,10 @@
   <h1>DXRuby compare</h1>
   <p>Runs <code>compare.rb</code>, which also runs unchanged on DXRuby (<code>ruby -rdxruby compare.rb</code>). Put the two screenshots side by side to compare Sprite positions, hit areas and z order.</p>
   <canvas id="game" width="640" height="480"></canvas>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/compare/compare.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/compare/compare.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>

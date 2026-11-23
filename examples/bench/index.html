@@ -21,8 +21,10 @@
   <button id="run">Run Benchmarks</button>
   <canvas id="game" width="640" height="480"></canvas>
   <div id="test-output"></div>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/bench/bench.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/bench/bench.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>

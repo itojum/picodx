@@ -13,8 +13,10 @@
   <div><a href="../index.html">← Tests</a></div>
   <h1>set_repeat Test</h1>
   <canvas id="game" width="640" height="360"></canvas>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/test/repeat/test.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/test/repeat/test.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>

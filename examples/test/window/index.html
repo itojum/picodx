@@ -23,9 +23,11 @@
   <canvas id="game" width="400" height="220"></canvas>
   <canvas id="game2" width="200" height="100" style="display:none"></canvas>
   <div id="test-output"></div>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/test/helpers.rb"></script>
-  <script type="text/ruby" src="/test/window/test.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/test/helpers.rb"></script>
+  <script type="text/ruby-app" src="/test/window/test.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>

@@ -16,8 +16,10 @@
   <p>Hold a key — <code>key_down?</code> shows the name while held. Tap — blue bar flashes once (<code>key_push?</code>). Release — orange bar flashes once (<code>key_release?</code>).</p>
   <p>Arrows / WASD → <code>Input.x</code> / <code>Input.y</code> axis. Move mouse over canvas → coordinates. Click → button state. Scroll → <code>mouse_wheel_pos</code>.</p>
   <canvas id="game" width="640" height="500"></canvas>
-  <script type="text/ruby" src="/lib/picodx.rb"></script>
-  <script type="text/ruby" src="/test/input/test.rb"></script>
+  <script type="text/ruby-importmap">{ "imports": { "picodx": "/lib/picodx.rb" } }</script>
+  <script type="text/ruby" src="/loader.rb"></script>
+  <script type="text/ruby-app">require "picodx"</script>
+  <script type="text/ruby-app" src="/test/input/test.rb"></script>
   <script src="/init.iife.js"></script>
 </body>
 </html>
