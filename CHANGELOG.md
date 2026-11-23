@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.0](https://github.com/itojum/picodx/compare/picodx-v2.1.2...picodx-v3.0.0) (2026-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* picodx コマンド(picodx bundle)を削除した。分割したゲームは <script type="text/ruby-app" src="main.rb"> で読み込み、require './x' は loader が取得する。 require 'dxruby' は import map で "dxruby" を picodx の lib/dxruby.rb に割り当てる。
+* lib/picodx.rb を <script type="text/ruby"> で直接読み込めなくなった。 importmap-picoruby の import map で picodx を指定し、text/ruby-app のスクリプトで require "picodx" する。
+
+### Features
+
+* picodx bundle をなくし、分割したゲームも importmap-picoruby で読み込む ([9a431f2](https://github.com/itojum/picodx/commit/9a431f274e7e8b7f6bd657b6b40b1a8622090378))
+* ライブラリを結合せず、importmap-picoruby で読み込む ([7f11f26](https://github.com/itojum/picodx/commit/7f11f26ad0ce62ef6dc003ec5c4b40a76eb4803f))
+
 ## [2.1.2](https://github.com/itojum/picodx/compare/picodx-v2.1.1...picodx-v2.1.2) (2026-10-18)
 
 
