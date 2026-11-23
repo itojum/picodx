@@ -1,7 +1,0 @@
-#!/usr/bin/env ruby
-# Builds lib/picodx.rb by bundling lib/picodx/all.rb and the files it requires.
-
-root = File.expand_path('..', __dir__)
-exec 'ruby', File.join(root, 'bin/picodx'), 'bundle',
-     File.join(root, 'lib/picodx/all.rb'),
-     '-o', File.join(root, 'lib/picodx.rb')

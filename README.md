@@ -8,9 +8,14 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 
 ```html
 <canvas id="game" width="640" height="480"></canvas>
-<!-- Pin a version (e.g. picodx@1.0.0) for anything you publish -->
-<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/picodx@latest/lib/picodx.rb"></script>
-<script type="text/ruby">
+<!-- Pin a version (e.g. picodx@3.0.0) for anything you publish -->
+<script type="text/ruby-importmap">
+  { "imports": { "picodx": "npm:picodx@latest" } }
+</script>
+<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/importmap-picoruby@0.1.0/loader.rb"></script>
+<script type="text/ruby-app">
+  require "picodx"
+
   Window.bgcolor = [20, 20, 40]
 
   ball = Image.new(24, 24, [255, 80, 80])
@@ -25,26 +30,44 @@ The goal is to run DXRuby games in the browser with as few changes to the game c
 <script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
 
+PicoDX is plain Ruby files that load each other with `require` (`lib/picodx.rb` requires `picodx/window` and so on), so `require "picodx"` works wherever PicoRuby.wasm's `require` can find `lib/`. PicoRuby.wasm starts with an empty file system; the example above puts the files there with [importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby), but any other way of doing so works too.
+
 `Window.init("canvas-id")` is optional: on the first draw or `Window.loop`, PicoDX connects to `<canvas id="game">`, or to the first `<canvas>` on the page.
 
 Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order), and the `C_*` constants are ARGB as in DXRuby.
 
 ### Games split into files
 
-`require './player.rb'` cannot load files in the browser. Bundle the game into one script first; its `require` lines stay as they are, so the source still runs on DXRuby:
+A game split into files loads them with `require` in the same way. With importmap-picoruby, the loader also fetches the files the game requires, so the game runs as it is. Map `dxruby` to `lib/dxruby.rb` as well, and a game written for DXRuby keeps its `require 'dxruby'`:
 
-```bash
-npx picodx bundle main.rb -o game.bundle.rb
+```html
+<script type="text/ruby-importmap">
+  { "imports": {
+      "picodx": "npm:picodx@latest",
+      "dxruby": "npm:picodx@latest/lib/dxruby.rb" } }
+</script>
+<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/importmap-picoruby@0.1.0/loader.rb"></script>
+<script type="text/ruby-app" src="main.rb"></script>
+<script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
 
-Then load `game.bundle.rb` instead of `main.rb`. See [Bundling](docs/bundle.md) for how requires are resolved and what is not supported.
+```ruby
+# main.rb
+require 'dxruby'
+require './player.rb'      # the page's directory, like DXRuby run from the game's folder
+require './class/enemy'
+```
+
+- `require './x'` is resolved against the page's directory, and the required file's own `require './y'` too.
+- Only requires with a string literal are fetched. For a name built at run time, list the files under `"preload"` in the import map ([importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby)).
+- `require_relative` is not available in PicoRuby yet; use `require './x'`.
+- A library PicoRuby does not have (`require 'set'`, …) raises `LoadError`; remove the require, or make the library available to `require` (e.g. add it to the import map).
 
 ## Documentation
 
 - [Window](docs/window.md) — game loop, drawing, z order, blending
 - [Image](docs/image.md) — image object, pixel access, tiles
 - [Input](docs/input.md) — keyboard / mouse input and key constants
-- [Bundling](docs/bundle.md) — `picodx bundle` for games split into files
 
 Sprite, Font, Sound and RenderTarget follow the DXRuby API; see the [DXRuby reference](https://mirichi.github.io/dxruby-doc/index.html) until their pages are added.
 
@@ -65,12 +88,10 @@ Requires Node.js (see `.node-version`) and Ruby (see `.ruby-version`).
 
 ```bash
 npm run setup   # install dependencies
-npm run build   # bundle lib/picodx/all.rb into lib/picodx.rb
-npm test        # unit tests for `picodx bundle` (the library itself is tested in the browser, see below)
-npm run serve   # build and start the dev server at http://localhost:3000
+npm run serve   # start the dev server at http://localhost:3000
 ```
 
-`lib/picodx/all.rb` lists the library files in load order; add new files there.
+`lib/picodx.rb` requires the library files in `lib/picodx/` in load order; add new files there. The dev server serves `lib/` as it is, so changes show up on reload.
 
 ### Examples
 

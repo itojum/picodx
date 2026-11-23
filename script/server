@@ -9,6 +9,7 @@ end
 root = File.expand_path('..', __dir__)
 dist = File.join(root, 'node_modules/@picoruby/wasm-wasi/dist')
 lib  = File.join(root, 'lib')
+loader = File.join(root, 'node_modules/importmap-picoruby')
 
 no_cache = proc { |res| res['Cache-Control'] = 'no-store' }
 
@@ -21,10 +22,12 @@ server = WEBrick::HTTPServer.new(Port: 3000)
 server.config[:MimeTypes]['wasm'] = 'application/wasm'
 server.mount('/', NoCacheFileHandler, File.join(root, 'examples'))
 
-server.mount_proc('/lib/picodx.rb') do |_req, res|
+server.mount('/lib', NoCacheFileHandler, lib)
+
+server.mount_proc('/loader.rb') do |_req, res|
   res['Content-Type'] = 'text/plain; charset=utf-8'
   no_cache.call(res)
-  res.body = File.read(File.join(lib, 'picodx.rb'))
+  res.body = File.read(File.join(loader, 'loader.rb'))
 end
 
 { '/init.iife.js'  => 'application/javascript',

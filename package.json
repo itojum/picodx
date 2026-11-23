@@ -3,20 +3,12 @@
   "version": "2.1.2",
   "description": "A minimal 2D game library for PicoRuby.wasm, modelled after DXRuby's API",
   "main": "lib/picodx.rb",
-  "bin": {
-    "picodx": "bin/picodx"
-  },
   "files": [
-    "lib/picodx.rb",
-    "bin/picodx",
-    "cli/bundler.rb"
+    "lib/"
   ],
   "scripts": {
-    "build": "ruby script/build",
-    "test": "ruby test/bundler_test.rb",
-    "prepublishOnly": "npm run build",
     "setup": "npm install",
-    "serve": "npm run build && ruby script/server"
+    "serve": "ruby script/server"
   },
   "keywords": [
     "picoruby",
@@ -30,6 +22,7 @@
     "url": "git+https://github.com/itojum/picodx.git"
   },
   "devDependencies": {
-    "@picoruby/wasm-wasi": "^4.0.2"
+    "@picoruby/wasm-wasi": "4.0.6-head.20261119",
+    "importmap-picoruby": "0.1.0"
   }
 }
