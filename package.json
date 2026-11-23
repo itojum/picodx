@@ -3,16 +3,10 @@
   "version": "2.1.2",
   "description": "A minimal 2D game library for PicoRuby.wasm, modelled after DXRuby's API",
   "main": "lib/picodx.rb",
-  "bin": {
-    "picodx": "bin/picodx"
-  },
   "files": [
-    "lib/",
-    "bin/picodx",
-    "cli/bundler.rb"
+    "lib/"
   ],
   "scripts": {
-    "test": "ruby test/bundler_test.rb",
     "setup": "npm install",
     "serve": "ruby script/server"
   },

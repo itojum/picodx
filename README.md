@@ -38,20 +38,36 @@ Colors are `[r, g, b]` or `[a, r, g, b]` (DXRuby order), and the `C_*` constants
 
 ### Games split into files
 
-`require './player.rb'` cannot load files in the browser. Bundle the game into one script first; its `require` lines stay as they are, so the source still runs on DXRuby:
+Files the game requires are fetched by the loader too, so a game split into files runs as it is. Map `dxruby` to PicoDX as well, and a game written for DXRuby keeps its `require 'dxruby'`:
 
-```bash
-npx picodx bundle main.rb -o game.bundle.rb
+```html
+<script type="text/ruby-importmap">
+  { "imports": {
+      "picodx": "npm:picodx@latest",
+      "dxruby": "npm:picodx@latest/lib/dxruby.rb" } }
+</script>
+<script type="text/ruby" src="https://cdn.jsdelivr.net/npm/importmap-picoruby@0.1.0/loader.rb"></script>
+<script type="text/ruby-app" src="main.rb"></script>
+<script src="https://cdn.jsdelivr.net/npm/@picoruby/wasm-wasi@latest/dist/init.iife.js"></script>
 ```
 
-Then load `game.bundle.rb` instead of `main.rb`. See [Bundling](docs/bundle.md) for how requires are resolved and what is not supported.
+```ruby
+# main.rb
+require 'dxruby'
+require './player.rb'      # the page's directory, like DXRuby run from the game's folder
+require './class/enemy'
+```
+
+- `require './x'` is resolved against the page's directory, and the required file's own `require './y'` too.
+- Only requires with a string literal are fetched. For a name built at run time, list the files under `"preload"` in the import map ([importmap-picoruby](https://www.npmjs.com/package/importmap-picoruby)).
+- `require_relative` is not available in PicoRuby yet; use `require './x'`.
+- A library PicoRuby does not have (`require 'set'`, …) raises `LoadError`; remove the require or add the library to the import map.
 
 ## Documentation
 
 - [Window](docs/window.md) — game loop, drawing, z order, blending
 - [Image](docs/image.md) — image object, pixel access, tiles
 - [Input](docs/input.md) — keyboard / mouse input and key constants
-- [Bundling](docs/bundle.md) — `picodx bundle` for games split into files
 
 Sprite, Font, Sound and RenderTarget follow the DXRuby API; see the [DXRuby reference](https://mirichi.github.io/dxruby-doc/index.html) until their pages are added.
 
@@ -72,7 +88,6 @@ Requires Node.js (see `.node-version`) and Ruby (see `.ruby-version`).
 
 ```bash
 npm run setup   # install dependencies
-npm test        # unit tests for `picodx bundle` (the library itself is tested in the browser, see below)
 npm run serve   # start the dev server at http://localhost:3000
 ```
 
